@@ -119,6 +119,7 @@ class PaperRecognizer(object):
             return self.canny_image(image, mode)
 
     def otsu_image(self, image):
+        image = cv2.blur(image, (2, 2))
         ret, image = cv2.threshold(image, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
         return image
 

@@ -17,7 +17,7 @@ while True:
     if output_image is None:
         output_image = recognizer.get_output_image(0)
 
-    output_image = image
+    output_image = cv2.cvtColor(output_image, cv2.COLOR_GRAY2BGR)
 
     output_contour = recognizer.get_output_contour(0)
     if output_contour is None:
