@@ -7,7 +7,8 @@ recognizer = paper_recognizer.PaperRecognizer()
 
 while True:
     # Capture frame-by-frame
-    ret, image = cap.read()
+    #ret, image = cap.read()
+    image = cv2.imread("training/plain_8.jpg")
 
     image = cv2.resize(image, (500, 500))
 
@@ -17,13 +18,13 @@ while True:
     if output_image is None:
         output_image = recognizer.get_output_image(0)
 
-    output_image = cv2.cvtColor(output_image, cv2.COLOR_GRAY2BGR)
+    # output_image = cv2.cvtColor(output_image, cv2.COLOR_GRAY2BGR)
 
     output_contour = recognizer.get_output_contour(0)
-    if output_contour is None:
-        output_contour = recognizer.get_output_contour(0)
+    #if output_contour is None:
+    #    output_contour = recognizer.get_output_contour(0)
 
-    cv2.drawContours(output_image, output_contour, -1, (255, 0, 0), 3)
+    #cv2.drawContours(output_image, output_contour, -1, (255, 0, 0), 3)
 
     if corners is not None:
         cv2.drawContours(output_image, [corners], 0, (0, 255, 0), 3)

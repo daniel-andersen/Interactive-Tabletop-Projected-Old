@@ -6,44 +6,48 @@ import math
 class PaperRecognizer(object):
 
     ThresholdModes = util.Enum('OTSU', 'AUTO', 'NORMAL', 'BRIGHT_ROOM', 'DARK_ROOM')
+    # ThresholdModes = util.Enum('OTSU')
 
     min_contour_area = 0
-    min_line_length = 0
+    max_contour_area = 0
 
-    output_images = []
-    output_contours = []
+    min_line_length = 0
+    min_line_length_squared = 0
+
+    dilated_images = {}
+    contours = {}
+    output_src = None
 
     def __init__(self):
         pass
 
     def recognize_paper(self, image):
 
-        self.output_images = []
-        self.output_contours = []
+        self.output_src = image.copy()
 
         # Prepare constants
         self.prepare_constants_from_image(image)
 
         # Grayscale
         grayscaled_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        grayscaled_image = cv2.medianBlur(grayscaled_image, 3)
 
-        # Blur
-        # grayscaled_image = cv2.GaussianBlur(grayscaled_image, (5, 5), 2)
-
-        # Find non-obstructed bounds of image
-        bounds = self.find_non_obstructed_bounds_from_image(grayscaled_image)
-
-        return bounds
+        # Find non-obstructed bounds
+        return self.find_bounds_from_image(grayscaled_image)
 
     def get_output_image(self, index):
-        return self.output_images[index] if len(self.output_images) > index else None
+        return self.output_src
+        # return self.dilated_images[index] if len(self.dilated_images) > index else None
 
     def get_output_contour(self, index):
-        return self.output_contours[index] if len(self.output_contours) > index else None
+        return self.contours[index] if len(self.contours) > index else None
 
-    def find_non_obstructed_bounds_from_image(self, image):
+    def find_bounds_from_image(self, image):
 
-        # Try different thresholding levels
+        self.dilated_images = {}
+        self.contours = {}
+
+        # Find non-obstructed bounds
         for (threshold_mode, str) in self.ThresholdModes.tuples():
 
             # Find threshold levels
@@ -52,31 +56,36 @@ class PaperRecognizer(object):
             # Dilate image
             dilated_image = cv2.dilate(thresholded_image, (3, 3))
 
-            self.output_images.append(dilated_image)
+            self.dilated_images[threshold_mode] = dilated_image
 
             # Find contours
-            contours, hierarchy = cv2.findContours(dilated_image, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-            self.output_contours.append(contours)
-            if len(contours) == 0:
+            self.contours[threshold_mode], hierarchy =\
+                cv2.findContours(dilated_image, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
+
+            if len(self.contours[threshold_mode]) == 0:
                 continue
 
-            # Find corners
-            corners = self.find_non_obstructed_bounds_from_contour(contours, hierarchy)
-            if corners is None:
-                continue
+            # Find non-obstructed bounds
+            corners = self.find_non_obstructed_bounds_from_contours(self.contours[threshold_mode])
+            if corners is not None:
+                return corners
 
-            return corners
+        # Find obstructed bounds
+        for (threshold_mode, str) in self.ThresholdModes.tuples():
+
+            # Find obstructed bounds
+            corners = self.find_obstructed_bounds_from_contours(self.contours[threshold_mode])
+            if corners is not None:
+                return corners
 
         return None
 
-    def find_non_obstructed_bounds_from_contour(self, contours, hierarchy):
+    def find_non_obstructed_bounds_from_contours(self, contours):
 
         # Simplify contours
         approxed_contours = []
-
         for contour in contours:
-            approxed_contour = cv2.approxPolyDP(contour, cv2.arcLength(contour, True) * 0.02, True)
-            approxed_contours.append(approxed_contour)
+            approxed_contours.append(cv2.approxPolyDP(contour, cv2.arcLength(contour, True) * 0.02, True))
 
         # Find valid contours
         valid_contour_indexes = []
@@ -97,6 +106,32 @@ class PaperRecognizer(object):
 
         return approxed_contours[best_index] if best_index is not None else None
 
+    def find_obstructed_bounds_from_contours(self, contours):
+
+        # Simplify contours
+        approxed_contours = []
+        for contour in contours:
+            approxed_contours.append(cv2.approxPolyDP(contour, cv2.arcLength(contour, True) * 0.002, True))
+
+        # Find all valid lines
+        valid_lines = []
+
+        for contour in approxed_contours:
+            length = len(contour)
+            for i in range(0, length):
+                p1 = contour[(i + 0) % length][0]
+                p2 = contour[(i + 1) % length][0]
+
+                delta_x = p1[0] - p2[0]
+                delta_y = p1[1] - p2[1]
+                sqr_line_length = (delta_x * delta_x) + (delta_y * delta_y)
+
+                if sqr_line_length > self.min_line_length_squared:
+                    valid_lines.append((p1, p2))
+                    cv2.line(self.output_src, (p1[0], p1[1]), (p2[0], p2[1]), color=(0, 0, 255), thickness=5)
+
+        return None
+
     def score_for_contour(self, contour):
         return cv2.contourArea(contour, False) # * (1.0 - self.max_cosine_from_contour(contour))
 
@@ -104,7 +139,8 @@ class PaperRecognizer(object):
         if len(contour) != 4:
             return False
 
-        if cv2.contourArea(contour, False) < self.min_contour_area:
+        area = cv2.contourArea(contour, False)
+        if area < self.min_contour_area or area > self.max_contour_area:
             return False
 
         if not cv2.isContourConvex(contour):
@@ -161,8 +197,11 @@ class PaperRecognizer(object):
     def prepare_constants_from_image(self, image):
         width, height = image.shape[:2]
 
-        self.min_contour_area = (width * 0.3) * (height * 0.3)
+        self.min_contour_area = (width * 0.1) * (height * 0.1)
+        self.max_contour_area = (width * 0.95) * (height * 0.95)
+
         self.min_line_length = min(width, height) * 0.1
+        self.min_line_length_squared = self.min_line_length * self.min_line_length
 
     def max_cosine_from_contour(self, contour):
         max_cosine = 0.0
