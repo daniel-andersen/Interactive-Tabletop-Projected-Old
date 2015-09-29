@@ -1,5 +1,5 @@
 WiFi (hidden SSID)
-http://stackoverflow.com/questions/28031274/configure-wifi-hidden-ssid-on-raspbian-edimax-wifi-adapter
+http://www.bytecreation.com/blog/2014/1/1/raspberry-pi-wifi-configuration-hidden-ssid
 Content of /etc/wpa_supplicant/wpa_supplicant.conf:
 """
 ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
