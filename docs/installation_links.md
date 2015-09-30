@@ -1,3 +1,12 @@
+Display
+=======
+
+In '/boot/config.txt' uncomment:
+hdmi_force_hotplug=1
+hdmi_group=1
+hdmi_mode=28
+
+
 WiFi (hidden SSID)
 ==================
 
@@ -32,6 +41,13 @@ dpkg -i raspi-config.deb && rm raspi-config.deb
 raspi-config
 """
 
+Camera module
+=============
+
+See: https://www.raspberrypi.org/documentation/usage/camera/README.md
+
+Enable camera module in raspi-config
+
 Expand filesystem to fill whole SD card
 =======================================
 
@@ -41,26 +57,8 @@ See: http://elinux.org/RPi_raspi-config
 sudo raspi-config expand_rootfs
 """
 
+OpenCV 3 + Python 2.7/3
+=======================
 
-OLD STUFF
-=========
-
-X-server
-In '/boot/config.txt' uncomment:
-hdmi_force_hotplug=1
-hdmi_group=1
-hdmi_mode=28
-
-
-Kivy
-http://kivy.org/docs/installation/installation-rpi.html
-
-
-OpenCV
-http://www.pyimagesearch.com/2015/02/23/install-opencv-and-python-on-your-raspberry-pi-2-and-b/
-(And a bit of http://robertcastle.com/2014/02/installing-opencv-on-a-raspberry-pi/)
-
-
-Camera Module
-https://www.raspberrypi.org/documentation/usage/camera/README.md
+See: http://www.pyimagesearch.com/2015/07/27/installing-opencv-3-0-for-both-python-2-7-and-python-3-on-your-raspberry-pi-2/
 
