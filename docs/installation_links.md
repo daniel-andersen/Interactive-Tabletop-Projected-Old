@@ -22,6 +22,7 @@ network={
 
 Raspi-config
 ============
+
 See: http://www.forum-raspberrypi.de/Thread-raspbian-minimal
 
 """
@@ -29,6 +30,15 @@ apt-get -y install lua5.1 triggerhappy dmsetup libdevmapper1.02.1 libparted0debi
 wget http://archive.raspberrypi.org/debian/pool/main/r/raspi-config/raspi-config_20130925-1_all.deb -O raspi-config.deb
 dpkg -i raspi-config.deb && rm raspi-config.deb
 raspi-config
+"""
+
+Expand filesystem to fill whole SD card
+=======================================
+
+See: http://elinux.org/RPi_raspi-config
+
+"""
+sudo raspi-config expand_rootfs
 """
 
 
