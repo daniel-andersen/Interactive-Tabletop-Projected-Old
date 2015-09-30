@@ -1,8 +1,10 @@
 WiFi (hidden SSID)
 ==================
 
-http://www.bytecreation.com/blog/2014/1/1/raspberry-pi-wifi-configuration-hidden-ssid
+See: http://www.bytecreation.com/blog/2014/1/1/raspberry-pi-wifi-configuration-hidden-ssid
+
 Content of /etc/wpa_supplicant/wpa_supplicant.conf:
+
 """
 ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
 update_config=1
@@ -20,7 +22,14 @@ network={
 
 Raspi-config
 ============
-http://www.forum-raspberrypi.de/Thread-raspbian-minimal
+See: http://www.forum-raspberrypi.de/Thread-raspbian-minimal
+
+"""
+apt-get -y install lua5.1 triggerhappy dmsetup libdevmapper1.02.1 libparted0debian1 parted
+wget http://archive.raspberrypi.org/debian/pool/main/r/raspi-config/raspi-config_20130925-1_all.deb -O raspi-config.deb
+dpkg -i raspi-config.deb && rm raspi-config.deb
+raspi-config
+"""
 
 
 OLD STUFF
