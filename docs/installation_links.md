@@ -62,3 +62,10 @@ OpenCV 3 + Python 2.7/3
 
 See: http://www.pyimagesearch.com/2015/07/27/installing-opencv-3-0-for-both-python-2-7-and-python-3-on-your-raspberry-pi-2/
 
+If running out of space while using pip install use custom build directory:
+
+"""
+mkdir ~/tmp
+pip install -b ~/tmp numpy
+"""
+
