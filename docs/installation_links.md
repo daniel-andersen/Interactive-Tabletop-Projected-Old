@@ -1,4 +1,6 @@
 WiFi (hidden SSID)
+==================
+
 http://www.bytecreation.com/blog/2014/1/1/raspberry-pi-wifi-configuration-hidden-ssid
 Content of /etc/wpa_supplicant/wpa_supplicant.conf:
 """
@@ -16,6 +18,13 @@ network={
 }
 """
 
+Raspi-config
+============
+http://www.forum-raspberrypi.de/Thread-raspbian-minimal
+
+
+OLD STUFF
+=========
 
 X-server
 In '/boot/config.txt' uncomment:
