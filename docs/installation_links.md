@@ -69,3 +69,17 @@ mkdir ~/tmp
 pip install -b ~/tmp numpy
 """
 
+If seeing:
+
+"""
+[ 21%] Building CXX object modules/videoio/CMakeFiles/opencv_videoio.dir/src/cap_ffmpeg.cpp.o
+In file included from /home/sysop/opencv/modules/videoio/src/cap_ffmpeg.cpp:45:0:
+/home/sysop/opencv/modules/videoio/src/cap_ffmpeg_impl.hpp:1546:71: error: use of enum ‘AVCodecID’ without previous declaration
+/home/sysop/opencv/modules/videoio/src/cap_ffmpeg_impl.hpp:1556:83: error: use of enum ‘AVCodecID’ without previous declaration
+make[2]: *** [modules/videoio/CMakeFiles/opencv_videoio.dir/src/cap_ffmpeg.cpp.o] Error 1
+make[1]: *** [modules/videoio/CMakeFiles/opencv_videoio.dir/all] Error 2
+make: *** [all] Error 2
+"""
+
+See: http://stackoverflow.com/questions/31663498/opencv-3-0-0-make-error-with-ffmpeg/31818445#31818445
+
