@@ -57,8 +57,19 @@ See: http://elinux.org/RPi_raspi-config
 sudo raspi-config expand_rootfs
 """
 
-OpenCV 3 + Python 2.7/3
-=======================
+Upgrade to Jessie (from Wheezy)
+===============================
+
+"""
+sudo vi /etc/apt/sources.list
+sudo apt-get update
+sudo apt-get install python3 python3-dev
+sudo apt-get upgrade
+sudo apt-get remove --purge python3.2 python3.2-dev # If already installed python 3.2
+"""
+
+Python 3
+========
 
 See: http://www.pyimagesearch.com/2015/07/27/installing-opencv-3-0-for-both-python-2-7-and-python-3-on-your-raspberry-pi-2/
 
@@ -68,6 +79,13 @@ If running out of space while using pip install use custom build directory:
 mkdir ~/tmp
 pip install -b ~/tmp numpy
 """
+
+OpenCV 3
+========
+
+See: http://raspberrypi.stackexchange.com/questions/27232/installing-opencv-3-0-on-raspberry-pi-b
+
+Turn perf_test off.
 
 If seeing:
 
@@ -82,4 +100,12 @@ make: *** [all] Error 2
 """
 
 See: http://stackoverflow.com/questions/31663498/opencv-3-0-0-make-error-with-ffmpeg/31818445#31818445
+
+If seeing:
+
+"""
+c++: internal compiler error: Segmentation fault (program cc1plus)
+"""
+
+See last answer in: https://bitcointalk.org/index.php?topic=304389.0
 
