@@ -83,7 +83,9 @@ pip install -b ~/tmp numpy
 OpenCV 3
 ========
 
-See: http://raspberrypi.stackexchange.com/questions/27232/installing-opencv-3-0-on-raspberry-pi-b
+Use above link: http://www.pyimagesearch.com/2015/07/27/installing-opencv-3-0-for-both-python-2-7-and-python-3-on-your-raspberry-pi-2/
+
+If anything goes wrong, use: http://raspberrypi.stackexchange.com/questions/27232/installing-opencv-3-0-on-raspberry-pi-b
 
 Turn perf_test off.
 
