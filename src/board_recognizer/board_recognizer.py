@@ -7,7 +7,6 @@ import math
 
 class BoardDescriptor(object):
     """Represents a description of a board.
-
     board_image -- The recognized and transformed image
     board_corners -- The four points in the source image representing the corners of the recognized board
     """
@@ -28,22 +27,18 @@ class BoardRecognizer(object):
     ThresholdModes = enum.Enum('OTSU', 'AUTO', 'NORMAL', 'BRIGHT_ROOM', 'DARK_ROOM')
     # ThresholdModes = util.Enum('OTSU')
 
+    # Constants
     min_contour_area = 0
     max_contour_area = 0
 
     min_line_length = 0
     min_line_length_squared = 0
 
-    dilated_images = {}
-    contours = {}
-    output_src = None
-
     def __init__(self):
         pass
 
     def find_board(self, image):
         """Finds a board, if any, in the source image.
-
         :param image: Source image from which to recognize board
         :return: An instance of the BoardDescription class
         """
@@ -60,17 +55,15 @@ class BoardRecognizer(object):
             # Dilate image
             dilated_image = cv2.dilate(thresholded_image, (3, 3))
 
-            self.dilated_images[threshold_mode] = dilated_image
-
             # Find contours
-            out_image, self.contours[threshold_mode], hierarchy =\
+            contour_image, contours, hierarchy =\
                 cv2.findContours(dilated_image, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
-            if len(self.contours[threshold_mode]) == 0:
+            if len(contours) == 0:
                 continue
 
             # Find non-obstructed bounds
-            corners = self.find_non_obstructed_bounds_from_contours(self.contours[threshold_mode])
+            corners = self.find_non_obstructed_bounds_from_contours(contours)
             if corners is not None:
                 transformed_image = transform.transform_image(image, corners)
                 return BoardDescriptor(transformed_image, corners)
