@@ -8,7 +8,8 @@ def test():
     image = cv2.resize(image, (500, 500))
 
     descriptor = BoardDescriptor()
-    descriptor.border_percentage_size = [0.0184, 0.0336]
+    descriptor.border_percentage_size = (0.0184, 0.0336)
+    descriptor.tile_count = [18, 15]
 
     recognizer = BoardRecognizer()
     descriptor = recognizer.find_board(image, descriptor)
@@ -16,6 +17,7 @@ def test():
     if descriptor.is_recognized():
         cv2.imshow('Board Image', descriptor.board_image)
         cv2.imshow('Board Canvas', descriptor.board_canvas())
+        cv2.imshow('Board Tile', descriptor.tile(9, 0))
 
     while True:
         if cv2.waitKey(1) & 0xFF == ord('q'):
