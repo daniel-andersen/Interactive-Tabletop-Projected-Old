@@ -21,10 +21,11 @@ class BoardRecognizer(object):
     def __init__(self):
         pass
 
-    def find_board(self, image):
+    def find_board(self, image, board_descriptor):
         """Finds a board, if any, in the source image.
         :param image: Source image from which to recognize board
-        :return: An instance of the BoardDescription class
+        :param board_descriptor: Current board descriptor
+        :return: A description of the recognized board given by an instance of the BoardDescription class
         """
         source_image = self.prepare_image(image)
 
@@ -50,7 +51,11 @@ class BoardRecognizer(object):
             corners = self.find_non_obstructed_bounds_from_contours(contours)
             if corners is not None:
                 transformed_image = transform.transform_image(image, [corner[0] for corner in corners])
-                return BoardDescriptor(transformed_image, corners)
+
+                board_descriptor = BoardDescriptor(board_descriptor)
+                board_descriptor.board_image = transformed_image
+                board_descriptor.board_corners = corners
+                return board_descriptor
 
         return BoardDescriptor(None, None)
 
