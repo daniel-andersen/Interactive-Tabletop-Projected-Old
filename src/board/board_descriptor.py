@@ -50,6 +50,7 @@ class BoardDescriptor(object):
         """
         image_height, image_width = image.shape[:2]
         border_width, border_height = self.border_size(image)
+
         return (border_width,
                 border_height,
                 image_width - border_width,
@@ -77,10 +78,13 @@ class BoardDescriptor(object):
         """
         board_x1, board_y1, board_x2, board_y2, board_width, board_height = self.board_region(self.board_image)
 
-        return (board_x1 + (x * board_width / self.tile_count[0]),
-                board_y1 + (y * board_height / self.tile_count[1]),
-                board_x1 + ((x + 1) * board_width / self.tile_count[0]),
-                board_y1 + ((y + 1) * board_height / self.tile_count[1]),
+        tile_width = board_width / self.tile_count[0]
+        tile_height = board_height / self.tile_count[1]
+
+        return (board_x1 + (x * tile_width),
+                board_y1 + (y * tile_height),
+                board_x1 + ((x + 1) * tile_width),
+                board_y1 + ((y + 1) * tile_height),
                 board_width / self.tile_count[0],
                 board_height / self.tile_count[1])
 
@@ -92,5 +96,4 @@ class BoardDescriptor(object):
         :return: The tile at x, y
         """
         x1, y1, x2, y2 = self.tile_region(x, y)[:4]
-        print("%i, %i, %i, %i" % (x1, y1, x2, y2))
-        return self.board_canvas()[y1:y2, x1:x2]
+        return self.board_image[y1:y2, x1:x2]
