@@ -1,8 +1,24 @@
 from util import enum
-from board.board_descriptor import BoardDescriptor
 from board import transform
+import numpy as np
 import cv2
 import math
+
+
+class BoardDescriptor(object):
+    """Represents a description of a board.
+    board_image -- The recognized and transformed image
+    board_corners -- The four points in the source image representing the corners of the recognized board
+    """
+    def __init__(self, board_image, board_corners):
+        self.board_image = board_image
+        self.board_corners = board_corners
+
+    def is_recognized(self):
+        """Indicates whether the board has been recognized in the source image or not.
+        :return: True, if the board has been recognized in the source image, else false
+        """
+        return True if self.board_image is not None else False
 
 
 class BoardRecognizer(object):
