@@ -18,6 +18,7 @@ def test():
         cv2.imshow('Board Image', descriptor.snapshot.board_image)
         cv2.imshow('Board Canvas', descriptor.board_canvas())
         cv2.imshow('Board Tile', descriptor.tile(9, 0))
+        cv2.imshow('Board Tiles', descriptor.tiles([(9, 0), (9, 1), (1, 6)]))
 
     while True:
         if cv2.waitKey(1) & 0xFF == ord('q'):

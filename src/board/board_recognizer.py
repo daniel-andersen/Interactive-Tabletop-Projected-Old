@@ -161,15 +161,6 @@ class BoardRecognizer(object):
     def calculate_histogram_from_image(self, image):
         return cv2.calcHist([image], [0], None, [256], [0, 256])
 
-    def prepare_constants_from_image(self, image):
-        width, height = image.shape[:2]
-
-        self.min_contour_area = (width * 0.1) * (height * 0.1)
-        self.max_contour_area = (width * 0.95) * (height * 0.95)
-
-        self.min_line_length = min(width, height) * 0.1
-        self.min_line_length_squared = self.min_line_length * self.min_line_length
-
     def max_cosine_from_contour(self, contour):
         max_cosine = 0.0
 
