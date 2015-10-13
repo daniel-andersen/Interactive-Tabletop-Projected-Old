@@ -9,15 +9,15 @@ def order_corners(corners):
     :param pts: Corner points
     :return: Ordered points, clockwise from top/left corner
     """
-    sum = np.array([corners[i][0][0] + corners[i][0][1] for i in range(0, 4)])
-    diff = np.array([corners[i][0][0] - corners[i][0][1] for i in range(0, 4)])
+    sum = np.array([corners[i][0] + corners[i][1] for i in range(0, 4)])
+    diff = np.array([corners[i][0] - corners[i][1] for i in range(0, 4)])
 
-    topLeft = corners[np.argmin(sum)][0]       # Top/left corner has smallest sum
-    topRight = corners[np.argmax(diff)][0]     # Top/right corner has largest difference
-    bottomRight = corners[np.argmax(sum)][0]   # Bottom/right corner has largest sum
-    bottomLeft = corners[np.argmin(diff)][0]   # Bottom/left corner has smallest difference
+    topLeft = corners[np.argmin(sum)]       # Top/left corner has smallest sum
+    topRight = corners[np.argmax(diff)]     # Top/right corner has largest difference
+    bottomRight = corners[np.argmax(sum)]   # Bottom/right corner has largest sum
+    bottomLeft = corners[np.argmin(diff)]   # Bottom/left corner has smallest difference
 
-    return np.array([topLeft, topRight, bottomRight, bottomLeft], np.float32)
+    return [topLeft, topRight, bottomRight, bottomLeft]
 
 
 def warp_corners(corners):
@@ -26,22 +26,32 @@ def warp_corners(corners):
     :param corners: Source points
     :return: Points warped to a rectangle, clockwise from top/left corner
     """
-    (topLeft, topRight, bottomRight, bottomLeft) = corners
+    (top_left, top_right, bottom_right, bottom_left) = corners
 
     # Find width
-    width_upper = math.sqrt(((topLeft[0] - topRight[0]) ** 2) + ((topLeft[1] - topRight[1]) ** 2))
-    width_lower = math.sqrt(((bottomLeft[0] - bottomRight[0]) ** 2) + ((bottomLeft[1] - bottomRight[1]) ** 2))
+    width_upper = distance(top_left, top_right)
+    width_lower = distance(bottom_left, bottom_right)
     width = int(max(width_upper, width_lower))
 
     # Find height
-    height_left = math.sqrt(((topLeft[0] - bottomLeft[0]) ** 2) + ((topLeft[1] - bottomLeft[1]) ** 2))
-    height_right = math.sqrt(((topRight[0] - bottomRight[0]) ** 2) + ((topRight[1] - bottomRight[1]) ** 2))
+    height_left = distance(top_left, bottom_left)
+    height_right = distance(top_right, bottom_right)
     height = int(max(height_left, height_right))
 
-    return np.array([[0, 0],
-                     [width, 0],
-                     [width, height],
-                     [0, height]], np.float32)
+    return [[0, 0],
+            [width, 0],
+            [width, height],
+            [0, height]]
+
+
+def distance(p1, p2):
+    """
+    Calculates the distance between the two points.
+    :param p1: First point
+    :param p2: Second point
+    :return: Distance between points
+    """
+    return math.sqrt(((p1[0] - p2[0]) ** 2) + ((p1[1] - p2[1]) ** 2))
 
 
 def transform_image(image, corners):
@@ -53,6 +63,7 @@ def transform_image(image, corners):
     source_points = order_corners(corners)
     dest_points = warp_corners(source_points)
 
-    perspective_transform = cv2.getPerspectiveTransform(source_points, dest_points)
+    perspective_transform = cv2.getPerspectiveTransform(np.array(source_points, np.float32),
+                                                        np.array(dest_points, np.float32))
 
     return cv2.warpPerspective(image, perspective_transform, (dest_points[2][0], dest_points[2][1]))
