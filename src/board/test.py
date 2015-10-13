@@ -1,9 +1,9 @@
 import cv2
-from board_recognizer import board_recognizer
+from board import board_recognizer
 
 
 def test():
-    image = cv2.imread("board_recognizer/training/practice2b.png")
+    image = cv2.imread("board/training/practice2b.png")
     image = cv2.resize(image, (500, 500))
 
     recognizer = board_recognizer.BoardRecognizer()

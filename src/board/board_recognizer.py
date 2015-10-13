@@ -1,5 +1,5 @@
 from util import enum
-from board_recognizer import transform
+from board import transform
 import numpy as np
 import cv2
 import math

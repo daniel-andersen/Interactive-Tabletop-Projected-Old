@@ -1,3 +1,3 @@
-import board_recognizer.test as test
+import board.test as test
 
 test.test()

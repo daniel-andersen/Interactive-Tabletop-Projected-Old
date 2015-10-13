@@ -1,10 +1,10 @@
 import cv2
-import board_recognizer
+import board
 import brick_recognizer
 
 cap = cv2.VideoCapture(0)
 
-boardRecogizer = board_recognizer.BoardRecognizer()
+boardRecogizer = board.BoardRecognizer()
 brickRecognizer = brick_recognizer.BrickRecognizer()
 
 while True:
