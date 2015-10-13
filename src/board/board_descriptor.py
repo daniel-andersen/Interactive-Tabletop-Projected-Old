@@ -1,29 +1,26 @@
-from screen.screen import Screen
-
-
 class BoardDescriptor(object):
-    """Represents a description of a board. Can be initialized (and reset) with a board descriptor object.
+    """Represents a description of a board.
 
     Field variables:
-
-    board_image -- The recognized and transformed image
-    board_corners -- The four points in the source image representing the corners of the recognized board
-
     border_percentage_size -- (width (percent / 100), height (percent / 100))
-
     tile_count -- (width, height)
     """
-    def __init__(self, board_descriptor=None):
+    class Snapshot:
+        """Represents a snapshot (current camera feed image) of a board.
+
+        Field variables:
+        board_image -- The recognized and transformed image
+        board_corners -- The four points in the source image representing the corners of the recognized board
         """
-        Initializes and copies static values from an optional board descriptor.
-        :param board_descriptor: Board descriptor to copy static values from
-        :return: New instance
-        """
-        self.board_image = board_descriptor.board_image if board_descriptor is not None else None
-        self.board_corners = board_descriptor.board_corners if board_descriptor is not None else None
-        self.border_percentage_size = board_descriptor.border_percentage_size if board_descriptor is not None else None
-        self.tile_count = board_descriptor.tile_count if board_descriptor is not None else None
-        self.board_canvas_image = None
+        def __init__(self):
+            self.board_image = None
+            self.board_corners = None
+            self.board_canvas_image = None
+
+    def __init__(self):
+        self.snapshot = None
+        self.border_percentage_size = None
+        self.tile_count = None
         self.tile_size = None
 
     def is_recognized(self):
@@ -31,7 +28,7 @@ class BoardDescriptor(object):
         Indicates whether the board has been recognized in the source image or not.
         :return: True, if the board has been recognized in the source image, else false
         """
-        return True if self.board_image is not None else False
+        return True if self.snapshot.board_image is not None else False
 
     def border_size(self, image):
         """
@@ -63,11 +60,11 @@ class BoardDescriptor(object):
         Extracts the board canvas from the transformed image, that is, the non-border area of the image.
         :return: The board canvas image
         """
-        if self.board_canvas_image is None:
-            region = self.board_region(self.board_image)
-            self.board_canvas_image = self.board_image[region[1]:region[3], region[0]:region[2]]
+        if self.snapshot.board_canvas_image is None:
+            region = self.board_region(self.snapshot.board_image)
+            self.snapshot.board_canvas_image = self.snapshot.board_image[region[1]:region[3], region[0]:region[2]]
 
-        return self.board_canvas_image
+        return self.snapshot.board_canvas_image
 
     def tile_region(self, x, y):
         """
@@ -76,7 +73,7 @@ class BoardDescriptor(object):
         :param y: Y coordinate
         :return: The (x1, y1, x2, y2, width, height) tile region
         """
-        board_x1, board_y1, board_x2, board_y2, board_width, board_height = self.board_region(self.board_image)
+        board_x1, board_y1, board_x2, board_y2, board_width, board_height = self.board_region(self.snapshot.board_image)
 
         tile_width = board_width / self.tile_count[0]
         tile_height = board_height / self.tile_count[1]
@@ -96,4 +93,4 @@ class BoardDescriptor(object):
         :return: The tile at x, y
         """
         x1, y1, x2, y2 = self.tile_region(x, y)[:4]
-        return self.board_image[y1:y2, x1:x2]
+        return self.snapshot.board_image[y1:y2, x1:x2]

@@ -12,10 +12,10 @@ def test():
     descriptor.tile_count = [18, 15]
 
     recognizer = BoardRecognizer()
-    descriptor = recognizer.find_board(image, descriptor)
+    recognizer.find_board(image, descriptor)
 
     if descriptor.is_recognized():
-        cv2.imshow('Board Image', descriptor.board_image)
+        cv2.imshow('Board Image', descriptor.snapshot.board_image)
         cv2.imshow('Board Canvas', descriptor.board_canvas())
         cv2.imshow('Board Tile', descriptor.tile(9, 0))
 

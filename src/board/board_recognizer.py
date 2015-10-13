@@ -6,7 +6,8 @@ import math
 
 
 class BoardRecognizer(object):
-    """Class capable of recognizing a game board.
+    """
+    Class capable of recognizing a game board.
     """
     ThresholdModes = enum.Enum('OTSU', 'AUTO', 'NORMAL', 'BRIGHT_ROOM', 'DARK_ROOM')
     # ThresholdModes = util.Enum('OTSU')
@@ -22,10 +23,10 @@ class BoardRecognizer(object):
         pass
 
     def find_board(self, image, board_descriptor):
-        """Finds a board, if any, in the source image.
+        """
+        Finds a board, if any, in the source image and populates the board descriptor.
         :param image: Source image from which to recognize board
         :param board_descriptor: Current board descriptor
-        :return: A description of the recognized board given by an instance of the BoardDescription class
         """
         source_image = self.prepare_image(image)
 
@@ -52,12 +53,13 @@ class BoardRecognizer(object):
             if corners is not None:
                 transformed_image = transform.transform_image(image, [corner[0] for corner in corners])
 
-                board_descriptor = BoardDescriptor(board_descriptor)
-                board_descriptor.board_image = transformed_image
-                board_descriptor.board_corners = corners
-                return board_descriptor
+                snapshot = BoardDescriptor.Snapshot()
+                snapshot.board_image = transformed_image
+                snapshot.board_corners = corners
+                board_descriptor.snapshot = snapshot
+                return
 
-        return BoardDescriptor(None, None)
+        return
 
     def prepare_constants_from_image(self, image):
         width, height = image.shape[:2]
