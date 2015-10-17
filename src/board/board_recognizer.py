@@ -22,11 +22,10 @@ class BoardRecognizer(object):
     def __init__(self):
         pass
 
-    def find_board(self, image, board_descriptor):
+    def find_board(self, image):
         """
         Finds a board, if any, in the source image and populates the board descriptor.
         :param image: Source image from which to recognize board
-        :param board_descriptor: Current board descriptor
         """
         source_image = self.prepare_image(image)
 
@@ -56,10 +55,9 @@ class BoardRecognizer(object):
                 snapshot = BoardDescriptor.Snapshot()
                 snapshot.board_image = transformed_image
                 snapshot.board_corners = corners
-                board_descriptor.snapshot = snapshot
-                return
+                return snapshot
 
-        return
+        return None
 
     def prepare_constants_from_image(self, image):
         width, height = image.shape[:2]
