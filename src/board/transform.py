@@ -12,12 +12,12 @@ def order_corners(corners):
     sum = np.array([corners[i][0] + corners[i][1] for i in range(0, 4)])
     diff = np.array([corners[i][0] - corners[i][1] for i in range(0, 4)])
 
-    topLeft = corners[np.argmin(sum)]       # Top/left corner has smallest sum
-    topRight = corners[np.argmax(diff)]     # Top/right corner has largest difference
-    bottomRight = corners[np.argmax(sum)]   # Bottom/right corner has largest sum
-    bottomLeft = corners[np.argmin(diff)]   # Bottom/left corner has smallest difference
+    top_left = corners[np.argmin(sum)]       # Top/left corner has smallest sum
+    top_right = corners[np.argmax(diff)]     # Top/right corner has largest difference
+    bottom_right = corners[np.argmax(sum)]   # Bottom/right corner has largest sum
+    bottom_left = corners[np.argmin(diff)]   # Bottom/left corner has smallest difference
 
-    return [topLeft, topRight, bottomRight, bottomLeft]
+    return [top_left, top_right, bottom_right, bottom_left]
 
 
 def warp_corners(corners):

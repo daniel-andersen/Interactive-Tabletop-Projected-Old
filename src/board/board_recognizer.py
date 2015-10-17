@@ -51,11 +51,7 @@ class BoardRecognizer(object):
             corners = self.find_non_obstructed_bounds_from_contours(contours)
             if corners is not None:
                 transformed_image = transform.transform_image(image, [corner[0] for corner in corners])
-
-                snapshot = BoardDescriptor.Snapshot()
-                snapshot.board_image = transformed_image
-                snapshot.board_corners = corners
-                return snapshot
+                return BoardDescriptor.Snapshot(transformed_image, corners)
 
         return None
 

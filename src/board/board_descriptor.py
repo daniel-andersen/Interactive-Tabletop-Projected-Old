@@ -1,4 +1,5 @@
 import numpy as np
+import cv2
 
 
 class BoardDescriptor(object):
@@ -14,11 +15,13 @@ class BoardDescriptor(object):
 
         Field variables:
         board_image -- The recognized and transformed image
+        grayscaled_board_image -- A grayscale version of the board image
         board_corners -- The four points in the source image representing the corners of the recognized board
         """
-        def __init__(self):
-            self.board_image = None
-            self.board_corners = None
+        def __init__(self, board_image=None, board_corners=None):
+            self.board_image = board_image
+            self.board_corners = board_corners
+            self.grayscaled_board_image = cv2.cvtColor(board_image, cv2.COLOR_BGR2GRAY) if board_image is not None else None
             self.board_canvas_image = None
 
     def __init__(self):
@@ -94,32 +97,54 @@ class BoardDescriptor(object):
                 tile_width,
                 tile_height)
 
-    def tile(self, x, y):
+    def tile(self, x, y, source_image=None):
         """
         Returns the tile at x, y.
         :param x: X coordinate
         :param y: Y coordinate
+        :param source_image: Source image, or None if using board image
         :return: The tile at x, y
         """
+        source_image = self.snapshot.board_image if source_image is None else source_image
         x1, y1, x2, y2 = self.tile_region(x, y)[:4]
-        return self.snapshot.board_image[y1:y2, x1:x2]
+        return source_image[y1:y2, x1:x2]
 
-    def tiles(self, coordinates):
+    def tile_strip(self, coordinates, source_image=None):
         """
         Returns the tiles at the specified coordinates.
         :param coordinates: List of coordinates [(x, y), ...]
+        :param source_image: Source image, or None if using board image
         :return: The tiles in a single horizontal image strip
         """
+        source_image = self.snapshot.board_image if source_image is None else source_image
+
         tile_width, tile_height = self.tile_size()
 
-        channels = self.snapshot.board_image.shape[2] if len(self.snapshot.board_image.shape) > 2 else 1
-        image = np.zeros((tile_height, len(coordinates) * tile_width, channels), self.snapshot.board_image.dtype)
+        channels = source_image.shape[2] if len(source_image.shape) > 2 else 1
+        if channels > 1:
+            size = (tile_height, len(coordinates) * tile_width, channels)
+        else:
+            size = (tile_height, len(coordinates) * tile_width)
+
+        image = np.zeros(size, source_image.dtype)
 
         offset = 0
         for (x, y) in coordinates:
             x1, y1, x2, y2 = self.tile_region(x, y)[:4]
-            tile_image = self.snapshot.board_image[y1:y2, x1:x2]
+            tile_image = source_image[y1:y2, x1:x2]
             image[0:tile_height, offset:offset + tile_width] = tile_image
             offset += tile_width
 
         return image
+
+    def tile_from_strip_image(self, index, tile_strip_image):
+        """
+        Returns the tile at the given index from the given tile strip image.
+        :param index: Tile index
+        :param tile_strip_image: Tile strip image
+        :return: The tile at the given index
+        """
+        tile_width, tile_height = self.tile_size()
+        x1 = index * tile_width
+        x2 = x1 + tile_width
+        return tile_strip_image[0:tile_height, x1:x2]
