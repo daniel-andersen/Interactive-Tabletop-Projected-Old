@@ -1,8 +1,9 @@
-import cv2
 import numpy as np
 
+
 class BoardDescriptor(object):
-    """Represents a description of a board.
+    """
+    Represents a description of a board.
 
     Field variables:
     border_percentage_size -- (width (percent / 100), height (percent / 100))

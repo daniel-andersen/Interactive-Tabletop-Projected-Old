@@ -1,5 +1,6 @@
 class Screen(object):
-    """Represents the description of the screen.
+    """
+    Represents the description of the screen.
 
     width -- Width of screen
     height -- Height of screen

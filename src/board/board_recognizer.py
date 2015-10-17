@@ -32,7 +32,7 @@ class BoardRecognizer(object):
         self.prepare_constants_from_image(source_image)
 
         # Find non-obstructed bounds
-        for (threshold_mode, str) in self.ThresholdModes.tuples():
+        for (threshold_mode, _) in self.ThresholdModes.tuples():
 
             # Find threshold levels
             thresholded_image = self.threshold_image(source_image, threshold_mode)
