@@ -54,6 +54,7 @@ class BoardRecognizer(object):
             corners = self.find_corners(contours, hierarchy, corner_marker, image)
             if corners is not None:
                 transformed_image = transform.transform_image(image, corners)
+                print(corners)
                 return BoardDescriptor.Snapshot(transformed_image, corners)
 
         return None
@@ -94,12 +95,13 @@ class BoardRecognizer(object):
                         valid_contour_indexes.append(i)
 
         ###
-        print("Valid contours: %i" % len(valid_contour_indexes))
-        #cts = [approxed_contours[i] for i in valid_contour_indexes]
-        ##cts = approxed_contours
+        #print("Valid contours: %i" % len(valid_contour_indexes))
+        ##cts = [approxed_contours[i] for i in valid_contour_indexes]
+        #cts = approxed_contours
         #image2 = image.copy()
         #cv2.drawContours(image2, cts, -1, (255,0,0), 2)
         #cv2.imshow('Contours', image2)
+        #cv2.waitKey(0)
         ###
 
         # Find best contours

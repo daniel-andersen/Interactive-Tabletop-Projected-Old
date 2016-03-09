@@ -6,16 +6,16 @@ from board.tile_brick_detector import TileBrickDetector
 
 def test():
     descriptor = BoardDescriptor()
-    descriptor.border_percentage_size = (0.0184, 0.0336)
+    descriptor.border_percentage_size = (0.0, 0.0)
     descriptor.corner_marker = BoardDescriptor.BoardCornerMarker.DEFAULT
-    descriptor.tile_count = [18, 15]
+    descriptor.tile_count = [30, 20]
 
     recognizer = BoardRecognizer()
 
     cap = cv2.VideoCapture(0)
 
     while True:
-        image = cv2.imread("board/training/practice15.png")
+        image = cv2.imread("board/training/practice16.png")
         #_, image = cap.read()
 
         descriptor.snapshot = recognizer.find_board(image, descriptor.corner_marker)
