@@ -6,11 +6,11 @@ import math
 def order_corners(corners):
     """
     Orders the four corner points from top/left, top/right, bottom/right, bottom/left.
-    :param pts: Corner points
+    :param corners: Corner points
     :return: Ordered points, clockwise from top/left corner
     """
-    sum = np.array([corners[i][0] + corners[i][1] for i in range(0, 4)])
-    diff = np.array([corners[i][0] - corners[i][1] for i in range(0, 4)])
+    sum = np.array([corner[0] + corner[1] for corner in corners])
+    diff = np.array([corner[0] - corner[1] for corner in corners])
 
     top_left = corners[np.argmin(sum)]       # Top/left corner has smallest sum
     top_right = corners[np.argmax(diff)]     # Top/right corner has largest difference

@@ -1,3 +1,4 @@
+from util import enum
 import numpy as np
 import cv2
 
@@ -10,6 +11,8 @@ class BoardDescriptor(object):
     border_percentage_size -- (width (percent / 100), height (percent / 100))
     tile_count -- (width, height)
     """
+    BoardCornerMarker = enum.Enum('DEFAULT')
+
     class Snapshot:
         """Represents a snapshot (current camera feed image) of a board.
 
@@ -28,13 +31,14 @@ class BoardDescriptor(object):
         self.snapshot = None
         self.border_percentage_size = None
         self.tile_count = None
+        self.corner_marker = self.BoardCornerMarker.DEFAULT
 
     def is_recognized(self):
         """
         Indicates whether the board has been recognized in the source image or not.
         :return: True, if the board has been recognized in the source image, else false
         """
-        return True if self.snapshot.board_image is not None else False
+        return True if self.snapshot is not None and self.snapshot.board_image is not None else False
 
     def border_size(self):
         """
