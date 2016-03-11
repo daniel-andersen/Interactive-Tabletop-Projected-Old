@@ -3,6 +3,7 @@ from board.board_descriptor import BoardDescriptor
 from board import transform
 import cv2
 import math
+import itertools
 import numpy as np
 
 
@@ -15,6 +16,11 @@ class BoardRecognizer(object):
     # Constants
     min_marker_area = 0
     max_marker_area = 0
+
+    min_contour_area = 0
+
+    aspect_ratio = 0
+    aspect_ratio_max_deviation = 0
 
     min_line_length = 0
     min_line_length_squared = 0
@@ -54,7 +60,6 @@ class BoardRecognizer(object):
             corners = self.find_corners(contours, hierarchy, corner_marker, image)
             if corners is not None:
                 transformed_image = transform.transform_image(image, corners)
-                print(corners)
                 return BoardDescriptor.Snapshot(transformed_image, corners)
 
         return None
@@ -64,6 +69,11 @@ class BoardRecognizer(object):
 
         self.min_marker_area = (width * 0.01) * (height * 0.01)
         self.max_marker_area = (width * 0.05) * (height * 0.05)
+
+        self.min_contour_area = (width * 0.25) * (height * 0.25)
+
+        self.aspect_ratio = 1.5
+        self.aspect_ratio_max_deviation = 0.15
 
         self.min_line_length = min(width, height) * 0.1
         self.min_line_length_squared = self.min_line_length * self.min_line_length
@@ -105,25 +115,66 @@ class BoardRecognizer(object):
         ###
 
         # Find best contours
-        best_contours = []
+        best_contour_indices = []
 
         for i in valid_contour_indexes:
             score = self.score_for_contour(approxed_contours[i], corner_marker)
-            best_contours.append((i, score))
-            best_contours = sorted(best_contours, key=lambda c: c[1])
-            best_contours = best_contours[:min(4, len(best_contours))]
+            best_contour_indices.append((i, score))
 
-        if len(best_contours) != 4:
+        if len(best_contour_indices) < 4:
             return None
 
-        # Extract all points
-        all_points = []
-        for (index, _) in best_contours:
-            for p in approxed_contours[index]:
-                all_points.append(p[0])
+        # Find best combination of corners
+        best_corners = []
 
-        # Return corner points
-        return transform.order_corners(all_points)
+        for corner_indices in itertools.combinations(range(0, len(best_contour_indices)), 4):
+
+            # Extract all points
+            all_points = []
+            for best_contour_index in corner_indices:
+                index = best_contour_indices[best_contour_index][0]
+                for p in approxed_contours[index]:
+                    all_points.append(p[0])
+
+            # Find corners
+            corners = transform.order_corners(all_points)
+            contour = np.int32(corners).reshape(-1, 1, 2)
+
+            # Check if valid
+            if not self.is_corner_combination_valid(contour):
+                continue
+
+            # Calculate score
+            score = self.score_for_corners(contour)
+            best_corners.append((corners, score))
+
+        if len(best_corners) == 0:
+            return None
+
+        # Return best combination
+        best_corners = sorted(best_corners, key=lambda c: c[1])
+
+        return best_corners[0][0]
+
+    def is_corner_combination_valid(self, contour):
+        if abs(cv2.contourArea(contour)) < self.min_contour_area:
+            return False
+
+        if not self.has_correct_aspect_ratio(contour):
+            return False
+
+        if self.max_cosine_from_contour(contour) > 0.1:
+            return False
+
+        return True
+
+    def has_correct_aspect_ratio(self, contour):
+        (_, _), (width, height), _ = cv2.minAreaRect(contour)
+        aspect_ratio = max(float(width) / float(height), float(height) / float(width))
+        return abs(aspect_ratio - self.aspect_ratio) <= self.aspect_ratio_max_deviation
+
+    def score_for_corners(self, contour):
+        return cv2.contourArea(contour, False)
 
     def score_for_contour(self, contour, corner_marker):
         marker_contour = self.marker_contour_for_marker(corner_marker)
@@ -257,9 +308,9 @@ class BoardRecognizer(object):
         return max_cosine
 
     def angle(self, pt1, pt2, pt0):
-        dx1 = pt1[0] - pt0[0] + 0.0
-        dy1 = pt1[1] - pt0[1] + 0.0
-        dx2 = pt2[0] - pt0[0] + 0.0
-        dy2 = pt2[1] - pt0[1] + 0.0
+        dx1 = float(pt1[0] - pt0[0])
+        dy1 = float(pt1[1] - pt0[1])
+        dx2 = float(pt2[0] - pt0[0])
+        dy2 = float(pt2[1] - pt0[1])
 
         return (dx1*dx2 + dy1*dy2) / math.sqrt((dx1*dx1 + dy1*dy1) * (dx2*dx2 + dy2*dy2) + 1e-10)
