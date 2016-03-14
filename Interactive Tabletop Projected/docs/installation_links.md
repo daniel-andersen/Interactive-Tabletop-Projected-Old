@@ -2,7 +2,8 @@ Boot in fullscreen Chromium kiosk mode
 ======================================
 
 http://blogs.wcode.org/2013/09/howto-boot-your-raspberry-pi-into-a-fullscreen-browser-kiosk/
-
+Installing simple webkit kiosk browser: https://github.com/pschultz/kiosk-browser
+See .xinitrc
 
 Display
 =======
