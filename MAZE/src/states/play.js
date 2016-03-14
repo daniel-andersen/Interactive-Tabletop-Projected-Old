@@ -1,65 +1,47 @@
-var TemplateGame = TemplateGame || {};
+var MAZE = MAZE || {};
 
-TemplateGame.Play = new Kiwi.State( "Play" );
+MAZE.Play = new Kiwi.State( "Play" );
+
+var maxPlayers = 4;
+
+var borderLayer = null;
+var tileLayers = [];
 
 /**
-* The PlayState in the core state that is used in the game. 
+* The PlayState in the core state that is used in the game.
 *
 * It is the state where majority of the functionality occurs 'in-game' occurs.
 */
 
+MAZE.Play.preload = function () {
+    this.addJSON( 'tilemap', 'assets/maps/sample.json' );
+    this.addSpriteSheet( 'tiles', 'assets/img/tiles/board_tiles.png', 40, 40 );
+}
 
 /**
 * This create method is executed when a Kiwi state has finished loading
 * any resources that were required to load.
 */
-TemplateGame.Play.create = function () {
+MAZE.Play.create = function () {
 
 	Kiwi.State.prototype.create.call( this );
 
-	/*
-	* Replace with your own game creation code here...
-	*/
-	this.name = new Kiwi.GameObjects.StaticImage(
-		this, this.textures.kiwiName, 10, 10) ;
+    this.tilemap = new Kiwi.GameObjects.Tilemap.TileMap( this, 'tilemap', this.textures.tiles );
 
-	this.heart = new Kiwi.GameObjects.Sprite(
-		this, this.textures.icons, 10, 10 );
-	this.heart.cellIndex = 8;
-	this.heart.y = this.game.stage.height - this.heart.height - 10;
+    borderLayer = this.tilemap.getLayerByName( "Border Layer" );
+    this.addChild( borderLayer );
 
+    tileLayers.push( this.tilemap.getLayerByName("Tile Layer 1" ));
+    this.addChild( tileLayers[0] );
 
-	this.shield = new Kiwi.GameObjects.Sprite(
-		this, this.textures.icons, 200, 200 );
-	this.shield.cellIndex = 9;
-	this.shield.y = this.game.stage.height * 0.5 - this.shield.height * 0.5;
-	this.shield.x = this.game.stage.width * 0.5 - this.shield.width * 0.5;
+    tileLayers.push( this.tilemap.getLayerByName("Tile Layer 2" ));
+    this.addChild( tileLayers[1] );
 
-
-	this.crown = new Kiwi.GameObjects.Sprite(
-		this, this.textures.icons, 10, 10 );
-	this.crown.cellIndex = 10;
-	this.crown.x = this.game.stage.width - this.crown.width - 10;
-	this.crown.y = this.game.stage.height - this.crown.height - 10;
-
-
-	this.bomb = new Kiwi.GameObjects.Sprite(
-		this, this.textures.icons, 0, 10 );
-	this.bomb.x = this.game.stage.width - this.bomb.width  -10;
-
-
-	// Add the GameObjects to the stage
-	this.addChild( this.heart );
-	this.addChild( this.crown );
-	this.addChild( this.shield );
-	this.addChild( this.bomb );
-	this.addChild( this.name );
+    borderLayer.alpha = 1.0;
 };
 
 
-TemplateGame.Play.update = function() {
+MAZE.Play.update = function() {
 
 	Kiwi.State.prototype.update.call( this );
-
-	this.shield.rotation += this.game.time.clock.rate * 0.01;
 };

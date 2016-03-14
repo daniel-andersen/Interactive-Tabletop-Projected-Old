@@ -16,7 +16,7 @@
 * with some custom code to handle the loading/bobbing/fading of all the items,
 * so if you override a method (e.g. the preload) make sure you call the
 * super method.
-* 
+*
 * The parameters we are passing into this method are as follows:
 * 1 - name {string} Name of this state.
 * 2 - stateToSwitch {string} Name of the state to switch to AFTER all the
@@ -27,13 +27,13 @@
 * 4 - subfolder {string} Folder that the loading graphics are located in
 */
 
-var TemplateGame = TemplateGame || {};
+var MAZE = MAZE || {};
 
-TemplateGame.Loading = new KiwiLoadingScreen(
+MAZE.Loading = new KiwiLoadingScreen(
 	"Loading", "Intro", "assets/img/loading/" );
 
 
-TemplateGame.Loading.preload = function () {
+MAZE.Loading.preload = function () {
 
 	// Make sure to call the super at the top.
 	// Otherwise the loading graphics will load last,
