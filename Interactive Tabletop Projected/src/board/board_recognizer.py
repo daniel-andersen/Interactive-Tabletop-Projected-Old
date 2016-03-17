@@ -98,15 +98,11 @@ class BoardRecognizer(object):
 
         for i in range(0, len(approxed_contours)):
             if self.are_marker_conditions_satisfied_for_contour(contours[i], corner_marker):
-                child_index = hierarchy[0][i][2]
-                parent_index = hierarchy[0][i][3]
-                if child_index == -1 and parent_index != -1:
-                    if self.are_marker_conditions_satisfied_for_contour(contours[parent_index], corner_marker):
-                        valid_contour_indexes.append(i)
+                valid_contour_indexes.append(i)
 
         ###
         #print("Valid contours: %i" % len(valid_contour_indexes))
-        ##cts = [approxed_contours[i] for i in valid_contour_indexes]
+        #cts = [approxed_contours[i] for i in valid_contour_indexes]
         #cts = approxed_contours
         #image2 = image.copy()
         #cv2.drawContours(image2, cts, -1, (255,0,0), 2)
@@ -199,7 +195,7 @@ class BoardRecognizer(object):
                 return False
 
         # Check score
-        return self.score_for_contour(contour, corner_marker) < 0.3
+        return self.score_for_contour(contour, corner_marker) < 0.5
 
     """
     def are_default_marker_conditions_satisfied_for_contour(self, contour, corner_marker):

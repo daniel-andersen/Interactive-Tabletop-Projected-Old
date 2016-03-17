@@ -51,7 +51,7 @@ class TileBrickDetector(object):
         :param board_descriptor: Board descriptor
         :return: Median (min, max)
         """
-        tile_images = [board_descriptor.tile(coordinates[i][0], coordinates[i][1]) for i in range(0, len(coordinates))]
+        tile_images = [board_descriptor.tile(coordinates[i][0], coordinates[i][1], grayscaled=True) for i in range(0, len(coordinates))]
         histograms = [self.histogram_from_image(tile_images[i], 256) for i in range(0, len(coordinates))]
         medians = [self.histogram_median(histograms[i], board_descriptor) for i in range(0, len(coordinates))]
         return np.min(medians), np.max(medians)
@@ -68,7 +68,7 @@ class TileBrickDetector(object):
         return median
 
     def probabilities_of_bricks(self, coordinates, histogram_bin_count, board_descriptor):
-        tile_strip_image = cv2.equalizeHist(board_descriptor.tile_strip(coordinates, board_descriptor.snapshot.grayscaled_board_image))
+        tile_strip_image = cv2.equalizeHist(board_descriptor.tile_strip(coordinates, grayscaled=True))
         return [self.probability_of_brick(i, tile_strip_image, histogram_bin_count, board_descriptor) for i in range(0, len(coordinates))]
 
     def probability_of_brick(self, index, tile_strip_image, histogram_bin_count, board_descriptor):

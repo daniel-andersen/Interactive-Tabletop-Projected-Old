@@ -38,6 +38,9 @@ MAZE.Play.create = function () {
     this.addChild( tileLayers[1] );
 
     borderLayer.alpha = 1.0;
+
+    test = new MazeInfo()
+    test.test()
 };
 
 

@@ -1,0 +1,10 @@
+{
+  "version": 3,
+  "file": "maze.js",
+  "sourceRoot": "",
+  "sources": [
+    "maze.coffee"
+  ],
+  "names": [],
+  "mappings": "AAAA,IAAA;;AAAM;;;qBACF,IAAA,GAAM,SAAA;WACF,KAAA,CAAM,OAAN;EADE"
+}

@@ -1,3 +1,4 @@
 import board.test as test
 
-test.test()
+test.run_tests()
+#test.test()

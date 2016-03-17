@@ -101,26 +101,30 @@ class BoardDescriptor(object):
                 tile_width,
                 tile_height)
 
-    def tile(self, x, y, source_image=None):
+    def tile(self, x, y, source_image=None, grayscaled=False):
         """
         Returns the tile at x, y.
         :param x: X coordinate
         :param y: Y coordinate
         :param source_image: Source image, or None if using board image
+        :param grayscaled: If true and source_image is None, use grayscaled image as source
         :return: The tile at x, y
         """
-        source_image = self.snapshot.board_image if source_image is None else source_image
+        if source_image is None:
+            source_image = self.snapshot.board_image if not grayscaled else self.snapshot.grayscaled_board_image
         x1, y1, x2, y2 = self.tile_region(x, y)[:4]
         return source_image[y1:y2, x1:x2]
 
-    def tile_strip(self, coordinates, source_image=None):
+    def tile_strip(self, coordinates, source_image=None, grayscaled=False):
         """
         Returns the tiles at the specified coordinates.
         :param coordinates: List of coordinates [(x, y), ...]
         :param source_image: Source image, or None if using board image
+        :param grayscaled: If true and source_image is None, use grayscaled image as source
         :return: The tiles in a single horizontal image strip
         """
-        source_image = self.snapshot.board_image if source_image is None else source_image
+        if source_image is None:
+            source_image = self.snapshot.board_image if not grayscaled else self.snapshot.grayscaled_board_image
 
         tile_width, tile_height = self.tile_size()
 
