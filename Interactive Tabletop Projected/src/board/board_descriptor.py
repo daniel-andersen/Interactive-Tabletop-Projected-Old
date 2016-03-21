@@ -8,8 +8,11 @@ class BoardDescriptor(object):
     Represents a description of a board.
 
     Field variables:
-    border_percentage_size -- (width (percent / 100), height (percent / 100))
-    tile_count -- (width, height)
+    snapshot -- Board snapshot
+    board_size -- [width, height]
+    border_percentage_size -- [width (percent / 100), height (percent / 100)]
+    tile_count -- [width, height]
+    corner_marker -- Corner marker to use as detection
     """
     BoardCornerMarker = enum.Enum('DEFAULT')
 
@@ -29,6 +32,7 @@ class BoardDescriptor(object):
 
     def __init__(self):
         self.snapshot = None
+        self.board_size = None
         self.border_percentage_size = None
         self.tile_count = None
         self.corner_marker = self.BoardCornerMarker.DEFAULT
@@ -140,7 +144,7 @@ class BoardDescriptor(object):
         for (x, y) in coordinates:
             x1, y1, x2, y2 = self.tile_region(x, y)[:4]
             tile_image = source_image[y1:y2, x1:x2]
-            image[0:tile_height, offset:offset + tile_width] = tile_image
+            image[0:tile_height, offset:offset + int(tile_width)] = tile_image
             offset += tile_width
 
         return image
