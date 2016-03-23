@@ -24,7 +24,7 @@ feh -F /home/pi/magic_lamp/Interactive\ Tabletop\ Projected/assets/splash.png & 
 # Start the browser
 browser http://localhost:9000 & browser_pid=$!
 
-sleep 5
+sleep 10
 kill -9 $feh_pid
 
 wait $browser_pid
