@@ -19,14 +19,23 @@ module.exports = function(grunt) {
         dest: 'src',
         ext: ".js"
       }
+    },
+    copy: {
+      main: {
+        expand: true,
+        cwd: "../ClientLibrary/src/",
+        src: "**",
+        dest: "src/"
+      }
     }
   });
 
-  // Load the plugin that provides the "uglify" task.
+  // Load plugins
+  grunt.loadNpmTasks('grunt-contrib-copy');
   grunt.loadNpmTasks('grunt-contrib-coffee');
   grunt.loadNpmTasks('grunt-serve');
 
-  // Default task(s).
-  grunt.registerTask('default', ['coffee']);
-  grunt.registerTask('run', ['coffee', 'serve']);
+  // Tasks
+  grunt.registerTask('default', ['copy', 'coffee']);
+  grunt.registerTask('run', ['default', 'serve']);
 };
