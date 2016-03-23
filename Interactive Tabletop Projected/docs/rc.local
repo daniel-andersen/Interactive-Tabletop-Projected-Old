@@ -17,10 +17,9 @@ if [ "$_IP" ]; then
   printf "My IP address is %s\n" "$_IP"
 fi
 
-# Start web server
-printf "Starting Interactive Tabletop Project:ed WEBSERVER..."
-cd ~/Magic\ Lamp/MAZE
-grunt run &
+# Start server
+#printf "Starting webserver..."
+#sudo nginx
 
 printf "Starting X11 server..."
 su - pi -c 'startx' &

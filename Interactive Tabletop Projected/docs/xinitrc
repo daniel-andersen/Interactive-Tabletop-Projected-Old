@@ -19,8 +19,13 @@ xwit -root -warp $( cat /sys/module/*fb*/parameters/fbwidth ) $( cat /sys/module
 matchbox-window-manager -use_titlebar no -use_cursor no &
 
 # Show splash
-#feh -F /home/pi/splash.png &
+feh -F /home/pi/magic_lamp/Interactive\ Tabletop\ Projected/assets/splash.png & feh_pid=$!
 
 # Start the browser
-browser http://www.beakable.com
+browser http://localhost:9000 & browser_pid=$!
+
+sleep 5
+kill -9 $fed_pid
+
+wait $browser_pid
 
