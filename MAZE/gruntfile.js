@@ -27,24 +27,15 @@ module.exports = function(grunt) {
         src: "**",
         dest: "src/"
       }
-    },
-    connect: {
-      server: {
-        options: {
-          port: 8080,
-          base: '',
-          keepalive: true
-        }
-      }
     }
   });
 
   // Load plugins
   grunt.loadNpmTasks('grunt-contrib-copy');
   grunt.loadNpmTasks('grunt-contrib-coffee');
-  grunt.loadNpmTasks('grunt-contrib-connect');
+  grunt.loadNpmTasks('grunt-serve');
 
   // Tasks
   grunt.registerTask('default', ['copy', 'coffee']);
-  grunt.registerTask('run', ['default', 'connect']);
+  grunt.registerTask('run', ['default', 'serve']);
 };

@@ -10,7 +10,7 @@ ClientLibrary = (function() {
   payload = "payload";
 
   function ClientLibrary(port1) {
-    this.port = port1 != null ? port1 : 8080;
+    this.port = port1 != null ? port1 : 9001;
   }
 
   ClientLibrary.prototype.connect = function() {

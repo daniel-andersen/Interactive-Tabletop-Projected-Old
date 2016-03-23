@@ -4,7 +4,7 @@ class ClientLibrary
     action = "action"
     payload = "payload";
 
-    constructor: (@port = 8080) ->
+    constructor: (@port = 9001) ->
 
     connect: ->
         disconnect()
