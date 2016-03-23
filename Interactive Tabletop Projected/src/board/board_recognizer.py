@@ -234,6 +234,7 @@ class BoardRecognizer(object):
         return cv2.matchShapes(contour, marker_contour, 1, 0.0)
 
     def are_marker_conditions_satisfied_for_contour(self, contour, approxed_contour, corner_marker):
+
         # Check number of lines
         if len(approxed_contour) != 3:
             #print("Len lines: %i" % len(approxed_contour))

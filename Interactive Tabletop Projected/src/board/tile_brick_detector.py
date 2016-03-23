@@ -15,8 +15,8 @@ class TileBrickDetector(object):
         self.histogram_bin_count_fallback_2 = 8
 
         self.brick_detection_minimum_median_delta = 40
-        self.brick_detection_minimum_probability = 0.3
-        self.brick_detection_minimum_deviation = 0.5
+        self.brick_detection_minimum_probability = 0.25
+        self.brick_detection_maximum_deviation = 0.6
 
     def find_brick_among_tiles(self, board_descriptor, coordinates):
         """
@@ -41,8 +41,9 @@ class TileBrickDetector(object):
         #print("1) %f - %f vs %f" % (max_probability, second_max_probability, self.brick_detection_minimum_probability))
         if max_probability < self.brick_detection_minimum_probability:
             return None
-        #print("2) %f - %f vs %f - %f" % (max_probability, second_max_probability, second_max_probability / max_probability, self.brick_detection_minimum_deviation))
-        if second_max_probability / max_probability >= self.brick_detection_minimum_deviation:
+
+        #print("2) %f - %f vs %f - %f" % (max_probability, second_max_probability, second_max_probability / max_probability, self.brick_detection_maximum_deviation))
+        if second_max_probability / max_probability >= self.brick_detection_maximum_deviation:
             return None
 
         return coordinates[np.argmax(probabilities)]
