@@ -30,6 +30,9 @@ class BoardRecognizer(object):
 
     marker_contour_cache = {}
 
+    image_width = 0
+    image_height = 0
+
     def __init__(self):
         pass
 
@@ -44,25 +47,18 @@ class BoardRecognizer(object):
 
         self.prepare_constants_from_image(source_image, board_descriptor)
 
-        # Find markers
+        # Search for board in different threshold levels
         for (threshold_mode, _) in self.ThresholdModes.tuples():
 
-            # Find threshold levels
-            thresholded_image = self.threshold_image(source_image, threshold_mode)
-
-            # Dilate image
-            #dilated_image = cv2.dilate(thresholded_image, (3, 3))
-            dilated_image = thresholded_image.copy()
-
-            # Find contours
-            contours, hierarchy =\
-                cv2.findContours(dilated_image, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-
-            if len(contours) == 0:
-                continue
+            # Find markers in all four part of image
+            markers = []
+            markers += self.find_markers(source_image, 0, 0, threshold_mode, board_descriptor.corner_marker)
+            markers += self.find_markers(source_image, 1, 0, threshold_mode, board_descriptor.corner_marker)
+            markers += self.find_markers(source_image, 0, 1, threshold_mode, board_descriptor.corner_marker)
+            markers += self.find_markers(source_image, 1, 1, threshold_mode, board_descriptor.corner_marker)
 
             # Find corners
-            corners = self.find_corners(contours, hierarchy, board_descriptor.corner_marker, image)
+            corners = self.find_corners(markers, board_descriptor.corner_marker, image)
             if corners is not None:
                 transformed_image = transform.transform_image(image, corners)
                 return BoardDescriptor.Snapshot(transformed_image, corners)
@@ -70,16 +66,16 @@ class BoardRecognizer(object):
         return None
 
     def prepare_constants_from_image(self, image, board_descriptor):
-        image_width, image_height = image.shape[:2]
+        self.image_height, self.image_width = image.shape[:2]
         board_width, board_height = board_descriptor.board_size
 
-        self.marker_area_min = (image_width * 0.01) * (image_height * 0.01)
-        self.marker_area_max = (image_width * 0.05) * (image_height * 0.05)
-        self.marker_arc_length_max = (image_width * 0.05 * 2.0) + (image_height * 0.05 * 2.0)
+        self.marker_area_min = (self.image_width * 0.01) * (self.image_height * 0.01)
+        self.marker_area_max = (self.image_width * 0.05) * (self.image_height * 0.05)
+        self.marker_arc_length_max = (self.image_width * 0.05 * 2.0) + (self.image_height * 0.05 * 2.0)
 
-        self.marker_image_margin_max = [image_width * 0.25, image_height * 0.25]
+        self.marker_image_margin_max = [self.image_width * 0.25, self.image_height * 0.25]
 
-        self.board_area_min = (image_width * 0.65) * (image_height * 0.65)
+        self.board_area_min = (self.image_width * 0.65) * (self.image_height * 0.65)
 
         self.board_aspect_ratio = float(max(board_width, board_height)) / float(min(board_width, board_height))
 
@@ -88,7 +84,27 @@ class BoardRecognizer(object):
         blurred_image = cv2.medianBlur(grayscaled_image, 3)
         return blurred_image
 
-    def find_corners(self, contours, hierarchy, corner_marker, image):
+    def find_markers(self, image, part_x, part_y, threshold_mode, corner_marker):
+
+        # Extract part image
+        x = part_x * (self.image_width / 2)
+        y = part_y * (self.image_height / 2)
+        image = image[y:(y + (self.image_height / 2)), x:(x + (self.image_width / 2))]
+
+        # Threshold image
+        thresholded_image = self.threshold_image(image, threshold_mode)
+        #cv2.imshow("Contours", thresholded_image)
+        #cv2.waitKey(0)
+
+        # Dilate image
+        dilated_image = cv2.dilate(thresholded_image, (1, 1))
+
+        # Find contours
+        contours, hierarchy =\
+            cv2.findContours(dilated_image, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+
+        if len(contours) == 0:
+            return []
 
         # Calculate approx multiplier
         approx_multiplier = self.approx_multiplier_for_marker(corner_marker)
@@ -96,7 +112,15 @@ class BoardRecognizer(object):
         # Simplify contours
         approxed_contours = []
         for contour in contours:
-            approxed_contours.append(cv2.approxPolyDP(contour, cv2.arcLength(contour, True) * approx_multiplier, True))
+
+            # Approx contour
+            approxed_contour = cv2.approxPolyDP(contour, cv2.arcLength(contour, True) * approx_multiplier, True)
+
+            # Convex hull contour
+            approxed_contour = cv2.convexHull(approxed_contour)
+
+            # Add to list
+            approxed_contours.append(approxed_contour)
 
         # Find valid contours
         valid_contour_indexes = []
@@ -118,11 +142,23 @@ class BoardRecognizer(object):
         #cv2.waitKey(0)
         ###
 
+        valid_contours = [approxed_contours[i] for i in valid_contour_indexes]
+
+        # Translate points to fit image part
+        for i in range(0, len(valid_contours)):
+            for j in range(0, len(valid_contours[i])):
+                valid_contours[i][j][0][0] += x
+                valid_contours[i][j][0][1] += y
+
+        return valid_contours
+
+    def find_corners(self, marker_contours, corner_marker, image):
+
         # Find best contours
         best_contour_indices = []
 
-        for i in valid_contour_indexes:
-            score = self.score_for_contour(contours[i], corner_marker)
+        for i in range(0, len(marker_contours)):
+            score = self.score_for_contour(marker_contours[i], corner_marker)
             best_contour_indices.append((i, score))
 
         if len(best_contour_indices) < 4:
@@ -137,7 +173,7 @@ class BoardRecognizer(object):
             all_points = []
             for best_contour_index in corner_indices:
                 index = best_contour_indices[best_contour_index][0]
-                for p in approxed_contours[index]:
+                for p in marker_contours[index]:
                     all_points.append(p[0])
 
             # Find corners
@@ -200,16 +236,19 @@ class BoardRecognizer(object):
     def are_marker_conditions_satisfied_for_contour(self, contour, approxed_contour, corner_marker):
         # Check number of lines
         if len(approxed_contour) != 3:
+            #print("Len lines: %i" % len(approxed_contour))
             return False
 
         # Check area
         area = cv2.contourArea(approxed_contour, False)
         if area < self.marker_area_min or area > self.marker_area_max:
+            #print("Area: %f" % area)
             return False
 
         # Check arc length
         length = cv2.arcLength(approxed_contour, True)
         if length > self.marker_arc_length_max:
+            #print("Arc length: %f" % length)
             return False
 
         # Check angles - must have two 45 degrees and one 90 degrees
@@ -226,11 +265,13 @@ class BoardRecognizer(object):
                 angle_count_90 += 1
 
         if angle_count_45 != 2 or angle_count_90 != 1:
+            #print("Angle: %i vs %i" % (angle_count_45, angle_count_90))
             return False
 
         # Match shape
-        if self.score_for_contour(contour, corner_marker) > self.marker_score_max:
-            return False
+        #if self.score_for_contour(contour, corner_marker) > self.marker_score_max:
+        #    print("Score: %f" % self.score_for_contour(contour, corner_marker))
+        #    return False
 
         return True
 
@@ -278,7 +319,7 @@ class BoardRecognizer(object):
 
     def approx_multiplier_for_marker(self, corner_marker):
         if corner_marker == BoardDescriptor.BoardCornerMarker.DEFAULT:
-            return 0.05
+            return 0.075
         else:
             return 0.02
 
