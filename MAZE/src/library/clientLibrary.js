@@ -1,7 +1,7 @@
-var ClientLibrary;
+var Client;
 
-ClientLibrary = (function() {
-  var action, borderPctX, borderPctY, cornerMarker, payload, socket;
+Client = (function() {
+  var action, payload, socket;
 
   socket = null;
 
@@ -9,25 +9,49 @@ ClientLibrary = (function() {
 
   payload = "payload";
 
-  function ClientLibrary(port1) {
-    this.port = port1 != null ? port1 : 9001;
+  function Client(port) {
+    this.port = port != null ? port : 9001;
+    this.socketOpen = false;
   }
 
-  ClientLibrary.prototype.connect = function() {
-    disconnect();
-    return socket = new WebSocket("http://localhost:" + port + "");
+  Client.prototype.connect = function(onSocketOpen) {
+    this.disconnect();
+    this.socket = new WebSocket("ws://localhost:" + this.port + "/");
+    this.socket.onopen = (function(_this) {
+      return function(event) {
+        return onSocketOpen();
+      };
+    })(this);
+    return this.socket.onmessage = (function(_this) {
+      return function(event) {
+        return _this.handleMessage(event.data);
+      };
+    })(this);
   };
 
-  ClientLibrary.prototype.disconnect = function() {
-    if (socket) {
-      socket.close();
-      return socket = null;
+  Client.prototype.disconnect = function() {
+    if (this.socket) {
+      this.socket.close();
+      return this.socket = null;
     }
   };
 
-  initializeTiledBoard(tileCountX, tileCountY, borderPctX = 0.0, borderPctY = 0.0, cornerMarker = "DEFAULT")(function() {
+  Client.prototype.handleMessage = function(message) {
+    return alert(message);
+  };
+
+  Client.prototype.initializeTiledBoard = function(tileCountX, tileCountY, borderPctX, borderPctY, cornerMarker) {
     var message;
-    return message = {
+    if (borderPctX == null) {
+      borderPctX = 0.0;
+    }
+    if (borderPctY == null) {
+      borderPctY = 0.0;
+    }
+    if (cornerMarker == null) {
+      cornerMarker = "DEFAULT";
+    }
+    message = {
       action: "initializeTiledBoard",
       payload: {
         "tileCountX": tileCountX,
@@ -37,9 +61,10 @@ ClientLibrary = (function() {
         "cornerMarker": cornerMarker
       }
     };
-  });
+    return this.socket.send(JSON.stringify(message));
+  };
 
-  requestTiledObjectPosition(validLocations)(function() {
+  Client.prototype.requestTiledObjectPosition = function(validLocations) {
     var location, message;
     return message = {
       action: "requestTiledObjectPosition",
@@ -57,9 +82,9 @@ ClientLibrary = (function() {
         ]
       }
     };
-  });
+  };
 
-  return ClientLibrary;
+  return Client;
 
 })();
 
