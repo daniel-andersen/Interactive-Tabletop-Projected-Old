@@ -7,7 +7,7 @@ class Client
     constructor: (@port = 9001) ->
         this.socketOpen = false
 
-    connect: (onSocketOpen) ->
+    connect: (onSocketOpen, onMessage) ->
         this.disconnect()
         this.socket = new WebSocket("ws://localhost:" + this.port + "/")
 
@@ -15,33 +15,38 @@ class Client
             onSocketOpen()
 
         this.socket.onmessage = (event) =>
-            this.handleMessage(event.data)
+            json = JSON.parse(event.data)
+            onMessage(json)
 
     disconnect: ->
         if this.socket
             this.socket.close()
             this.socket = null
 
-    handleMessage: (message) ->
-        alert(message)
-
-    initializeTiledBoard: (tileCountX, tileCountY, borderPctX = 0.0, borderPctY = 0.0, cornerMarker = "DEFAULT") ->
+    reset: () ->
         message = {
-            action: "initializeTiledBoard",
-            payload: {
-                "tileCountX": tileCountX,
-                "tileCountY": tileCountY,
-                "borderPctX": borderPctX,
-                "borderPctY": borderPctY,
-                "cornerMarker": cornerMarker
-            }
+            action: "reset",
+            payload: {}
         }
         this.socket.send(JSON.stringify(message))
 
+    initializeTiledBoard: (tileCountX, tileCountY, borderPctX = 0.0, borderPctY = 0.0, cornerMarker = "DEFAULT") ->
+        this.sendMessage("initializeTiledBoard", {
+            "tileCountX": tileCountX,
+            "tileCountY": tileCountY,
+            "borderPctX": borderPctX,
+            "borderPctY": borderPctY,
+            "cornerMarker": cornerMarker
+        })
+
     requestTiledObjectPosition: (validLocations) ->
+        this.sendMessage("requestTiledObjectPosition", {
+            "validLocations": [[location.x, location.y] for location in validLocations]
+        })
+
+    sendMessage: (action, payload) ->
         message = {
-            action: "requestTiledObjectPosition",
-            payload: {
-                "validLocations": [[location.x, location.y] for location in validLocations]
-            }
+            action: action,
+            payload: payload
         }
+        this.socket.send(JSON.stringify(message))

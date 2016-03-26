@@ -14,7 +14,7 @@ Client = (function() {
     this.socketOpen = false;
   }
 
-  Client.prototype.connect = function(onSocketOpen) {
+  Client.prototype.connect = function(onSocketOpen, onMessage) {
     this.disconnect();
     this.socket = new WebSocket("ws://localhost:" + this.port + "/");
     this.socket.onopen = (function(_this) {
@@ -24,7 +24,9 @@ Client = (function() {
     })(this);
     return this.socket.onmessage = (function(_this) {
       return function(event) {
-        return _this.handleMessage(event.data);
+        var json;
+        json = JSON.parse(event.data);
+        return onMessage(json);
       };
     })(this);
   };
@@ -36,12 +38,16 @@ Client = (function() {
     }
   };
 
-  Client.prototype.handleMessage = function(message) {
-    return alert(message);
+  Client.prototype.reset = function() {
+    var message;
+    message = {
+      action: "reset",
+      payload: {}
+    };
+    return this.socket.send(JSON.stringify(message));
   };
 
   Client.prototype.initializeTiledBoard = function(tileCountX, tileCountY, borderPctX, borderPctY, cornerMarker) {
-    var message;
     if (borderPctX == null) {
       borderPctX = 0.0;
     }
@@ -51,37 +57,39 @@ Client = (function() {
     if (cornerMarker == null) {
       cornerMarker = "DEFAULT";
     }
-    message = {
-      action: "initializeTiledBoard",
-      payload: {
-        "tileCountX": tileCountX,
-        "tileCountY": tileCountY,
-        "borderPctX": borderPctX,
-        "borderPctY": borderPctY,
-        "cornerMarker": cornerMarker
-      }
-    };
-    return this.socket.send(JSON.stringify(message));
+    return this.sendMessage("initializeTiledBoard", {
+      "tileCountX": tileCountX,
+      "tileCountY": tileCountY,
+      "borderPctX": borderPctX,
+      "borderPctY": borderPctY,
+      "cornerMarker": cornerMarker
+    });
   };
 
   Client.prototype.requestTiledObjectPosition = function(validLocations) {
-    var location, message;
-    return message = {
-      action: "requestTiledObjectPosition",
-      payload: {
-        "validLocations": [
-          (function() {
-            var i, len, results;
-            results = [];
-            for (i = 0, len = validLocations.length; i < len; i++) {
-              location = validLocations[i];
-              results.push([location.x, location.y]);
-            }
-            return results;
-          })()
-        ]
-      }
+    var location;
+    return this.sendMessage("requestTiledObjectPosition", {
+      "validLocations": [
+        (function() {
+          var i, len, results;
+          results = [];
+          for (i = 0, len = validLocations.length; i < len; i++) {
+            location = validLocations[i];
+            results.push([location.x, location.y]);
+          }
+          return results;
+        })()
+      ]
+    });
+  };
+
+  Client.prototype.sendMessage = function(action, payload) {
+    var message;
+    message = {
+      action: action,
+      payload: payload
     };
+    return this.socket.send(JSON.stringify(message));
   };
 
   return Client;
