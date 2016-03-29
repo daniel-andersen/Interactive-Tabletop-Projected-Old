@@ -19,23 +19,12 @@ module.exports = function(grunt) {
         dest: 'src',
         ext: ".js"
       }
-    },
-    copy: {
-      main: {
-        expand: true,
-        cwd: "../ClientLibrary/src/",
-        src: "**",
-        dest: "src/"
-      }
     }
   });
 
   // Load plugins
-  grunt.loadNpmTasks('grunt-contrib-copy');
   grunt.loadNpmTasks('grunt-contrib-coffee');
-  grunt.loadNpmTasks('grunt-serve');
 
   // Tasks
-  grunt.registerTask('default', ['copy', 'coffee']);
-  grunt.registerTask('run', ['default', 'serve']);
+  grunt.registerTask('default', ['coffee']);
 };
