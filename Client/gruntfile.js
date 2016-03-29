@@ -20,10 +20,18 @@ module.exports = function(grunt) {
         ext: ".js"
       }
     },
+    serve: {
+      options: {
+        port: 9000,
+        serve: {
+		  path: "target"
+		}
+      }
+	},
     subgrunt: {
       maze: {
         projects: {
-          '../Content/MAZE': 'default'
+          "../Content/MAZE": "default"
         }
       }
     },
@@ -36,22 +44,24 @@ module.exports = function(grunt) {
         dest: "target/"
       },
       maze: {
-        expand: true,
-        cwd: "../Content/MAZE/src",
-        src: "**",
-        dest: "target/content/maze"
+        files: [
+          {expand: true, cwd: "../Content/MAZE/assets", src: "**", dest: "target/content/maze/assets"},
+          {expand: true, cwd: "../Content/MAZE/src", src: "**", dest: "target/content/maze/src"},
+          {expand: true, cwd: "../Content/MAZE/lib", src: "**", dest: "target/content/maze/lib"},
+          {expand: true, cwd: "../Content/MAZE/", src: "*.html", dest: "target/content/maze/"}
+        ]
       }
     }
   });
 
   // Load plugins
-  grunt.loadNpmTasks('grunt-contrib-clean');
-  grunt.loadNpmTasks('grunt-contrib-copy');
-  grunt.loadNpmTasks('grunt-contrib-coffee');
-  grunt.loadNpmTasks('grunt-subgrunt');
-  grunt.loadNpmTasks('grunt-serve');
+  grunt.loadNpmTasks("grunt-contrib-clean");
+  grunt.loadNpmTasks("grunt-contrib-copy");
+  grunt.loadNpmTasks("grunt-contrib-coffee");
+  grunt.loadNpmTasks("grunt-subgrunt");
+  grunt.loadNpmTasks("grunt-serve");
 
   // Tasks
-  grunt.registerTask('default', ['clean', 'subgrunt', 'copy', 'coffee']);
-  grunt.registerTask('run', ['default', 'serve']);
+  grunt.registerTask("default", ["clean", "coffee", "subgrunt", "copy"]);
+  grunt.registerTask("run", ["default", "serve"]);
 };
