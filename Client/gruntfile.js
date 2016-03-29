@@ -35,11 +35,11 @@ module.exports = function(grunt) {
         src: "**",
         dest: "target/"
       },
-      content: {
+      maze: {
         expand: true,
-        cwd: "../Content/**/src",
+        cwd: "../Content/MAZE/src",
         src: "**",
-        dest: "target/content/"
+        dest: "target/content/maze"
       }
     }
   });
