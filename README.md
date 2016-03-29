@@ -1,4 +1,4 @@
 Magic Lamp
 ==========
 
-![Magic Lamp](server/photos/magic_lamp_prototype_1.jpg)
+![Magic Lamp](Server/photos/magic_lamp_prototype_1.jpg)
