@@ -15,5 +15,9 @@ class MazeInfo
     initializeBoard: ->
         client.initializeTiledBoard(32, 20)
 
+    waitForStartPositions: ->
+        client.reportBackWhenTileAtAnyOfPositions([[10, 10], [11, 10], [12, 10]])
+
     start: ->
         console.log "Ready!"
+        this.waitForStartPositions()

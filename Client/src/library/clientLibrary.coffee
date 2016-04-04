@@ -41,7 +41,12 @@ class Client
 
     requestTiledObjectPosition: (validLocations) ->
         this.sendMessage("requestTiledObjectPosition", {
-            "validLocations": [[location.x, location.y] for location in validLocations]
+            "validLocations": validLocations
+        })
+
+    reportBackWhenTileAtAnyOfPositions: (validLocations) ->
+        this.sendMessage("reportBackWhenTileAtAnyOfPositions", {
+            "validLocations": validLocations
         })
 
     sendMessage: (action, payload) ->

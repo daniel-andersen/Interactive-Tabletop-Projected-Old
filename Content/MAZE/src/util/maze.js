@@ -36,8 +36,13 @@ MazeInfo = (function() {
     return client.initializeTiledBoard(32, 20);
   };
 
+  MazeInfo.prototype.waitForStartPositions = function() {
+    return client.reportBackWhenTileAtAnyOfPositions([[10, 10], [11, 10], [12, 10]]);
+  };
+
   MazeInfo.prototype.start = function() {
-    return console.log("Ready!");
+    console.log("Ready!");
+    return this.waitForStartPositions();
   };
 
   return MazeInfo;
