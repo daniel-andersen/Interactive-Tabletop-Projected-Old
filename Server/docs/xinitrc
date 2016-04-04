@@ -19,7 +19,11 @@ xwit -root -warp $( cat /sys/module/*fb*/parameters/fbwidth ) $( cat /sys/module
 matchbox-window-manager -use_titlebar no -use_cursor no &
 
 # Show splash
-feh -F /home/pi/magic_lamp/Server/assets/splash.png & feh_pid=$!
+feh -F ~/magic_lamp/Server/assets/splash.png & feh_pid=$!
+
+# Start server
+cd ~/magic_lamp/Server/src
+python main.py &
 
 # Start the browser
 ~/kiosk-browser/browser http://localhost:9000 & browser_pid=$!

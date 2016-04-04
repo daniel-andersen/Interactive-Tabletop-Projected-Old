@@ -17,10 +17,6 @@ if [ "$_IP" ]; then
   printf "My IP address is %s\n" "$_IP"
 fi
 
-# Start server
-#printf "Starting webserver..."
-#sudo nginx
-
 printf "Starting X11 server..."
 su - pi -c 'startx' &
 
