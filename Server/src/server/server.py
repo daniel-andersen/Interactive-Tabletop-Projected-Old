@@ -1,11 +1,19 @@
+import os
 import json
 from random import randint
 from SimpleWebSocketServer import SimpleWebSocketServer, WebSocket
-from camera import Camera
 from board.board_descriptor import BoardDescriptor
 from board.board_recognizer import BoardRecognizer
 from board.tile_brick_detector import TileBrickDetector
 from reporters.tiled_brick_position_reporter import TiledBrickPositionReporter
+
+if os.uname()[4][:3] == 'arm':
+    print("Using Raspberry Pi camera")
+    from camera import Camera
+else:
+    print("Using desktop camera")
+    from camera_desktop import Camera
+
 
 class Server(WebSocket):
     """
@@ -24,6 +32,7 @@ class Server(WebSocket):
             self.camera = None
 
         self.camera = Camera()
+        self.camera.start()
 
     def handleMessage(self):
         """
@@ -109,7 +118,10 @@ class Server(WebSocket):
 
         validLocations: Locations to search for object in.
         """
-        self.board_descriptor.snapshot = self.board_recognizer.find_board(self.take_photo(), self.board_descriptor)
+        image = self.take_photo()
+        if image is None:
+            return "CAMERA_NOT_READY"
+        self.board_descriptor.snapshot = self.board_recognizer.find_board(image, self.board_descriptor)
         if self.board_descriptor.is_recognized():
             valid_locations = payload["validLocations"]
             position = self.brick_detector.find_brick_among_tiles(self.board_descriptor, valid_locations)
@@ -157,7 +169,7 @@ class Server(WebSocket):
     def draw_reporter_id(self):
         while True:
             id = randint(0, 100000)
-            if not id in self.reporters:
+            if id not in self.reporters:
                 return id
 
 

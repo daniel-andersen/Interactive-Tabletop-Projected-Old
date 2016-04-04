@@ -67,19 +67,14 @@ Client = (function() {
   };
 
   Client.prototype.requestTiledObjectPosition = function(validLocations) {
-    var location;
     return this.sendMessage("requestTiledObjectPosition", {
-      "validLocations": [
-        (function() {
-          var i, len, results;
-          results = [];
-          for (i = 0, len = validLocations.length; i < len; i++) {
-            location = validLocations[i];
-            results.push([location.x, location.y]);
-          }
-          return results;
-        })()
-      ]
+      "validLocations": validLocations
+    });
+  };
+
+  Client.prototype.reportBackWhenTileAtAnyOfPositions = function(validLocations) {
+    return this.sendMessage("reportBackWhenTileAtAnyOfPositions", {
+      "validLocations": validLocations
     });
   };
 

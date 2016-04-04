@@ -23,6 +23,8 @@ class TiledBrickPositionReporter(Reporter):
         """
         while not self.stopped:
             image = self.camera.read()
+            if image is None:
+                continue
 
             self.board_descriptor.snapshot = self.board_recognizer.find_board(image, self.board_descriptor)
 

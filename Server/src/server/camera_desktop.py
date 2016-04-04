@@ -1,14 +1,11 @@
+import cv2
 from threading import Thread
-from picamera.array import PiRGBArray
-from picamera import PiCamera
 
 
 class Camera(object):
     stopped = False
     image = None
     camera = None
-    raw_capture = None
-    stream = None
 
     def start(self, resolution=(320, 240), framerate=32):
         """
@@ -20,14 +17,8 @@ class Camera(object):
         self.stopped = False
 
         # Initialize camera
-        self.camera = PiCamera()
-        self.camera.resolution = resolution
-        self.camera.framerate = framerate
-
-        self.raw_capture = PiRGBArray(self.camera, size=resolution)
-        self.raw_capture.truncate(0)
-
-        self.stream = self.camera.capture_continuous(self.raw_capture, format="bgr", use_video_port=True)
+        self.camera = cv2.VideoCapture(0)
+        self.grab_image()
 
         # Start thread
         thread = Thread(target=self.update, args=())
@@ -50,13 +41,11 @@ class Camera(object):
         """
         Grabs next image from camera.
         """
-        for f in self.stream:
-            self.image = f.array
-            self.raw_capture.truncate(0)
+        while not self.stopped:
+            self.grab_image()
 
-            # Stop
-            if self.stopped:
-                self.stream.close()
-                self.raw_capture.close()
-                self.camera.close()
-                return
+    def grab_image(self):
+        """
+        Grabs an image from the camera input.
+        """
+        _, self.image = self.camera.read()
