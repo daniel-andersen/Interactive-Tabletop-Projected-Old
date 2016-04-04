@@ -19,10 +19,10 @@ xwit -root -warp $( cat /sys/module/*fb*/parameters/fbwidth ) $( cat /sys/module
 matchbox-window-manager -use_titlebar no -use_cursor no &
 
 # Show splash
-feh -F /home/pi/magic_lamp/Interactive\ Tabletop\ Projected/assets/splash.png & feh_pid=$!
+feh -F /home/pi/magic_lamp/Server/assets/splash.png & feh_pid=$!
 
 # Start the browser
-browser http://localhost:9000 & browser_pid=$!
+~/kiosk-browser/browser http://localhost:9000 & browser_pid=$!
 
 sleep 10
 kill -9 $feh_pid
