@@ -59,7 +59,11 @@ Choose:
 Install X11
 -----------
 
-    $ sudo apt-get install xserver-xorg xinit x11-xserver-utils matchbox --fix-missing
+    $ sudo apt-get install xserver-xorg xinit x11-xserver-utils matchbox feh --fix-missing
+
+Grant all access to start X11:
+
+    $ sudo dpkg-reconfigure x11-common
 
 Move .xinitrc and rc.local into place:
 
@@ -92,6 +96,8 @@ Setup ssh-keys and clone Magic Lamp:
 
 Install dependencies:
 
+    $ sudo apt-get install build-essential cmake pkg-config  # Build essentials
+    $ sudo apt-get install libjpeg8-dev libjasper-dev libpng12-dev  # Image handling
     $ sudo apt-get install libatlas-base-dev gfortran   # For optimizations within OpenCV
     $ sudo apt-get install python-pip python-dev python-picamera
     $ ./install_dependencies.sh
