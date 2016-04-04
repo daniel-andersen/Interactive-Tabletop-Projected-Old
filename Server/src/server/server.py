@@ -164,6 +164,7 @@ class Server(WebSocket):
         print self.address, 'connected'
 
     def handleClose(self):
+        self.reset_reporters()
         print self.address, 'closed'
 
     def draw_reporter_id(self):
