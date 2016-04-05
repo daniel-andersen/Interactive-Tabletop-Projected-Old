@@ -39,6 +39,8 @@ Maze = (function() {
   Maze.prototype.setupUi = function() {
     var borderLayer, i, len, ref, statusTextField, tileLayer;
     this.tilemap = new Kiwi.GameObjects.Tilemap.TileMap(this.kiwiState, "tilemap", this.kiwiState.textures.tiles);
+    this.logo = new Kiwi.GameObjects.StaticImage(this.kiwiState, this.kiwiState.textures.logo, 0, 0);
+    this.logo.alpha = 0.0;
     borderLayer = this.tilemap.getLayerByName("Border Layer");
     this.tileLayers = [];
     this.tileLayers.push(this.tilemap.getLayerByName("Tile Layer 1"));
@@ -51,12 +53,31 @@ Maze = (function() {
     this.kiwiState.addChild(borderLayer);
     this.kiwiState.addChild(this.tileLayers[0]);
     this.kiwiState.addChild(this.tileLayers[1]);
-    statusTextField = new Kiwi.HUD.Widget.TextField(this.kiwiState.game, "HEY 2", 100, 10);
+    this.kiwiState.addChild(this.logo);
+    statusTextField = new Kiwi.HUD.Widget.TextField(this.kiwiState.game, "", 100, 10);
     statusTextField.style.color = "#00ff00";
     statusTextField.style.fontSize = "14px";
     statusTextField.style.textShadow = "-1px -1px 5px black, 1px -1px 5px black, -1px 1px 5px black, 1px 1px 5px black";
     this.client.debug_textField = statusTextField;
-    return this.kiwiState.game.huds.defaultHUD.addWidget(statusTextField);
+    this.kiwiState.game.huds.defaultHUD.addWidget(statusTextField);
+    setTimeout((function(_this) {
+      return function() {
+        var fadeLogoTween;
+        fadeLogoTween = _this.kiwiState.game.tweens.create(_this.logo);
+        return fadeLogoTween.to({
+          alpha: 1.0
+        }, 2000, Kiwi.Animations.Tweens.Easing.Linear.In, true);
+      };
+    })(this), 500);
+    return setTimeout((function(_this) {
+      return function() {
+        var fadeMazeTween;
+        fadeMazeTween = _this.kiwiState.game.tweens.create(_this.tileLayers[0]);
+        return fadeMazeTween.to({
+          alpha: 1.0
+        }, 2000, Kiwi.Animations.Tweens.Easing.Linear.In, true);
+      };
+    })(this), 2500);
   };
 
   Maze.prototype.initializeBoard = function() {

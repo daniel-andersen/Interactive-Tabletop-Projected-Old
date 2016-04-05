@@ -8,6 +8,7 @@ maze = null
 MAZE.Game.preload = ->
     @addJSON("tilemap", "assets/maps/sample.json")
     @addSpriteSheet("tiles", "assets/img/tiles/board_tiles.png", 40, 40)
+    @addImage("logo", "assets/img/menu/title.png")
 
 MAZE.Game.create = ->
     Kiwi.State::create.call(this)

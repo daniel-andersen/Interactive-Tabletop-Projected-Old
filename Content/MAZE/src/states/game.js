@@ -10,7 +10,8 @@ maze = null;
 
 MAZE.Game.preload = function() {
   this.addJSON("tilemap", "assets/maps/sample.json");
-  return this.addSpriteSheet("tiles", "assets/img/tiles/board_tiles.png", 40, 40);
+  this.addSpriteSheet("tiles", "assets/img/tiles/board_tiles.png", 40, 40);
+  return this.addImage("logo", "assets/img/menu/title.png");
 };
 
 MAZE.Game.create = function() {
