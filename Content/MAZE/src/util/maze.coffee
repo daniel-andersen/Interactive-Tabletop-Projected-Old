@@ -36,7 +36,7 @@ class Maze
         @kiwiState.addChild(@tileLayers[0])
         @kiwiState.addChild(@tileLayers[1])
 
-        statusTextField = new Kiwi.HUD.Widget.TextField(@kiwiState.game, "HEY 2", 100, 10)
+        statusTextField = new Kiwi.HUD.Widget.TextField(@kiwiState.game, "", 100, 10)
         statusTextField.style.color = "#00ff00"
         statusTextField.style.fontSize = "14px"
         statusTextField.style.textShadow = "-1px -1px 5px black, 1px -1px 5px black, -1px 1px 5px black, 1px 1px 5px black"
