@@ -5,6 +5,9 @@ class Client
     payload = "payload";
 
     constructor: (@port = 9001) ->
+        @debug_textField = null
+        @debug_log = []
+
         this.socketOpen = false
 
     connect: (onSocketOpen, onMessage) ->
@@ -17,6 +20,11 @@ class Client
         this.socket.onmessage = (event) =>
             json = JSON.parse(event.data)
             onMessage(json)
+
+            if @debug_textField?
+                @debug_log.splice(0, 0, JSON.stringify(json))
+                @debug_textField.text = @debug_log[..5].join("<br/>")
+
 
     disconnect: ->
         if this.socket

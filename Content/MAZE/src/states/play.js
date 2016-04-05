@@ -39,8 +39,16 @@ MAZE.Play.create = function () {
 
     borderLayer.alpha = 1.0;
 
-    test = new MazeInfo()
-    test.test()
+    statusTextField = new Kiwi.HUD.Widget.TextField(this.game, '', 100, 10);
+    this.game.huds.defaultHUD.addWidget(statusTextField);
+
+    statusTextField.style.color = '#00ff00';
+    statusTextField.style.fontSize = '14px';
+    statusTextField.style.textShadow = '-1px -1px 5px black, 1px -1px 5px black, -1px 1px 5px black, 1px 1px 5px black';
+
+    maze = new MazeInfo()
+    maze.client.debug_textField = statusTextField
+    maze.startup()
 };
 
 

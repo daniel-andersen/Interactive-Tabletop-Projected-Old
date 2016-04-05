@@ -11,6 +11,8 @@ Client = (function() {
 
   function Client(port) {
     this.port = port != null ? port : 9001;
+    this.debug_textField = null;
+    this.debug_log = [];
     this.socketOpen = false;
   }
 
@@ -26,7 +28,11 @@ Client = (function() {
       return function(event) {
         var json;
         json = JSON.parse(event.data);
-        return onMessage(json);
+        onMessage(json);
+        if (_this.debug_textField != null) {
+          _this.debug_log.splice(0, 0, JSON.stringify(json));
+          return _this.debug_textField.text = _this.debug_log.slice(0, 6).join("<br/>");
+        }
       };
     })(this);
   };

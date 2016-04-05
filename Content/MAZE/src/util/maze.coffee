@@ -1,11 +1,13 @@
 class MazeInfo
-    client = new Client()
 
-    test: ->
-        client.connect (() => this.reset()), ((json) => this.onMessage(json))
+    constructor: ->
+        @client = new Client()
+
+    startup: ->
+        @client.connect (() => this.reset()), ((json) => this.onMessage(json))
 
     reset: ->
-        client.reset()
+        @client.reset()
 
     onMessage: (json) ->
         switch json["action"]
@@ -13,10 +15,10 @@ class MazeInfo
             when "initializeTiledBoard" then this.start()
 
     initializeBoard: ->
-        client.initializeTiledBoard(32, 20)
+        @client.initializeTiledBoard(32, 20)
 
     waitForStartPositions: ->
-        client.reportBackWhenTileAtAnyOfPositions([[10, 10], [11, 10], [12, 10]])
+        @client.reportBackWhenTileAtAnyOfPositions([[10, 10], [11, 10], [12, 10]])
 
     start: ->
         console.log "Ready!"

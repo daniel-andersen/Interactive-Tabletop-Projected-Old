@@ -1,14 +1,12 @@
 var MazeInfo;
 
 MazeInfo = (function() {
-  var client;
+  function MazeInfo() {
+    this.client = new Client();
+  }
 
-  function MazeInfo() {}
-
-  client = new Client();
-
-  MazeInfo.prototype.test = function() {
-    return client.connect(((function(_this) {
+  MazeInfo.prototype.startup = function() {
+    return this.client.connect(((function(_this) {
       return function() {
         return _this.reset();
       };
@@ -20,7 +18,7 @@ MazeInfo = (function() {
   };
 
   MazeInfo.prototype.reset = function() {
-    return client.reset();
+    return this.client.reset();
   };
 
   MazeInfo.prototype.onMessage = function(json) {
@@ -33,11 +31,11 @@ MazeInfo = (function() {
   };
 
   MazeInfo.prototype.initializeBoard = function() {
-    return client.initializeTiledBoard(32, 20);
+    return this.client.initializeTiledBoard(32, 20);
   };
 
   MazeInfo.prototype.waitForStartPositions = function() {
-    return client.reportBackWhenTileAtAnyOfPositions([[10, 10], [11, 10], [12, 10]]);
+    return this.client.reportBackWhenTileAtAnyOfPositions([[10, 10], [11, 10], [12, 10]]);
   };
 
   MazeInfo.prototype.start = function() {
