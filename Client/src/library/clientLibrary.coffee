@@ -12,6 +12,7 @@ class Client
 
     connect: (onSocketOpen, onMessage) ->
         this.disconnect()
+
         this.socket = new WebSocket("ws://localhost:" + this.port + "/")
 
         this.socket.onopen = (event) =>
