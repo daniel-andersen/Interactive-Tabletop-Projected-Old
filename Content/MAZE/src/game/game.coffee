@@ -1,9 +1,38 @@
-class Maze
+MAZE = MAZE or {}
+MAZE.Game = new Kiwi.State("Game")
+
+tileLayers = []
+
+mazeGame = null
+
+MAZE.Game.preload = ->
+    @addJSON("tilemap", "assets/maps/sample.json")
+    @addSpriteSheet("tiles", "assets/img/tiles/board_tiles.png", 40, 40)
+    @addImage("logo", "assets/img/menu/title.png")
+
+MAZE.Game.create = ->
+    Kiwi.State::create.call(this)
+
+    mazeGame = new MazeGame(this)
+    mazeGame.start()
+
+MAZE.Game.shutDown = ->
+    Kiwi.State::shutDown.call(this)
+    mazeGame.stop()
+
+MAZE.Game.update = ->
+    Kiwi.State::update.call(this)
+
+
+
+class MazeGame
 
     constructor: (@kiwiState) ->
         @client = new Client()
+        @mazeModel = new MazeModel()
 
     start: ->
+        @mazeModel.createRandomMaze()
         @setupUi()
         @client.connect((() => @reset()), ((json) => @onMessage(json)))
 
@@ -61,11 +90,10 @@ class Maze
 
 
     initializeBoard: ->
-        @client.initializeTiledBoard(32, 20)
+        @client.initializeTiledBoard(@mazeModel.width, @mazeModel.height)
 
     waitForStartPositions: ->
         @client.reportBackWhenTileAtAnyOfPositions([[10, 10], [11, 10], [12, 10]])
 
     ready: ->
-        console.log "Ready!"
         @waitForStartPositions()

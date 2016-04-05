@@ -1,12 +1,43 @@
-var Maze;
+var MAZE, MazeGame, mazeGame, tileLayers;
 
-Maze = (function() {
-  function Maze(kiwiState) {
+MAZE = MAZE || {};
+
+MAZE.Game = new Kiwi.State("Game");
+
+tileLayers = [];
+
+mazeGame = null;
+
+MAZE.Game.preload = function() {
+  this.addJSON("tilemap", "assets/maps/sample.json");
+  this.addSpriteSheet("tiles", "assets/img/tiles/board_tiles.png", 40, 40);
+  return this.addImage("logo", "assets/img/menu/title.png");
+};
+
+MAZE.Game.create = function() {
+  Kiwi.State.prototype.create.call(this);
+  mazeGame = new MazeGame(this);
+  return mazeGame.start();
+};
+
+MAZE.Game.shutDown = function() {
+  Kiwi.State.prototype.shutDown.call(this);
+  return mazeGame.stop();
+};
+
+MAZE.Game.update = function() {
+  return Kiwi.State.prototype.update.call(this);
+};
+
+MazeGame = (function() {
+  function MazeGame(kiwiState) {
     this.kiwiState = kiwiState;
     this.client = new Client();
+    this.mazeModel = new MazeModel();
   }
 
-  Maze.prototype.start = function() {
+  MazeGame.prototype.start = function() {
+    this.mazeModel.createRandomMaze();
     this.setupUi();
     return this.client.connect(((function(_this) {
       return function() {
@@ -19,15 +50,15 @@ Maze = (function() {
     })(this)));
   };
 
-  Maze.prototype.stop = function() {
+  MazeGame.prototype.stop = function() {
     return this.client.disconnect();
   };
 
-  Maze.prototype.reset = function() {
+  MazeGame.prototype.reset = function() {
     return this.client.reset();
   };
 
-  Maze.prototype.onMessage = function(json) {
+  MazeGame.prototype.onMessage = function(json) {
     switch (json["action"]) {
       case "reset":
         return this.initializeBoard();
@@ -36,7 +67,7 @@ Maze = (function() {
     }
   };
 
-  Maze.prototype.setupUi = function() {
+  MazeGame.prototype.setupUi = function() {
     var borderLayer, i, len, ref, statusTextField, tileLayer;
     this.tilemap = new Kiwi.GameObjects.Tilemap.TileMap(this.kiwiState, "tilemap", this.kiwiState.textures.tiles);
     this.logo = new Kiwi.GameObjects.StaticImage(this.kiwiState, this.kiwiState.textures.logo, 0, 0);
@@ -80,21 +111,20 @@ Maze = (function() {
     })(this), 2500);
   };
 
-  Maze.prototype.initializeBoard = function() {
-    return this.client.initializeTiledBoard(32, 20);
+  MazeGame.prototype.initializeBoard = function() {
+    return this.client.initializeTiledBoard(this.mazeModel.width, this.mazeModel.height);
   };
 
-  Maze.prototype.waitForStartPositions = function() {
+  MazeGame.prototype.waitForStartPositions = function() {
     return this.client.reportBackWhenTileAtAnyOfPositions([[10, 10], [11, 10], [12, 10]]);
   };
 
-  Maze.prototype.ready = function() {
-    console.log("Ready!");
+  MazeGame.prototype.ready = function() {
     return this.waitForStartPositions();
   };
 
-  return Maze;
+  return MazeGame;
 
 })();
 
-//# sourceMappingURL=maze.js.map
+//# sourceMappingURL=game.js.map
