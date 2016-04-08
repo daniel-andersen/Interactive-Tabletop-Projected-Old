@@ -9,7 +9,7 @@ tileLayers = [];
 mazeGame = null;
 
 MAZE.Game.preload = function() {
-  this.addJSON("tilemap", "assets/maps/sample.json");
+  this.addJSON("tilemap", "assets/maps/maze.json");
   this.addSpriteSheet("tiles", "assets/img/tiles/board_tiles.png", 40, 40);
   return this.addImage("logo", "assets/img/menu/title.png");
 };
@@ -37,8 +37,8 @@ MazeGame = (function() {
   }
 
   MazeGame.prototype.start = function() {
-    this.mazeModel.createRandomMaze();
     this.setupUi();
+    console.log("1");
     return this.client.connect(((function(_this) {
       return function() {
         return _this.reset();
@@ -68,19 +68,17 @@ MazeGame = (function() {
   };
 
   MazeGame.prototype.setupUi = function() {
-    var borderLayer, i, len, ref, statusTextField, tileLayer;
-    this.tilemap = new Kiwi.GameObjects.Tilemap.TileMap(this.kiwiState, "tilemap", this.kiwiState.textures.tiles);
+    var borderLayer, statusTextField;
     this.logo = new Kiwi.GameObjects.StaticImage(this.kiwiState, this.kiwiState.textures.logo, 0, 0);
     this.logo.alpha = 0.0;
+    this.tilemap = new Kiwi.GameObjects.Tilemap.TileMap(this.kiwiState, "tilemap", this.kiwiState.textures.tiles);
     borderLayer = this.tilemap.getLayerByName("Border Layer");
     this.tileLayers = [];
     this.tileLayers.push(this.tilemap.getLayerByName("Tile Layer 1"));
     this.tileLayers.push(this.tilemap.getLayerByName("Tile Layer 2"));
-    ref = this.tileLayers;
-    for (i = 0, len = ref.length; i < len; i++) {
-      tileLayer = ref[i];
-      tileLayer.alpha = 0.0;
-    }
+    this.tileLayers[0].alpha = 1.0;
+    this.tileLayers[1].alpha = 0.0;
+    this.visibleLayer = 0;
     this.kiwiState.addChild(borderLayer);
     this.kiwiState.addChild(this.tileLayers[0]);
     this.kiwiState.addChild(this.tileLayers[1]);
@@ -91,7 +89,7 @@ MazeGame = (function() {
     statusTextField.style.textShadow = "-1px -1px 5px black, 1px -1px 5px black, -1px 1px 5px black, 1px 1px 5px black";
     this.client.debug_textField = statusTextField;
     this.kiwiState.game.huds.defaultHUD.addWidget(statusTextField);
-    setTimeout((function(_this) {
+    return setTimeout((function(_this) {
       return function() {
         var fadeLogoTween;
         fadeLogoTween = _this.kiwiState.game.tweens.create(_this.logo);
@@ -100,15 +98,6 @@ MazeGame = (function() {
         }, 2000, Kiwi.Animations.Tweens.Easing.Linear.In, true);
       };
     })(this), 500);
-    return setTimeout((function(_this) {
-      return function() {
-        var fadeMazeTween;
-        fadeMazeTween = _this.kiwiState.game.tweens.create(_this.tileLayers[0]);
-        return fadeMazeTween.to({
-          alpha: 1.0
-        }, 2000, Kiwi.Animations.Tweens.Easing.Linear.In, true);
-      };
-    })(this), 2500);
   };
 
   MazeGame.prototype.initializeBoard = function() {
@@ -120,7 +109,34 @@ MazeGame = (function() {
   };
 
   MazeGame.prototype.ready = function() {
-    return this.waitForStartPositions();
+    console.log("2");
+    setTimeout((function(_this) {
+      return function() {
+        _this.mazeModel.createRandomMaze();
+        return _this.updateMaze();
+      };
+    })(this), 1500);
+    return setTimeout((function(_this) {
+      return function() {
+        return _this.waitForStartPositions();
+      };
+    })(this), 2500);
+  };
+
+  MazeGame.prototype.updateMaze = function() {
+    var alpha, entry, fadeMazeTween, i, j, ref, ref1, x, y;
+    this.visibleLayer = this.visibleLayer === 0 ? 1 : 0;
+    for (y = i = 0, ref = this.mazeModel.height - 1; 0 <= ref ? i <= ref : i >= ref; y = 0 <= ref ? ++i : --i) {
+      for (x = j = 0, ref1 = this.mazeModel.width - 1; 0 <= ref1 ? j <= ref1 : j >= ref1; x = 0 <= ref1 ? ++j : --j) {
+        entry = this.mazeModel.entryAtCoordinate(x, y);
+        this.tileLayers[this.visibleLayer].setTile(x, y, entry.tileIndex);
+      }
+    }
+    alpha = this.visibleLayer === 0 ? 0.0 : 1.0;
+    fadeMazeTween = this.kiwiState.game.tweens.create(this.tileLayers[1]);
+    return fadeMazeTween.to({
+      alpha: alpha
+    }, 1000, Kiwi.Animations.Tweens.Easing.Linear.In, true);
   };
 
   return MazeGame;

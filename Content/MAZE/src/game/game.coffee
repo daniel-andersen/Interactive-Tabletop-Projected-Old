@@ -6,7 +6,7 @@ tileLayers = []
 mazeGame = null
 
 MAZE.Game.preload = ->
-    @addJSON("tilemap", "assets/maps/sample.json")
+    @addJSON("tilemap", "assets/maps/maze.json")
     @addSpriteSheet("tiles", "assets/img/tiles/board_tiles.png", 40, 40)
     @addImage("logo", "assets/img/menu/title.png")
 
@@ -32,7 +32,6 @@ class MazeGame
         @mazeModel = new MazeModel()
 
     start: ->
-        @mazeModel.createRandomMaze()
         @setupUi()
         @client.connect((() => @reset()), ((json) => @onMessage(json)))
 
@@ -50,24 +49,31 @@ class MazeGame
 
 
     setupUi: ->
-        @tilemap = new Kiwi.GameObjects.Tilemap.TileMap(@kiwiState, "tilemap", @kiwiState.textures.tiles)
+
+        # Setup logo
         @logo = new Kiwi.GameObjects.StaticImage(@kiwiState, @kiwiState.textures.logo, 0, 0)
         @logo.alpha = 0.0
 
+        # Setup tilemap
+        @tilemap = new Kiwi.GameObjects.Tilemap.TileMap(@kiwiState, "tilemap", @kiwiState.textures.tiles)
         borderLayer = @tilemap.getLayerByName("Border Layer")
 
         @tileLayers = []
         @tileLayers.push(@tilemap.getLayerByName("Tile Layer 1"))
         @tileLayers.push(@tilemap.getLayerByName("Tile Layer 2"))
 
-        for tileLayer in @tileLayers
-            tileLayer.alpha = 0.0
+        @tileLayers[0].alpha = 1.0
+        @tileLayers[1].alpha = 0.0
 
+        @visibleLayer = 0
+
+        # Add elements to UI
         @kiwiState.addChild(borderLayer)
         @kiwiState.addChild(@tileLayers[0])
         @kiwiState.addChild(@tileLayers[1])
         @kiwiState.addChild(@logo)
 
+        # Setup debug log
         statusTextField = new Kiwi.HUD.Widget.TextField(@kiwiState.game, "", 100, 10)
         statusTextField.style.color = "#00ff00"
         statusTextField.style.fontSize = "14px"
@@ -81,12 +87,6 @@ class MazeGame
             fadeLogoTween.to({ alpha: 1.0 }, 2000, Kiwi.Animations.Tweens.Easing.Linear.In, true)
         , 500)
 
-        # Fade maze
-        setTimeout(() =>
-            fadeMazeTween = @kiwiState.game.tweens.create(@tileLayers[0]);
-            fadeMazeTween.to({ alpha: 1.0 }, 2000, Kiwi.Animations.Tweens.Easing.Linear.In, true)
-        , 2500)
-
 
 
     initializeBoard: ->
@@ -96,4 +96,28 @@ class MazeGame
         @client.reportBackWhenTileAtAnyOfPositions([[10, 10], [11, 10], [12, 10]])
 
     ready: ->
-        @waitForStartPositions()
+        # Fade maze
+        setTimeout(() =>
+            @mazeModel.createRandomMaze()
+            @updateMaze()
+        , 1500)
+
+        # Wait for start positions
+        setTimeout(() =>
+            @waitForStartPositions()
+        , 2500)
+
+
+
+    updateMaze: ->
+        @visibleLayer = if @visibleLayer == 0 then 1 else 0
+
+        for y in [0..@mazeModel.height - 1]
+            for x in [0..@mazeModel.width - 1]
+                entry = @mazeModel.entryAtCoordinate(x, y)
+                @tileLayers[@visibleLayer].setTile(x, y, entry.tileIndex)
+
+        alpha = if @visibleLayer == 0 then 0.0 else 1.0
+
+        fadeMazeTween = @kiwiState.game.tweens.create(@tileLayers[1]);
+        fadeMazeTween.to({ alpha: alpha }, 1000, Kiwi.Animations.Tweens.Easing.Linear.In, true)
