@@ -33,6 +33,8 @@ class MazeGame
 
     start: ->
         @setupUi()
+        @startNewGame()
+
         @client.connect((() => @reset()), ((json) => @onMessage(json)))
 
     stop: ->
@@ -48,6 +50,24 @@ class MazeGame
 
 
 
+    startNewGame: ->
+
+        @currentPlayerIndex = 0
+
+        # Prepare map
+        @visibleLayer = 0
+
+        @tileLayers[0].alpha = 1.0
+        @tileLayers[1].alpha = 0.0
+
+        @resetMaze()
+
+        # Fade logo
+        setTimeout(() =>
+            fadeLogoTween = @kiwiState.game.tweens.create(@logo);
+            fadeLogoTween.to({ alpha: 1.0 }, 2000, Kiwi.Animations.Tweens.Easing.Linear.In, true)
+        , 500)
+
     setupUi: ->
 
         # Setup logo
@@ -61,11 +81,6 @@ class MazeGame
         @tileLayers = []
         @tileLayers.push(@tilemap.getLayerByName("Tile Layer 1"))
         @tileLayers.push(@tilemap.getLayerByName("Tile Layer 2"))
-
-        @tileLayers[0].alpha = 1.0
-        @tileLayers[1].alpha = 0.0
-
-        @visibleLayer = 0
 
         # Add elements to UI
         @kiwiState.addChild(borderLayer)
@@ -81,12 +96,6 @@ class MazeGame
         @client.debug_textField = statusTextField
         @kiwiState.game.huds.defaultHUD.addWidget(statusTextField)
 
-        # Fade logo
-        setTimeout(() =>
-            fadeLogoTween = @kiwiState.game.tweens.create(@logo);
-            fadeLogoTween.to({ alpha: 1.0 }, 2000, Kiwi.Animations.Tweens.Easing.Linear.In, true)
-        , 500)
-
 
 
     initializeBoard: ->
@@ -98,7 +107,6 @@ class MazeGame
     ready: ->
         # Fade maze
         setTimeout(() =>
-            @mazeModel.createRandomMaze()
             @updateMaze()
         , 1500)
 
@@ -108,16 +116,47 @@ class MazeGame
         , 2500)
 
 
+    resetMaze: ->
 
-    updateMaze: ->
-        @visibleLayer = if @visibleLayer == 0 then 1 else 0
+        # Create random maze and reset players
+        @mazeModel.createRandomMaze()
 
+        # Draw transparent maze
         for y in [0..@mazeModel.height - 1]
             for x in [0..@mazeModel.width - 1]
                 entry = @mazeModel.entryAtCoordinate(x, y)
-                @tileLayers[@visibleLayer].setTile(x, y, entry.tileIndex)
+                @tileLayers[@visibleLayer].setTile(x, y, @mazeModel.transparentTileIndex)
 
-        alpha = if @visibleLayer == 0 then 0.0 else 1.0
+    updateMaze: ->
+
+        # Shift layer
+        @visibleLayer = if @visibleLayer == 0 then 1 else 0
+
+        # Draw maze
+        @drawMaze()
+
+        # Fade new layer
+        destinationAlpha = if @visibleLayer == 0 then 0.0 else 1.0
 
         fadeMazeTween = @kiwiState.game.tweens.create(@tileLayers[1]);
-        fadeMazeTween.to({ alpha: alpha }, 1000, Kiwi.Animations.Tweens.Easing.Linear.In, true)
+        fadeMazeTween.to({ alpha: destinationAlpha }, 1000, Kiwi.Animations.Tweens.Easing.Linear.In, true)
+
+    drawMaze: ->
+
+        # Draw black tiles
+        for y in [0..@mazeModel.height - 1]
+            for x in [0..@mazeModel.width - 1]
+                @tileLayers[@visibleLayer].setTile(x, y, @mazeModel.transparentTileIndex)
+
+        # Draw player tiles
+        drawOrder = (i for i in [0..@mazeModel.numberOfPlayers - 1])
+        drawOrder.splice(@currentPlayerIndex, 1)
+        drawOrder.push(@currentPlayerIndex)
+
+        for playerIndex in drawOrder
+            player = @mazeModel.players[playerIndex]
+            tileOffset = if playerIndex == @currentPlayerIndex then 0 else 6
+
+            for position in @mazeModel.positionsReachableByPlayer(player)
+                entry = @mazeModel.entryAtPosition(position)
+                @tileLayers[@visibleLayer].setTile(position.x, position.y, entry.tileIndex + tileOffset)

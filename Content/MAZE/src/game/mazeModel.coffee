@@ -12,7 +12,7 @@ TileType =
 
 
 class MazeEntry
-    constructor: (@tileType = TileType.WALL, @tileIndex = 18) ->
+    constructor: (@tileType = TileType.WALL, @tileIndex = 6) ->
 
 
 class MazeModel
@@ -20,10 +20,13 @@ class MazeModel
     constructor: ->
         @numberOfPlayers = 4
 
-        @players = (new Player() for i in [1..@numberOfPlayers])
-
         @width = 32
         @height = 20
+
+        @blackTileIndex = 5
+        @transparentTileIndex = 6
+        @wallTileIndex = 19
+        @hallwayTileIndex = 7
 
     createRandomMaze: ->
 
@@ -42,12 +45,14 @@ class MazeModel
                 if entry.tileType == TileType.HALLWAY
                     entry.tileIndex = @randomHallwayIndex()
                 if entry.tileType == TileType.EMPTY
-                    entry.tileIndex = 18
+                    entry.tileIndex = @transparentTileIndex
 
     resetMaze: ->
         @maze = ((new MazeEntry(@defaultTileTypeAtCoordinate(x, y)) for x in [0..@width - 1]) for y in [0..@height - 1])
 
     placePlayers: ->
+        @players = (new Player() for _ in [1..@numberOfPlayers])
+
         @players[0].position = new Position(0, @height / 2)
         @players[1].position = new Position(@width - 1, @height / 2)
         @players[2].position = new Position(@width / 2, 0)
@@ -91,7 +96,7 @@ class MazeModel
 
             if not @isPositionValid(oppositePosition, margin=1)
                 continue
-                
+
             # Add hallways
             @entryAtPosition(position).tileType = TileType.HALLWAY
             @addHallwayAtPosition(oppositePosition)
@@ -123,11 +128,46 @@ class MazeModel
 
         return positions
 
+    adjacentHallwayPositions: (position) ->
+        positions = @adjacentPositions(position)
+        return (p for p in @adjacentPositions(position) when @entryAtPosition(p).tileType == TileType.HALLWAY)
+
     isPositionValid: (position, margin=0) -> position.x >= margin and position.y >= margin and position.x < @width - margin and position.y < @height - margin
 
-    randomWallIndex: -> return Util.randomInRange(11, 17)
+    positionsReachableByPlayer: (player) -> @positionsReachableFromPosition(player.position, player.reachDistance)
 
-    randomHallwayIndex: -> return Util.randomInRange(5, 11)
+    positionsReachableFromPosition: (position, maxDistance) ->
+
+        # Clear distance map
+        distanceMap = ((-1 for _ in [1..@width]) for _ in [1..@height])
+        distanceMap[position.y][position.x] = 0
+
+        # Reset positions
+        positions = []
+        positionsToVisit = [position]
+
+        # Keep expanding until reach distance reached for all positions to visit
+        while positionsToVisit.length > 0
+            position = positionsToVisit.splice(0, 1)[0]
+            distance = distanceMap[position.y][position.x]
+
+            if distance >= maxDistance
+                continue
+
+            # Add to reachable positions
+            positions.push(position)
+
+            # Visit all adjacent positions that has not yet been visited
+            for adjacentPosition in @adjacentHallwayPositions(position)
+                if distanceMap[adjacentPosition.y][adjacentPosition.x] == -1
+                    distanceMap[adjacentPosition.y][adjacentPosition.x] = distance + 1
+                    positionsToVisit.push(adjacentPosition)
+
+        return positions
+
+    randomWallIndex: -> return Util.randomInRange(@wallTileIndex, @wallTileIndex + 6)
+
+    randomHallwayIndex: -> return Util.randomInRange(@hallwayTileIndex, @hallwayTileIndex + 6)
 
     entryAtCoordinate: (x, y) -> @maze[y][x]
 

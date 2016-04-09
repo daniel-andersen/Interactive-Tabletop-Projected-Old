@@ -5,6 +5,7 @@ PlayerState =
     MOVING: 3
 
 
+playerPlacementReachDistance = 4
 playerDefaultReachDistance = 4
 
 
@@ -12,5 +13,5 @@ class Player
 
     constructor: ->
         @state = PlayerState.INITIAL_PLACEMENT
-        @reachDistance = playerDefaultReachDistance
+        @reachDistance = playerPlacementReachDistance
         @position = new Position()

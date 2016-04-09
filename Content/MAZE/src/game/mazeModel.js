@@ -17,7 +17,7 @@ TileType = {
 MazeEntry = (function() {
   function MazeEntry(tileType, tileIndex) {
     this.tileType = tileType != null ? tileType : TileType.WALL;
-    this.tileIndex = tileIndex != null ? tileIndex : 18;
+    this.tileIndex = tileIndex != null ? tileIndex : 6;
   }
 
   return MazeEntry;
@@ -26,31 +26,26 @@ MazeEntry = (function() {
 
 MazeModel = (function() {
   function MazeModel() {
-    var i;
     this.numberOfPlayers = 4;
-    this.players = (function() {
-      var j, ref, results;
-      results = [];
-      for (i = j = 1, ref = this.numberOfPlayers; 1 <= ref ? j <= ref : j >= ref; i = 1 <= ref ? ++j : --j) {
-        results.push(new Player());
-      }
-      return results;
-    }).call(this);
     this.width = 32;
     this.height = 20;
+    this.blackTileIndex = 5;
+    this.transparentTileIndex = 6;
+    this.wallTileIndex = 19;
+    this.hallwayTileIndex = 7;
   }
 
   MazeModel.prototype.createRandomMaze = function() {
-    var entry, j, ref, results, x, y;
+    var entry, i, ref, results, x, y;
     this.placePlayers();
     this.resetMaze();
     this.createMaze();
     results = [];
-    for (y = j = 0, ref = this.height - 1; 0 <= ref ? j <= ref : j >= ref; y = 0 <= ref ? ++j : --j) {
+    for (y = i = 0, ref = this.height - 1; 0 <= ref ? i <= ref : i >= ref; y = 0 <= ref ? ++i : --i) {
       results.push((function() {
-        var k, ref1, results1;
+        var j, ref1, results1;
         results1 = [];
-        for (x = k = 0, ref1 = this.width - 1; 0 <= ref1 ? k <= ref1 : k >= ref1; x = 0 <= ref1 ? ++k : --k) {
+        for (x = j = 0, ref1 = this.width - 1; 0 <= ref1 ? j <= ref1 : j >= ref1; x = 0 <= ref1 ? ++j : --j) {
           entry = this.entryAtCoordinate(x, y);
           if (entry.tileType === TileType.WALL || entry.tileType === TileType.BORDER) {
             entry.tileIndex = this.randomWallIndex();
@@ -59,7 +54,7 @@ MazeModel = (function() {
             entry.tileIndex = this.randomHallwayIndex();
           }
           if (entry.tileType === TileType.EMPTY) {
-            results1.push(entry.tileIndex = 18);
+            results1.push(entry.tileIndex = this.transparentTileIndex);
           } else {
             results1.push(void 0);
           }
@@ -73,13 +68,13 @@ MazeModel = (function() {
   MazeModel.prototype.resetMaze = function() {
     var x, y;
     return this.maze = (function() {
-      var j, ref, results;
+      var i, ref, results;
       results = [];
-      for (y = j = 0, ref = this.height - 1; 0 <= ref ? j <= ref : j >= ref; y = 0 <= ref ? ++j : --j) {
+      for (y = i = 0, ref = this.height - 1; 0 <= ref ? i <= ref : i >= ref; y = 0 <= ref ? ++i : --i) {
         results.push((function() {
-          var k, ref1, results1;
+          var j, ref1, results1;
           results1 = [];
-          for (x = k = 0, ref1 = this.width - 1; 0 <= ref1 ? k <= ref1 : k >= ref1; x = 0 <= ref1 ? ++k : --k) {
+          for (x = j = 0, ref1 = this.width - 1; 0 <= ref1 ? j <= ref1 : j >= ref1; x = 0 <= ref1 ? ++j : --j) {
             results1.push(new MazeEntry(this.defaultTileTypeAtCoordinate(x, y)));
           }
           return results1;
@@ -90,6 +85,15 @@ MazeModel = (function() {
   };
 
   MazeModel.prototype.placePlayers = function() {
+    var _;
+    this.players = (function() {
+      var i, ref, results;
+      results = [];
+      for (_ = i = 1, ref = this.numberOfPlayers; 1 <= ref ? i <= ref : i >= ref; _ = 1 <= ref ? ++i : --i) {
+        results.push(new Player());
+      }
+      return results;
+    }).call(this);
     this.players[0].position = new Position(0, this.height / 2);
     this.players[1].position = new Position(this.width - 1, this.height / 2);
     this.players[2].position = new Position(this.width / 2, 0);
@@ -97,11 +101,11 @@ MazeModel = (function() {
   };
 
   MazeModel.prototype.createMaze = function() {
-    var adjacentHallway, adjacentHallways, adjacentPosition, j, k, len, len1, margin, oppositePosition, player, position, randomIndex, ref, ref1, results;
+    var adjacentHallway, adjacentHallways, adjacentPosition, i, j, len, len1, margin, oppositePosition, player, position, randomIndex, ref, ref1, results;
     this.positionsToVisit = [];
     ref = this.players;
-    for (j = 0, len = ref.length; j < len; j++) {
-      player = ref[j];
+    for (i = 0, len = ref.length; i < len; i++) {
+      player = ref[i];
       this.addHallwayAtPosition(player.position);
     }
     results = [];
@@ -113,8 +117,8 @@ MazeModel = (function() {
       }
       adjacentHallways = [];
       ref1 = this.adjacentPositions(position);
-      for (k = 0, len1 = ref1.length; k < len1; k++) {
-        adjacentPosition = ref1[k];
+      for (j = 0, len1 = ref1.length; j < len1; j++) {
+        adjacentPosition = ref1[j];
         if (this.entryAtPosition(adjacentPosition).tileType === TileType.HALLWAY) {
           adjacentHallways.push(adjacentPosition);
         }
@@ -137,12 +141,12 @@ MazeModel = (function() {
   };
 
   MazeModel.prototype.addHallwayAtPosition = function(position) {
-    var adjacentPosition, j, len, ref, results;
+    var adjacentPosition, i, len, ref, results;
     this.entryAtPosition(position).tileType = TileType.HALLWAY;
     ref = this.adjacentPositions(position);
     results = [];
-    for (j = 0, len = ref.length; j < len; j++) {
-      adjacentPosition = ref[j];
+    for (i = 0, len = ref.length; i < len; i++) {
+      adjacentPosition = ref[i];
       results.push(this.addPositionToVisitList(adjacentPosition));
     }
     return results;
@@ -176,6 +180,23 @@ MazeModel = (function() {
     return positions;
   };
 
+  MazeModel.prototype.adjacentHallwayPositions = function(position) {
+    var p, positions;
+    positions = this.adjacentPositions(position);
+    return (function() {
+      var i, len, ref, results;
+      ref = this.adjacentPositions(position);
+      results = [];
+      for (i = 0, len = ref.length; i < len; i++) {
+        p = ref[i];
+        if (this.entryAtPosition(p).tileType === TileType.HALLWAY) {
+          results.push(p);
+        }
+      }
+      return results;
+    }).call(this);
+  };
+
   MazeModel.prototype.isPositionValid = function(position, margin) {
     if (margin == null) {
       margin = 0;
@@ -183,12 +204,55 @@ MazeModel = (function() {
     return position.x >= margin && position.y >= margin && position.x < this.width - margin && position.y < this.height - margin;
   };
 
+  MazeModel.prototype.positionsReachableByPlayer = function(player) {
+    return this.positionsReachableFromPosition(player.position, player.reachDistance);
+  };
+
+  MazeModel.prototype.positionsReachableFromPosition = function(position, maxDistance) {
+    var _, adjacentPosition, distance, distanceMap, i, len, positions, positionsToVisit, ref;
+    distanceMap = (function() {
+      var i, ref, results;
+      results = [];
+      for (_ = i = 1, ref = this.height; 1 <= ref ? i <= ref : i >= ref; _ = 1 <= ref ? ++i : --i) {
+        results.push((function() {
+          var j, ref1, results1;
+          results1 = [];
+          for (_ = j = 1, ref1 = this.width; 1 <= ref1 ? j <= ref1 : j >= ref1; _ = 1 <= ref1 ? ++j : --j) {
+            results1.push(-1);
+          }
+          return results1;
+        }).call(this));
+      }
+      return results;
+    }).call(this);
+    distanceMap[position.y][position.x] = 0;
+    positions = [];
+    positionsToVisit = [position];
+    while (positionsToVisit.length > 0) {
+      position = positionsToVisit.splice(0, 1)[0];
+      distance = distanceMap[position.y][position.x];
+      if (distance >= maxDistance) {
+        continue;
+      }
+      positions.push(position);
+      ref = this.adjacentHallwayPositions(position);
+      for (i = 0, len = ref.length; i < len; i++) {
+        adjacentPosition = ref[i];
+        if (distanceMap[adjacentPosition.y][adjacentPosition.x] === -1) {
+          distanceMap[adjacentPosition.y][adjacentPosition.x] = distance + 1;
+          positionsToVisit.push(adjacentPosition);
+        }
+      }
+    }
+    return positions;
+  };
+
   MazeModel.prototype.randomWallIndex = function() {
-    return Util.randomInRange(11, 17);
+    return Util.randomInRange(this.wallTileIndex, this.wallTileIndex + 6);
   };
 
   MazeModel.prototype.randomHallwayIndex = function() {
-    return Util.randomInRange(5, 11);
+    return Util.randomInRange(this.hallwayTileIndex, this.hallwayTileIndex + 6);
   };
 
   MazeModel.prototype.entryAtCoordinate = function(x, y) {

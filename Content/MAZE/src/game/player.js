@@ -1,4 +1,4 @@
-var Player, PlayerState, playerDefaultReachDistance;
+var Player, PlayerState, playerDefaultReachDistance, playerPlacementReachDistance;
 
 PlayerState = {
   DISABLED: 0,
@@ -7,12 +7,14 @@ PlayerState = {
   MOVING: 3
 };
 
+playerPlacementReachDistance = 4;
+
 playerDefaultReachDistance = 4;
 
 Player = (function() {
   function Player() {
     this.state = PlayerState.INITIAL_PLACEMENT;
-    this.reachDistance = playerDefaultReachDistance;
+    this.reachDistance = playerPlacementReachDistance;
     this.position = new Position();
   }
 
