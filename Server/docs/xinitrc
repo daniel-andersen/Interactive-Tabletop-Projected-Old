@@ -28,7 +28,7 @@ python main.py &
 # Start the browser
 ~/kiosk-browser/browser http://localhost:9000 & browser_pid=$!
 
-sleep 10
+sleep 5
 kill -9 $feh_pid
 
 wait $browser_pid
