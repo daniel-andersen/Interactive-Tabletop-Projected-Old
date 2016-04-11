@@ -76,14 +76,14 @@ class MazeGame
 
         # Setup tilemap
         @tilemap = new Kiwi.GameObjects.Tilemap.TileMap(@kiwiState, "tilemap", @kiwiState.textures.tiles)
-        borderLayer = @tilemap.getLayerByName("Border Layer")
+        @borderLayer = @tilemap.getLayerByName("Border Layer")
 
         @tileLayers = []
         @tileLayers.push(@tilemap.getLayerByName("Tile Layer 1"))
         @tileLayers.push(@tilemap.getLayerByName("Tile Layer 2"))
 
         # Add elements to UI
-        @kiwiState.addChild(borderLayer)
+        @kiwiState.addChild(@borderLayer)
         @kiwiState.addChild(@tileLayers[0])
         @kiwiState.addChild(@tileLayers[1])
         @kiwiState.addChild(@logo)
@@ -155,7 +155,7 @@ class MazeGame
 
         for playerIndex in drawOrder
             player = @mazeModel.players[playerIndex]
-            tileOffset = if playerIndex == @currentPlayerIndex then 0 else 6
+            tileOffset = if playerIndex == @currentPlayerIndex then 0 else 0
 
             for position in @mazeModel.positionsReachableByPlayer(player)
                 entry = @mazeModel.entryAtPosition(position)

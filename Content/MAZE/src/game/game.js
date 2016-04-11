@@ -85,15 +85,15 @@ MazeGame = (function() {
   };
 
   MazeGame.prototype.setupUi = function() {
-    var borderLayer, statusTextField;
+    var statusTextField;
     this.logo = new Kiwi.GameObjects.StaticImage(this.kiwiState, this.kiwiState.textures.logo, 0, 0);
     this.logo.alpha = 0.0;
     this.tilemap = new Kiwi.GameObjects.Tilemap.TileMap(this.kiwiState, "tilemap", this.kiwiState.textures.tiles);
-    borderLayer = this.tilemap.getLayerByName("Border Layer");
+    this.borderLayer = this.tilemap.getLayerByName("Border Layer");
     this.tileLayers = [];
     this.tileLayers.push(this.tilemap.getLayerByName("Tile Layer 1"));
     this.tileLayers.push(this.tilemap.getLayerByName("Tile Layer 2"));
-    this.kiwiState.addChild(borderLayer);
+    this.kiwiState.addChild(this.borderLayer);
     this.kiwiState.addChild(this.tileLayers[0]);
     this.kiwiState.addChild(this.tileLayers[1]);
     this.kiwiState.addChild(this.logo);
@@ -176,7 +176,7 @@ MazeGame = (function() {
     for (l = 0, len = drawOrder.length; l < len; l++) {
       playerIndex = drawOrder[l];
       player = this.mazeModel.players[playerIndex];
-      tileOffset = playerIndex === this.currentPlayerIndex ? 0 : 6;
+      tileOffset = playerIndex === this.currentPlayerIndex ? 0 : 0;
       results.push((function() {
         var len1, m, ref2, results1;
         ref2 = this.mazeModel.positionsReachableByPlayer(player);

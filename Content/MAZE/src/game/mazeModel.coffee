@@ -1,19 +1,20 @@
-Direction =
-    UP: 0
-    RIGHT: 1
-    DOWN: 2
-    LEFT: 3
+WallType =
+    UP: 1
+    RIGHT: 2
+    DOWN: 4
+    LEFT: 8
+    ALL_SIDES: 15
+    BORDER: 16
 
-TileType =
-    WALL: 0
-    HALLWAY: 1
-    BORDER: 2
-    EMPTY: 3
-
+blackTileIndex = 5
+transparentTileIndex = 6
+wallTileStartIndex = 7
 
 class MazeEntry
-    constructor: (@tileType = TileType.WALL, @tileIndex = 6) ->
+    constructor: (@walls = [WallType.UP, WallType.RIGHT, WallType.DOWN, WallType.LEFT], @tileIndex = transparentTileIndex) ->
 
+class MazeWall
+    constructor: (@position1, @position2) ->
 
 class MazeModel
 
@@ -23,93 +24,88 @@ class MazeModel
         @width = 32
         @height = 20
 
-        @blackTileIndex = 5
-        @transparentTileIndex = 6
-        @wallTileIndex = 19
-        @hallwayTileIndex = 7
-
     createRandomMaze: ->
 
+        # Place players
         @placePlayers()
 
         # Create maze
         @resetMaze()
         @createMaze()
-
-        # Set random tiles
-        for y in [0..@height - 1]
-            for x in [0..@width - 1]
-                entry = @entryAtCoordinate(x, y)
-                if entry.tileType == TileType.WALL or entry.tileType == TileType.BORDER
-                    entry.tileIndex = @randomWallIndex()
-                if entry.tileType == TileType.HALLWAY
-                    entry.tileIndex = @randomHallwayIndex()
-                if entry.tileType == TileType.EMPTY
-                    entry.tileIndex = @transparentTileIndex
+        @calculateTileIndices()
 
     resetMaze: ->
-        @maze = ((new MazeEntry(@defaultTileTypeAtCoordinate(x, y)) for x in [0..@width - 1]) for y in [0..@height - 1])
+        @maze = ((new MazeEntry() for x in [1..@width]) for y in [1..@height])
+        @validPositionMap = ((@isCoordinateValid(x, y) for x in [0..@width - 1]) for y in [0..@height - 1])
 
     placePlayers: ->
         @players = (new Player() for _ in [1..@numberOfPlayers])
 
-        @players[0].position = new Position(0, @height / 2)
+        @players[0].position = new Position(@width / 2, 0)
         @players[1].position = new Position(@width - 1, @height / 2)
-        @players[2].position = new Position(@width / 2, 0)
-        @players[3].position = new Position(@width / 2, @height - 1)
+        @players[2].position = new Position(@width / 2, @height - 1)
+        @players[3].position = new Position(0, @height / 2)
 
     createMaze: ->
 
-        # Reset list of positions to visit
-        @positionsToVisit = []
+        # Reset list of walls to visit
+        @wallsToVisit = []
 
-        # Add hallway at players positions
-        for player in @players
-            @addHallwayAtPosition(player.position)
+        # Remove walls at players positions and add to visit list
+        adjacentPosition = new Position(@players[0].position.x, @players[0].position.y + 1)
+        @removeWalls(@players[0].position, adjacentPosition)
+        @addAdjacentWallsToVisitList(adjacentPosition)
+
+        adjacentPosition = new Position(@players[1].position.x - 1, @players[1].position.y)
+        @removeWalls(@players[1].position, adjacentPosition)
+        @addAdjacentWallsToVisitList(adjacentPosition)
+
+        adjacentPosition = new Position(@players[2].position.x, @players[2].position.y - 1)
+        @removeWalls(@players[2].position, adjacentPosition)
+        @addAdjacentWallsToVisitList(adjacentPosition)
+
+        adjacentPosition = new Position(@players[3].position.x + 1, @players[3].position.y)
+        @removeWalls(@players[3].position, adjacentPosition)
+        @addAdjacentWallsToVisitList(adjacentPosition)
 
         # Build maze
-        while @positionsToVisit.length > 0
+        while @wallsToVisit.length > 0
 
             # Pick random position
-            randomIndex = Util.randomInRange(0, @positionsToVisit.length)
-            position = @positionsToVisit.splice(randomIndex, 1)[0]
+            randomIndex = Util.randomInRange(0, @wallsToVisit.length)
+            wall = @wallsToVisit.splice(randomIndex, 1)[0]
 
-            # Already used
-            if @entryAtPosition(position).tileType == TileType.hallways
+            # There must exist exactly one visited tile on either side of the wall
+            if @wallMaskAtPosition(wall.position1) != WallType.ALL_SIDES and @wallMaskAtPosition(wall.position2) != WallType.ALL_SIDES
                 continue
 
-            # Find adjacent hallways
-            adjacentHallways = []
+            # Remove walls
+            @removeWalls(wall.position1, wall.position2)
 
-            for adjacentPosition in @adjacentPositions(position)
-                if @entryAtPosition(adjacentPosition).tileType == TileType.HALLWAY
-                    adjacentHallways.push(adjacentPosition)
+            # Add adjacent positions
+            @addAdjacentWallsToVisitList(wall.position2)
 
-            if adjacentHallways.length != 1 then continue
+    calculateTileIndices: ->
+        for y in [0..@height - 1]
+            for x in [0..@width - 1]
+                entry = @entryAtCoordinate(x, y)
+                entry.tileIndex = @tileIndexAtCoordinate(x, y)
 
-            # Check hallway connection
-            adjacentHallway = adjacentHallways[0]
-            oppositePosition = new Position(position.x - (adjacentHallway.x - position.x), position.y - (adjacentHallway.y - position.y))
+    removeWalls: (position1, position2) ->
 
-            if @entryAtPosition(position).tileType != TileType.WALL or @entryAtPosition(position).tileType != TileType.WALL
-                continue
+        # Remove walls for position 1
+        entry = @entryAtPosition(position1)
+        wallType = @wallTypeOfAdjacentPositions(position1, position2)
+        entry.walls = entry.walls.filter (type) -> type isnt wallType
 
-            if not @isPositionValid(oppositePosition, margin=1)
-                continue
+        # Remove walls for position 2
+        entry = @entryAtPosition(position2)
+        wallType = @wallTypeOfAdjacentPositions(position2, position1)
+        entry.walls = entry.walls.filter (type) -> type isnt wallType
 
-            # Add hallways
-            @entryAtPosition(position).tileType = TileType.HALLWAY
-            @addHallwayAtPosition(oppositePosition)
-
-    addHallwayAtPosition: (position) ->
-        @entryAtPosition(position).tileType = TileType.HALLWAY
-
+    addAdjacentWallsToVisitList: (position) ->
         for adjacentPosition in @adjacentPositions(position)
-            @addPositionToVisitList(adjacentPosition)
-
-    addPositionToVisitList: (position) ->
-        if @isPositionValid(position) and @entryAtPosition(position).tileType == TileType.WALL
-            @positionsToVisit.push(position)
+            @wallsToVisit.push(new MazeWall(position, adjacentPosition))
 
     adjacentPositions: (position) ->
         positions = []
@@ -128,11 +124,12 @@ class MazeModel
 
         return positions
 
-    adjacentHallwayPositions: (position) ->
-        positions = @adjacentPositions(position)
-        return (p for p in @adjacentPositions(position) when @entryAtPosition(p).tileType == TileType.HALLWAY)
+    adjacentConnectedPositions: (position) ->
+        return (p for p in @adjacentPositions(position) when @arePositionsConnected(position, p))
 
-    isPositionValid: (position, margin=0) -> position.x >= margin and position.y >= margin and position.x < @width - margin and position.y < @height - margin
+    isPositionValid: (position) ->
+        if position.x < 0 or position.y < 0 or position.x > @width - 1 or position.y > @height - 1 then return false
+        return @validPositionMap[position.y][position.x]
 
     positionsReachableByPlayer: (player) -> @positionsReachableFromPosition(player.position, player.reachDistance)
 
@@ -158,46 +155,52 @@ class MazeModel
             positions.push(position)
 
             # Visit all adjacent positions that has not yet been visited
-            for adjacentPosition in @adjacentHallwayPositions(position)
+            for adjacentPosition in @adjacentConnectedPositions(position)
                 if distanceMap[adjacentPosition.y][adjacentPosition.x] == -1
                     distanceMap[adjacentPosition.y][adjacentPosition.x] = distance + 1
                     positionsToVisit.push(adjacentPosition)
 
         return positions
 
-    randomWallIndex: -> return Util.randomInRange(@wallTileIndex, @wallTileIndex + 6)
-
-    randomHallwayIndex: -> return Util.randomInRange(@hallwayTileIndex, @hallwayTileIndex + 6)
+    wallMaskAtPosition: (position) -> @entryAtPosition(position).walls.reduce( ((t, s) -> t + s), 0)
 
     entryAtCoordinate: (x, y) -> @maze[y][x]
 
     entryAtPosition: (position) -> @maze[position.y][position.x]
 
-    defaultTileTypeAtCoordinate: (x, y) ->
+    arePositionsConnected: (position1, position2) ->
+        wallType = @wallTypeOfAdjacentPositions(position1, position2)
+        return wallType not in @entryAtPosition(position1).walls
 
-        # Corners
-        if (x == 0 and y == 0) or (x == 1 and y == 0) or (x == 0 and y == 1)
-            return TileType.EMPTY
-        if (x == 0 and y == @height - 1) or (x == 1 and y == @height - 1) or (x == 0 and y == @height - 2)
-            return TileType.EMPTY
-        if (x == @width - 1 and y == 0) or (x == @width - 2 and y == 0) or (x == @width - 1 and y == 1)
-            return TileType.EMPTY
-        if (x == @width - 1 and y == @height - 1) or (x == @width - 2 and y == @height - 1) or (x == @width - 1 and y == @height - 2)
-            return TileType.EMPTY
+    wallTypeOfAdjacentPositions: (position1, position2) ->
 
-        # Border
-        if x == 0 or y == 0 or x == @width - 1 or y == @height - 1
-            return TileType.BORDER
-        if x == 1 and y == 1
-            return TileType.BORDER
-        if x == @width - 2 and y == 1
-            return TileType.BORDER
-        if x == 1 and y == @height - 2
-            return TileType.BORDER
-        if x == @width - 2 and y == @height - 2
-            return TileType.BORDER
+        # Horizontally adjacent
+        if position1.y == position2.y
+            if position1.x == position2.x - 1
+                return WallType.RIGHT
+            if position1.x == position2.x + 1
+                return WallType.LEFT
 
-        # Anywhere else
-        return TileType.WALL
+        # Vertically adjacent
+        if position1.x == position2.x
+            if position1.y == position2.y - 1
+                return WallType.DOWN
+            if position1.y == position2.y + 1
+                return WallType.UP
 
-    isBorder: (x, y) -> x == 0 or y == 0 or x == @width - 1 or y == @height - 1
+        return 0
+
+    isCoordinateValid: (x, y) ->
+        return not @isBorderAtCoordinate(x, y)
+
+    isBorderAtCoordinate: (x, y) ->
+        if x <= 0 or y <= 0 or x >= @width - 1 or y >= @height - 1 then return true
+        if x == 1 and y == 1 then return true
+        if x == @width - 2 and y == 1 then return true
+        if x == 1 and y == @height - 2 then return true
+        if x == @width - 2 and y == @height - 2 then return true
+        return false
+
+    tileIndexAtCoordinate: (x, y) ->
+        entry = @entryAtCoordinate(x, y)
+        return wallTileStartIndex + entry.walls.reduce( (((t, s) -> t + s)), 0)
