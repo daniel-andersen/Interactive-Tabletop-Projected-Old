@@ -51,8 +51,14 @@ class Camera(object):
         Grabs next image from camera.
         """
         for f in self.stream:
-            self.image = f.array
+            rotated_image = f.array
             self.raw_capture.truncate(0)
+
+            # Rotate image 180 degrees
+            (height, width) = rotated_image.shape[:2]
+            center = (width / 2, height / 2)
+            matrix = cv2.getRotationMatrix2D(center, 180, 1.0)
+            self.image = cv2.warpAffine(rotated_image, matrix, (width, height))
 
             # Stop
             if self.stopped:

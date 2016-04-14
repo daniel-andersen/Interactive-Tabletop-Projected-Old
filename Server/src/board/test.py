@@ -118,7 +118,7 @@ def test():
     #cap = cv2.VideoCapture(0)
 
     while True:
-        image = cv2.imread("output1.png")
+        image = cv2.imread("board/training/board3.png")
         #_, image = cap.read()
 
         board_descriptor.snapshot = board_recognizer.find_board(image, board_descriptor)
@@ -140,7 +140,7 @@ def test():
             cv2.imshow('OTSU Board Tiles', image2)
 
         else:
-            print("Not found!")
+            print("Board not found!")
 
         cv2.imshow('Board Image', image)
 

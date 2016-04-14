@@ -98,10 +98,10 @@ class BoardDescriptor(object):
 
         tile_width, tile_height = self.tile_size()
 
-        return (board_x1 + (x * tile_width),
-                board_y1 + (y * tile_height),
-                board_x1 + (x * tile_width) + int(tile_width),
-                board_y1 + (y * tile_height) + int(tile_height),
+        return (int(board_x1 + (x * tile_width)),
+                int(board_y1 + (y * tile_height)),
+                int(board_x1 + (x * tile_width)) + int(tile_width),
+                int(board_y1 + (y * tile_height)) + int(tile_height),
                 tile_width,
                 tile_height)
 
@@ -144,7 +144,7 @@ class BoardDescriptor(object):
         for (x, y) in coordinates:
             x1, y1, x2, y2 = self.tile_region(x, y)[:4]
             tile_image = source_image[y1:y2, x1:x2]
-            image[0:tile_height, offset:offset + int(tile_width)] = tile_image
+            image[0:int(tile_height), offset:offset + int(tile_width)] = tile_image
             offset += tile_width
 
         return image
@@ -158,5 +158,5 @@ class BoardDescriptor(object):
         """
         tile_width, tile_height = self.tile_size()
         x1 = index * tile_width
-        x2 = x1 + tile_width
-        return tile_strip_image[0:tile_height, x1:x2]
+        x2 = x1 + int(tile_width)
+        return tile_strip_image[0:int(tile_height), x1:x2]
