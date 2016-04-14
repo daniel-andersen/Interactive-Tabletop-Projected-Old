@@ -37,4 +37,4 @@ class TiledBrickPositionReporter(Reporter):
                     self.callback_function(tile)
                     self.stop()
             else:
-                cv2.imwrite("output_board_not_recognized.png", self.board_descriptor.snapshot.board_image)
+                cv2.imwrite("output_board_not_recognized.png", image)
