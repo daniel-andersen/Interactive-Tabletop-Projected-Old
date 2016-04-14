@@ -45,7 +45,7 @@
         {
          "firstgid":1,
          "image":"..\/img\/tiles\/board_tiles.png",
-         "imageheight":360,
+         "imageheight":440,
          "imagewidth":160,
          "margin":0,
          "name":"Bricks",
@@ -54,7 +54,7 @@
 
             },
          "spacing":0,
-         "tilecount":40,
+         "tilecount":44,
          "tileheight":40,
          "tilewidth":40
         }],

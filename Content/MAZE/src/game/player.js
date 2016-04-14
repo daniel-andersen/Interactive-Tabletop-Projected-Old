@@ -7,7 +7,7 @@ PlayerState = {
   MOVING: 3
 };
 
-playerPlacementReachDistance = 4;
+playerPlacementReachDistance = 3;
 
 playerDefaultReachDistance = 4;
 

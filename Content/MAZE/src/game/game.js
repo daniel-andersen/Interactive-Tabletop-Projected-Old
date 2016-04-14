@@ -1,4 +1,4 @@
-var MAZE, MazeGame, mazeGame, tileLayers;
+var GameState, MAZE, MazeGame, mazeGame, tileLayers;
 
 MAZE = MAZE || {};
 
@@ -27,6 +27,12 @@ MAZE.Game.shutDown = function() {
 
 MAZE.Game.update = function() {
   return Kiwi.State.prototype.update.call(this);
+};
+
+GameState = {
+  INITIALIZING: 0,
+  INITIAL_PLACEMENT: 1,
+  PLAYER_TURN: 2
 };
 
 MazeGame = (function() {
@@ -68,6 +74,7 @@ MazeGame = (function() {
   };
 
   MazeGame.prototype.startNewGame = function() {
+    this.gameState = GameState.INITIALIZING;
     this.currentPlayerIndex = 0;
     this.visibleLayer = 0;
     this.tileLayers[0].alpha = 1.0;
@@ -110,7 +117,22 @@ MazeGame = (function() {
   };
 
   MazeGame.prototype.waitForStartPositions = function() {
-    return this.client.reportBackWhenTileAtAnyOfPositions([[10, 10], [11, 10], [12, 10]]);
+    var i, id, j, position, positions, ref, results;
+    results = [];
+    for (i = j = 0, ref = this.mazeModel.players.length - 1; 0 <= ref ? j <= ref : j >= ref; i = 0 <= ref ? ++j : --j) {
+      positions = (function() {
+        var k, len, ref1, results1;
+        ref1 = this.mazeModel.positionsReachableByPlayer(this.mazeModel.players[i]);
+        results1 = [];
+        for (k = 0, len = ref1.length; k < len; k++) {
+          position = ref1[k];
+          results1.push([position.x, position.y]);
+        }
+        return results1;
+      }).call(this);
+      results.push(this.client.reportBackWhenTileAtAnyOfPositions(positions, id = i));
+    }
+    return results;
   };
 
   MazeGame.prototype.ready = function() {
@@ -127,21 +149,14 @@ MazeGame = (function() {
   };
 
   MazeGame.prototype.resetMaze = function() {
-    var entry, j, ref, results, x, y;
-    this.mazeModel.createRandomMaze();
-    results = [];
+    var j, k, ref, ref1, x, y;
     for (y = j = 0, ref = this.mazeModel.height - 1; 0 <= ref ? j <= ref : j >= ref; y = 0 <= ref ? ++j : --j) {
-      results.push((function() {
-        var k, ref1, results1;
-        results1 = [];
-        for (x = k = 0, ref1 = this.mazeModel.width - 1; 0 <= ref1 ? k <= ref1 : k >= ref1; x = 0 <= ref1 ? ++k : --k) {
-          entry = this.mazeModel.entryAtCoordinate(x, y);
-          results1.push(this.tileLayers[this.visibleLayer].setTile(x, y, this.mazeModel.transparentTileIndex));
-        }
-        return results1;
-      }).call(this));
+      for (x = k = 0, ref1 = this.mazeModel.width - 1; 0 <= ref1 ? k <= ref1 : k >= ref1; x = 0 <= ref1 ? ++k : --k) {
+        this.tileLayers[this.visibleLayer].setTile(x, y, transparentTileIndex);
+      }
     }
-    return results;
+    this.mazeModel.createRandomMaze();
+    return this.gameState = GameState.INITIAL_PLACEMENT;
   };
 
   MazeGame.prototype.updateMaze = function() {
@@ -156,10 +171,10 @@ MazeGame = (function() {
   };
 
   MazeGame.prototype.drawMaze = function() {
-    var drawOrder, entry, i, j, k, l, len, player, playerIndex, position, ref, ref1, results, tileOffset, x, y;
+    var drawOrder, entry, i, j, k, l, len, player, playerIndex, position, ref, ref1, results, x, y;
     for (y = j = 0, ref = this.mazeModel.height - 1; 0 <= ref ? j <= ref : j >= ref; y = 0 <= ref ? ++j : --j) {
       for (x = k = 0, ref1 = this.mazeModel.width - 1; 0 <= ref1 ? k <= ref1 : k >= ref1; x = 0 <= ref1 ? ++k : --k) {
-        this.tileLayers[this.visibleLayer].setTile(x, y, this.mazeModel.transparentTileIndex);
+        this.tileLayers[this.visibleLayer].setTile(x, y, transparentTileIndex);
       }
     }
     drawOrder = (function() {
@@ -176,7 +191,6 @@ MazeGame = (function() {
     for (l = 0, len = drawOrder.length; l < len; l++) {
       playerIndex = drawOrder[l];
       player = this.mazeModel.players[playerIndex];
-      tileOffset = playerIndex === this.currentPlayerIndex ? 0 : 0;
       results.push((function() {
         var len1, m, ref2, results1;
         ref2 = this.mazeModel.positionsReachableByPlayer(player);
@@ -184,12 +198,26 @@ MazeGame = (function() {
         for (m = 0, len1 = ref2.length; m < len1; m++) {
           position = ref2[m];
           entry = this.mazeModel.entryAtPosition(position);
-          results1.push(this.tileLayers[this.visibleLayer].setTile(position.x, position.y, entry.tileIndex + tileOffset));
+          results1.push(this.tileLayers[this.visibleLayer].setTile(position.x, position.y, entry.tileIndex + this.tileOffset(player, position)));
         }
         return results1;
       }).call(this));
     }
     return results;
+  };
+
+  MazeGame.prototype.tileOffset = function(player, position) {
+    switch (this.gameState) {
+      case GameState.INITIAL_PLACEMENT:
+        if (player.position.equals(position)) {
+          return 0;
+        } else {
+          return darkenTileOffset;
+        }
+        break;
+      default:
+        return 0;
+    }
   };
 
   return MazeGame;

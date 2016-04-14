@@ -78,10 +78,20 @@ Client = (function() {
     });
   };
 
-  Client.prototype.reportBackWhenTileAtAnyOfPositions = function(validLocations) {
-    return this.sendMessage("reportBackWhenTileAtAnyOfPositions", {
-      "validLocations": validLocations
-    });
+  Client.prototype.reportBackWhenTileAtAnyOfPositions = function(validLocations, id) {
+    if (id == null) {
+      id = null;
+    }
+    if (id !== null) {
+      return this.sendMessage("reportBackWhenTileAtAnyOfPositions", {
+        "validLocations": validLocations,
+        "id": id
+      });
+    } else {
+      return this.sendMessage("reportBackWhenTileAtAnyOfPositions", {
+        "validLocations": validLocations
+      });
+    }
   };
 
   Client.prototype.sendMessage = function(action, payload) {

@@ -25,6 +25,13 @@ MAZE.Game.update = ->
 
 
 
+GameState =
+    INITIALIZING: 0
+    INITIAL_PLACEMENT: 1
+    PLAYER_TURN: 2
+
+
+
 class MazeGame
 
     constructor: (@kiwiState) ->
@@ -52,6 +59,8 @@ class MazeGame
 
     startNewGame: ->
 
+        # Prepare game state
+        @gameState = GameState.INITIALIZING
         @currentPlayerIndex = 0
 
         # Prepare map
@@ -102,7 +111,9 @@ class MazeGame
         @client.initializeTiledBoard(@mazeModel.width, @mazeModel.height)
 
     waitForStartPositions: ->
-        @client.reportBackWhenTileAtAnyOfPositions([[10, 10], [11, 10], [12, 10]])
+        for i in [0..@mazeModel.players.length - 1]
+            positions = ([position.x, position.y] for position in @mazeModel.positionsReachableByPlayer(@mazeModel.players[i]))
+            @client.reportBackWhenTileAtAnyOfPositions(positions, id=i)
 
     ready: ->
         # Fade maze
@@ -118,14 +129,16 @@ class MazeGame
 
     resetMaze: ->
 
-        # Create random maze and reset players
-        @mazeModel.createRandomMaze()
-
         # Draw transparent maze
         for y in [0..@mazeModel.height - 1]
             for x in [0..@mazeModel.width - 1]
-                entry = @mazeModel.entryAtCoordinate(x, y)
-                @tileLayers[@visibleLayer].setTile(x, y, @mazeModel.transparentTileIndex)
+                @tileLayers[@visibleLayer].setTile(x, y, transparentTileIndex)
+
+        # Create random maze and reset players
+        @mazeModel.createRandomMaze()
+
+        # Place players mode
+        @gameState = GameState.INITIAL_PLACEMENT
 
     updateMaze: ->
 
@@ -143,10 +156,13 @@ class MazeGame
 
     drawMaze: ->
 
-        # Draw black tiles
+        # Draw transparent tiles
         for y in [0..@mazeModel.height - 1]
             for x in [0..@mazeModel.width - 1]
-                @tileLayers[@visibleLayer].setTile(x, y, @mazeModel.transparentTileIndex)
+                @tileLayers[@visibleLayer].setTile(x, y, transparentTileIndex)
+                #entry = @mazeModel.entryAtCoordinate(x, y)
+                #if entry.tileIndex != 22
+                    #@tileLayers[@visibleLayer].setTile(x, y, entry.tileIndex)
 
         # Draw player tiles
         drawOrder = (i for i in [0..@mazeModel.numberOfPlayers - 1])
@@ -155,8 +171,13 @@ class MazeGame
 
         for playerIndex in drawOrder
             player = @mazeModel.players[playerIndex]
-            tileOffset = if playerIndex == @currentPlayerIndex then 0 else 0
 
             for position in @mazeModel.positionsReachableByPlayer(player)
                 entry = @mazeModel.entryAtPosition(position)
-                @tileLayers[@visibleLayer].setTile(position.x, position.y, entry.tileIndex + tileOffset)
+                @tileLayers[@visibleLayer].setTile(position.x, position.y, entry.tileIndex + @tileOffset(player, position))
+
+    tileOffset: (player, position) ->
+        switch @gameState
+            when GameState.INITIAL_PLACEMENT
+                if player.position.equals(position) then 0 else darkenTileOffset
+            else 0

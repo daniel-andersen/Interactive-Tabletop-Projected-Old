@@ -1,4 +1,4 @@
-var MazeEntry, MazeModel, MazeWall, WallType, blackTileIndex, transparentTileIndex, wallTileStartIndex,
+var Direction, MazeEntry, MazeModel, MazeWall, WallType, blackTileIndex, darkenTileOffset, directionMovements, transparentTileIndex, wallTileStartIndex,
   indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
 WallType = {
@@ -6,15 +6,25 @@ WallType = {
   RIGHT: 2,
   DOWN: 4,
   LEFT: 8,
-  ALL_SIDES: 15,
-  BORDER: 16
+  ALL_SIDES: 15
 };
+
+Direction = {
+  UP: 0,
+  RIGHT: 1,
+  DOWN: 2,
+  LEFT: 3
+};
+
+directionMovements = [[0, -1], [1, 0], [0, 1], [-1, 0]];
 
 blackTileIndex = 5;
 
 transparentTileIndex = 6;
 
 wallTileStartIndex = 7;
+
+darkenTileOffset = 20;
 
 MazeEntry = (function() {
   function MazeEntry(walls, tileIndex) {
@@ -41,6 +51,7 @@ MazeModel = (function() {
     this.numberOfPlayers = 4;
     this.width = 32;
     this.height = 20;
+    this.granularity = 2;
   }
 
   MazeModel.prototype.createRandomMaze = function() {
@@ -101,21 +112,29 @@ MazeModel = (function() {
   };
 
   MazeModel.prototype.createMaze = function() {
-    var adjacentPosition, randomIndex, results, wall;
+    var downPosition, entry, i, leftPosition, position, randomIndex, ref, results, rightPosition, stop, upPosition, wall, x, y;
     this.wallsToVisit = [];
-    adjacentPosition = new Position(this.players[0].position.x, this.players[0].position.y + 1);
-    this.removeWalls(this.players[0].position, adjacentPosition);
-    this.addAdjacentWallsToVisitList(adjacentPosition);
-    adjacentPosition = new Position(this.players[1].position.x - 1, this.players[1].position.y);
-    this.removeWalls(this.players[1].position, adjacentPosition);
-    this.addAdjacentWallsToVisitList(adjacentPosition);
-    adjacentPosition = new Position(this.players[2].position.x, this.players[2].position.y - 1);
-    this.removeWalls(this.players[2].position, adjacentPosition);
-    this.addAdjacentWallsToVisitList(adjacentPosition);
-    adjacentPosition = new Position(this.players[3].position.x + 1, this.players[3].position.y);
-    this.removeWalls(this.players[3].position, adjacentPosition);
-    this.addAdjacentWallsToVisitList(adjacentPosition);
-    results = [];
+
+    /*
+    adjacentPosition = new Position(@players[0].position.x, @players[0].position.y + @granularity)
+    @removeWalls(@players[0].position, adjacentPosition)
+    @addAdjacentWallsToVisitList(adjacentPosition)
+    
+    adjacentPosition = new Position(@players[1].position.x - @granularity, @players[1].position.y)
+    @removeWalls(@players[1].position, adjacentPosition)
+    @addAdjacentWallsToVisitList(adjacentPosition)
+    
+    adjacentPosition = new Position(@players[2].position.x, @players[2].position.y - @granularity)
+    @removeWalls(@players[2].position, adjacentPosition)
+    @addAdjacentWallsToVisitList(adjacentPosition)
+    
+    adjacentPosition = new Position(@players[3].position.x + @granularity, @players[3].position.y)
+    @removeWalls(@players[3].position, adjacentPosition)
+    @addAdjacentWallsToVisitList(adjacentPosition)
+     */
+    position = this.positionWithGranularity(new Position(this.width / 2, this.height / 2));
+    this.removeWalls(position, new Position(position.x + 1, position.y));
+    this.addAdjacentWallsToVisitList(position);
     while (this.wallsToVisit.length > 0) {
       randomIndex = Util.randomInRange(0, this.wallsToVisit.length);
       wall = this.wallsToVisit.splice(randomIndex, 1)[0];
@@ -123,7 +142,57 @@ MazeModel = (function() {
         continue;
       }
       this.removeWalls(wall.position1, wall.position2);
-      results.push(this.addAdjacentWallsToVisitList(wall.position2));
+      this.addAdjacentWallsToVisitList(wall.position2);
+    }
+    this.digWalls(this.players[0].position, Direction.DOWN, stop = WallType.ALL_SIDES);
+    this.digWalls(this.players[1].position, Direction.LEFT, stop = WallType.ALL_SIDES);
+    this.digWalls(this.players[2].position, Direction.UP, stop = WallType.ALL_SIDES);
+    this.digWalls(this.players[3].position, Direction.RIGHT, stop = WallType.ALL_SIDES);
+
+    /*
+    for x in [(@players[1].position.x)..(@width - 2)]
+        @removeWalls(new Position(x, @players[1].position.y), new Position(x + 1, @players[1].position.y), granularity=1)
+    
+    for y in [(@players[2].position.y)..(@height - 2)]
+        @removeWalls(new Position(@players[2].position.x, y), new Position(@players[2].position.x, y + 1), granularity=1)
+     */
+    results = [];
+    for (y = i = 0, ref = this.height - 1; 0 <= ref ? i <= ref : i >= ref; y = 0 <= ref ? ++i : --i) {
+      results.push((function() {
+        var j, ref1, ref2, ref3, ref4, ref5, results1;
+        results1 = [];
+        for (x = j = 0, ref1 = this.width - 1; 0 <= ref1 ? j <= ref1 : j >= ref1; x = 0 <= ref1 ? ++j : --j) {
+          position = new Position(x, y);
+          entry = this.entryAtPosition(position);
+          upPosition = new Position(x, y - 1);
+          if (this.isPositionValid(upPosition) && (ref2 = WallType.DOWN, indexOf.call(this.entryAtPosition(upPosition).walls, ref2) < 0)) {
+            entry.walls = entry.walls.filter(function(type) {
+              return type !== WallType.UP;
+            });
+          }
+          rightPosition = new Position(x + 1, y);
+          if (this.isPositionValid(rightPosition) && (ref3 = WallType.LEFT, indexOf.call(this.entryAtPosition(rightPosition).walls, ref3) < 0)) {
+            entry.walls = entry.walls.filter(function(type) {
+              return type !== WallType.RIGHT;
+            });
+          }
+          downPosition = new Position(x, y + 1);
+          if (this.isPositionValid(downPosition) && (ref4 = WallType.UP, indexOf.call(this.entryAtPosition(downPosition).walls, ref4) < 0)) {
+            entry.walls = entry.walls.filter(function(type) {
+              return type !== WallType.DOWN;
+            });
+          }
+          leftPosition = new Position(x - 1, y);
+          if (this.isPositionValid(leftPosition) && (ref5 = WallType.RIGHT, indexOf.call(this.entryAtPosition(leftPosition).walls, ref5) < 0)) {
+            results1.push(entry.walls = entry.walls.filter(function(type) {
+              return type !== WallType.LEFT;
+            }));
+          } else {
+            results1.push(void 0);
+          }
+        }
+        return results1;
+      }).call(this));
     }
     return results;
   };
@@ -145,23 +214,29 @@ MazeModel = (function() {
     return results;
   };
 
-  MazeModel.prototype.removeWalls = function(position1, position2) {
+  MazeModel.prototype.removeWalls = function(position1, position2, granularity) {
     var entry, wallType;
+    if (granularity == null) {
+      granularity = this.granularity;
+    }
     entry = this.entryAtPosition(position1);
-    wallType = this.wallTypeOfAdjacentPositions(position1, position2);
+    wallType = this.wallTypeOfAdjacentPositions(position1, position2, granularity);
     entry.walls = entry.walls.filter(function(type) {
       return type !== wallType;
     });
     entry = this.entryAtPosition(position2);
-    wallType = this.wallTypeOfAdjacentPositions(position2, position1);
+    wallType = this.wallTypeOfAdjacentPositions(position2, position1, granularity);
     return entry.walls = entry.walls.filter(function(type) {
       return type !== wallType;
     });
   };
 
-  MazeModel.prototype.addAdjacentWallsToVisitList = function(position) {
+  MazeModel.prototype.addAdjacentWallsToVisitList = function(position, granularity) {
     var adjacentPosition, i, len, ref, results;
-    ref = this.adjacentPositions(position);
+    if (granularity == null) {
+      granularity = this.granularity;
+    }
+    ref = this.adjacentPositions(position, granularity);
     results = [];
     for (i = 0, len = ref.length; i < len; i++) {
       adjacentPosition = ref[i];
@@ -170,37 +245,43 @@ MazeModel = (function() {
     return results;
   };
 
-  MazeModel.prototype.adjacentPositions = function(position) {
+  MazeModel.prototype.adjacentPositions = function(position, granularity) {
     var p, positions;
+    if (granularity == null) {
+      granularity = this.granularity;
+    }
     positions = [];
-    p = new Position(position.x - 1, position.y);
+    p = new Position(position.x - granularity, position.y);
     if (this.isPositionValid(p)) {
       positions.push(p);
     }
-    p = new Position(position.x + 1, position.y);
+    p = new Position(position.x + granularity, position.y);
     if (this.isPositionValid(p)) {
       positions.push(p);
     }
-    p = new Position(position.x, position.y - 1);
+    p = new Position(position.x, position.y - granularity);
     if (this.isPositionValid(p)) {
       positions.push(p);
     }
-    p = new Position(position.x, position.y + 1);
+    p = new Position(position.x, position.y + granularity);
     if (this.isPositionValid(p)) {
       positions.push(p);
     }
     return positions;
   };
 
-  MazeModel.prototype.adjacentConnectedPositions = function(position) {
+  MazeModel.prototype.adjacentConnectedPositions = function(position, granularity) {
     var p;
+    if (granularity == null) {
+      granularity = this.granularity;
+    }
     return (function() {
       var i, len, ref, results;
-      ref = this.adjacentPositions(position);
+      ref = this.adjacentPositions(position, granularity);
       results = [];
       for (i = 0, len = ref.length; i < len; i++) {
         p = ref[i];
-        if (this.arePositionsConnected(position, p)) {
+        if (this.arePositionsConnected(position, p, granularity)) {
           results.push(p);
         }
       }
@@ -220,7 +301,7 @@ MazeModel = (function() {
   };
 
   MazeModel.prototype.positionsReachableFromPosition = function(position, maxDistance) {
-    var _, adjacentPosition, distance, distanceMap, i, len, positions, positionsToVisit, ref;
+    var _, adjacentPosition, distance, distanceMap, granularity, i, len, positions, positionsToVisit, ref;
     distanceMap = (function() {
       var i, ref, results;
       results = [];
@@ -246,7 +327,7 @@ MazeModel = (function() {
         continue;
       }
       positions.push(position);
-      ref = this.adjacentConnectedPositions(position);
+      ref = this.adjacentConnectedPositions(position, granularity = 1);
       for (i = 0, len = ref.length; i < len; i++) {
         adjacentPosition = ref[i];
         if (distanceMap[adjacentPosition.y][adjacentPosition.x] === -1) {
@@ -256,6 +337,27 @@ MazeModel = (function() {
       }
     }
     return positions;
+  };
+
+  MazeModel.prototype.digWalls = function(position, direction, stop) {
+    var entry, granularity, nextPosition;
+    if (stop == null) {
+      stop = WallType.ALL_SIDES;
+    }
+    entry = this.entryAtPosition(position);
+    while (this.wallMaskAtPosition(position) !== WallType.ALL_SIDES) {
+      nextPosition = this.positionInDirection(position, direction);
+      if (!this.isPositionValid(nextPosition)) {
+        return;
+      }
+      this.removeWalls(position, nextPosition, granularity = 1);
+      position = nextPosition;
+      entry = this.entryAtPosition(nextPosition);
+    }
+  };
+
+  MazeModel.prototype.positionInDirection = function(position, direction) {
+    return new Position(position.x + directionMovements[direction][0], position.y + directionMovements[direction][1]);
   };
 
   MazeModel.prototype.wallMaskAtPosition = function(position) {
@@ -272,26 +374,32 @@ MazeModel = (function() {
     return this.maze[position.y][position.x];
   };
 
-  MazeModel.prototype.arePositionsConnected = function(position1, position2) {
+  MazeModel.prototype.arePositionsConnected = function(position1, position2, granularity) {
     var wallType;
-    wallType = this.wallTypeOfAdjacentPositions(position1, position2);
+    if (granularity == null) {
+      granularity = this.granularity;
+    }
+    wallType = this.wallTypeOfAdjacentPositions(position1, position2, granularity);
     return indexOf.call(this.entryAtPosition(position1).walls, wallType) < 0;
   };
 
-  MazeModel.prototype.wallTypeOfAdjacentPositions = function(position1, position2) {
+  MazeModel.prototype.wallTypeOfAdjacentPositions = function(position1, position2, granularity) {
+    if (granularity == null) {
+      granularity = this.granularity;
+    }
     if (position1.y === position2.y) {
-      if (position1.x === position2.x - 1) {
+      if (position1.x === position2.x - granularity) {
         return WallType.RIGHT;
       }
-      if (position1.x === position2.x + 1) {
+      if (position1.x === position2.x + granularity) {
         return WallType.LEFT;
       }
     }
     if (position1.x === position2.x) {
-      if (position1.y === position2.y - 1) {
+      if (position1.y === position2.y - granularity) {
         return WallType.DOWN;
       }
-      if (position1.y === position2.y + 1) {
+      if (position1.y === position2.y + granularity) {
         return WallType.UP;
       }
     }
@@ -303,19 +411,16 @@ MazeModel = (function() {
   };
 
   MazeModel.prototype.isBorderAtCoordinate = function(x, y) {
-    if (x <= 0 || y <= 0 || x >= this.width - 1 || y >= this.height - 1) {
+    if (x <= 1 && y <= 1) {
       return true;
     }
-    if (x === 1 && y === 1) {
+    if (x >= this.width - 2 && y <= 1) {
       return true;
     }
-    if (x === this.width - 2 && y === 1) {
+    if (x <= 1 && y >= this.height - 2) {
       return true;
     }
-    if (x === 1 && y === this.height - 2) {
-      return true;
-    }
-    if (x === this.width - 2 && y === this.height - 2) {
+    if (x >= this.width - 2 && y >= this.height - 2) {
       return true;
     }
     return false;
@@ -327,6 +432,13 @@ MazeModel = (function() {
     return wallTileStartIndex + entry.walls.reduce((function(t, s) {
       return t + s;
     }), 0);
+  };
+
+  MazeModel.prototype.positionWithGranularity = function(position, granularity) {
+    if (granularity == null) {
+      granularity = this.granularity;
+    }
+    return new Position(position.x - (position.x % granularity), position.y - (position.y % granularity));
   };
 
   return MazeModel;

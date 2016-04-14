@@ -110,7 +110,7 @@ class Server(WebSocket):
                                               self.camera)
         self.reporters[id] = reporter
         reporter.start(id, lambda tile: self.send_message("OK", "tileFoundAtPosition", {"id": id, "tile": tile}))
-        return "OK", {}
+        return "OK", {"id": id}
 
     def request_tiled_object_position(self, payload):
         """

@@ -4,11 +4,19 @@ WallType =
     DOWN: 4
     LEFT: 8
     ALL_SIDES: 15
-    BORDER: 16
+
+Direction =
+    UP: 0
+    RIGHT: 1
+    DOWN: 2
+    LEFT: 3
+
+directionMovements = [[0, -1], [1, 0], [0, 1], [-1, 0]]
 
 blackTileIndex = 5
 transparentTileIndex = 6
 wallTileStartIndex = 7
+darkenTileOffset = 20
 
 class MazeEntry
     constructor: (@walls = [WallType.UP, WallType.RIGHT, WallType.DOWN, WallType.LEFT], @tileIndex = transparentTileIndex) ->
@@ -23,6 +31,8 @@ class MazeModel
 
         @width = 32
         @height = 20
+
+        @granularity = 2
 
     createRandomMaze: ->
 
@@ -52,21 +62,26 @@ class MazeModel
         @wallsToVisit = []
 
         # Remove walls at players positions and add to visit list
-        adjacentPosition = new Position(@players[0].position.x, @players[0].position.y + 1)
+        ###
+        adjacentPosition = new Position(@players[0].position.x, @players[0].position.y + @granularity)
         @removeWalls(@players[0].position, adjacentPosition)
         @addAdjacentWallsToVisitList(adjacentPosition)
 
-        adjacentPosition = new Position(@players[1].position.x - 1, @players[1].position.y)
+        adjacentPosition = new Position(@players[1].position.x - @granularity, @players[1].position.y)
         @removeWalls(@players[1].position, adjacentPosition)
         @addAdjacentWallsToVisitList(adjacentPosition)
 
-        adjacentPosition = new Position(@players[2].position.x, @players[2].position.y - 1)
+        adjacentPosition = new Position(@players[2].position.x, @players[2].position.y - @granularity)
         @removeWalls(@players[2].position, adjacentPosition)
         @addAdjacentWallsToVisitList(adjacentPosition)
 
-        adjacentPosition = new Position(@players[3].position.x + 1, @players[3].position.y)
+        adjacentPosition = new Position(@players[3].position.x + @granularity, @players[3].position.y)
         @removeWalls(@players[3].position, adjacentPosition)
         @addAdjacentWallsToVisitList(adjacentPosition)
+        ###
+        position = @positionWithGranularity(new Position(@width / 2, @height / 2))
+        @removeWalls(position, new Position(position.x + 1, position.y))
+        @addAdjacentWallsToVisitList(position)
 
         # Build maze
         while @wallsToVisit.length > 0
@@ -85,47 +100,84 @@ class MazeModel
             # Add adjacent positions
             @addAdjacentWallsToVisitList(wall.position2)
 
+        # Dig walls to players
+        @digWalls(@players[0].position, Direction.DOWN, stop=WallType.ALL_SIDES)
+        @digWalls(@players[1].position, Direction.LEFT, stop=WallType.ALL_SIDES)
+        @digWalls(@players[2].position, Direction.UP, stop=WallType.ALL_SIDES)
+        @digWalls(@players[3].position, Direction.RIGHT, stop=WallType.ALL_SIDES)
+
+        # Adjust player positions to account for granularity
+        ###
+        for x in [(@players[1].position.x)..(@width - 2)]
+            @removeWalls(new Position(x, @players[1].position.y), new Position(x + 1, @players[1].position.y), granularity=1)
+
+        for y in [(@players[2].position.y)..(@height - 2)]
+            @removeWalls(new Position(@players[2].position.x, y), new Position(@players[2].position.x, y + 1), granularity=1)
+        ###
+
+        # Dig walls to "non-granularity" tiles
+        for y in [0..@height - 1]
+            for x in [0..@width - 1]
+                position = new Position(x, y)
+                entry = @entryAtPosition(position)
+
+                upPosition = new Position(x, y - 1)
+                if @isPositionValid(upPosition) and WallType.DOWN not in @entryAtPosition(upPosition).walls
+                    entry.walls = entry.walls.filter (type) -> type isnt WallType.UP
+
+                rightPosition = new Position(x + 1, y)
+                if @isPositionValid(rightPosition) and WallType.LEFT not in @entryAtPosition(rightPosition).walls
+                    entry.walls = entry.walls.filter (type) -> type isnt WallType.RIGHT
+
+                downPosition = new Position(x, y + 1)
+                if @isPositionValid(downPosition) and WallType.UP not in @entryAtPosition(downPosition).walls
+                    entry.walls = entry.walls.filter (type) -> type isnt WallType.DOWN
+
+                leftPosition = new Position(x - 1, y)
+                if @isPositionValid(leftPosition) and WallType.RIGHT not in @entryAtPosition(leftPosition).walls
+                    entry.walls = entry.walls.filter (type) -> type isnt WallType.LEFT
+
     calculateTileIndices: ->
         for y in [0..@height - 1]
             for x in [0..@width - 1]
                 entry = @entryAtCoordinate(x, y)
                 entry.tileIndex = @tileIndexAtCoordinate(x, y)
 
-    removeWalls: (position1, position2) ->
+    removeWalls: (position1, position2, granularity=@granularity) ->
 
         # Remove walls for position 1
         entry = @entryAtPosition(position1)
-        wallType = @wallTypeOfAdjacentPositions(position1, position2)
+        wallType = @wallTypeOfAdjacentPositions(position1, position2, granularity)
         entry.walls = entry.walls.filter (type) -> type isnt wallType
 
         # Remove walls for position 2
         entry = @entryAtPosition(position2)
-        wallType = @wallTypeOfAdjacentPositions(position2, position1)
+        wallType = @wallTypeOfAdjacentPositions(position2, position1, granularity)
         entry.walls = entry.walls.filter (type) -> type isnt wallType
 
-    addAdjacentWallsToVisitList: (position) ->
-        for adjacentPosition in @adjacentPositions(position)
+    addAdjacentWallsToVisitList: (position, granularity=@granularity) ->
+        for adjacentPosition in @adjacentPositions(position, granularity)
             @wallsToVisit.push(new MazeWall(position, adjacentPosition))
 
-    adjacentPositions: (position) ->
+    adjacentPositions: (position, granularity=@granularity) ->
         positions = []
 
-        p = new Position(position.x - 1, position.y)
+        p = new Position(position.x - granularity, position.y)
         if @isPositionValid(p) then positions.push(p)
 
-        p = new Position(position.x + 1, position.y)
+        p = new Position(position.x + granularity, position.y)
         if @isPositionValid(p) then positions.push(p)
 
-        p = new Position(position.x, position.y - 1)
+        p = new Position(position.x, position.y - granularity)
         if @isPositionValid(p) then positions.push(p)
 
-        p = new Position(position.x, position.y + 1)
+        p = new Position(position.x, position.y + granularity)
         if @isPositionValid(p) then positions.push(p)
 
         return positions
 
-    adjacentConnectedPositions: (position) ->
-        return (p for p in @adjacentPositions(position) when @arePositionsConnected(position, p))
+    adjacentConnectedPositions: (position, granularity=@granularity) ->
+        return (p for p in @adjacentPositions(position, granularity) when @arePositionsConnected(position, p, granularity))
 
     isPositionValid: (position) ->
         if position.x < 0 or position.y < 0 or position.x > @width - 1 or position.y > @height - 1 then return false
@@ -155,12 +207,26 @@ class MazeModel
             positions.push(position)
 
             # Visit all adjacent positions that has not yet been visited
-            for adjacentPosition in @adjacentConnectedPositions(position)
+            for adjacentPosition in @adjacentConnectedPositions(position, granularity = 1)
                 if distanceMap[adjacentPosition.y][adjacentPosition.x] == -1
                     distanceMap[adjacentPosition.y][adjacentPosition.x] = distance + 1
                     positionsToVisit.push(adjacentPosition)
 
         return positions
+
+    digWalls: (position, direction, stop=WallType.ALL_SIDES) ->
+        entry = @entryAtPosition(position)
+
+        while @wallMaskAtPosition(position) != WallType.ALL_SIDES
+            nextPosition = @positionInDirection(position, direction)
+            if not @isPositionValid(nextPosition) then return
+
+            @removeWalls(position, nextPosition, granularity=1)
+
+            position = nextPosition
+            entry = @entryAtPosition(nextPosition)
+
+    positionInDirection: (position, direction) -> new Position(position.x + directionMovements[direction][0], position.y + directionMovements[direction][1])
 
     wallMaskAtPosition: (position) -> @entryAtPosition(position).walls.reduce( ((t, s) -> t + s), 0)
 
@@ -168,24 +234,24 @@ class MazeModel
 
     entryAtPosition: (position) -> @maze[position.y][position.x]
 
-    arePositionsConnected: (position1, position2) ->
-        wallType = @wallTypeOfAdjacentPositions(position1, position2)
+    arePositionsConnected: (position1, position2, granularity=@granularity) ->
+        wallType = @wallTypeOfAdjacentPositions(position1, position2, granularity)
         return wallType not in @entryAtPosition(position1).walls
 
-    wallTypeOfAdjacentPositions: (position1, position2) ->
+    wallTypeOfAdjacentPositions: (position1, position2, granularity=@granularity) ->
 
         # Horizontally adjacent
         if position1.y == position2.y
-            if position1.x == position2.x - 1
+            if position1.x == position2.x - granularity
                 return WallType.RIGHT
-            if position1.x == position2.x + 1
+            if position1.x == position2.x + granularity
                 return WallType.LEFT
 
         # Vertically adjacent
         if position1.x == position2.x
-            if position1.y == position2.y - 1
+            if position1.y == position2.y - granularity
                 return WallType.DOWN
-            if position1.y == position2.y + 1
+            if position1.y == position2.y + granularity
                 return WallType.UP
 
         return 0
@@ -194,13 +260,14 @@ class MazeModel
         return not @isBorderAtCoordinate(x, y)
 
     isBorderAtCoordinate: (x, y) ->
-        if x <= 0 or y <= 0 or x >= @width - 1 or y >= @height - 1 then return true
-        if x == 1 and y == 1 then return true
-        if x == @width - 2 and y == 1 then return true
-        if x == 1 and y == @height - 2 then return true
-        if x == @width - 2 and y == @height - 2 then return true
+        if x <= 1 and y <= 1 then return true
+        if x >= @width - 2 and y <= 1 then return true
+        if x <= 1 and y >= @height - 2 then return true
+        if x >= @width - 2 and y >= @height - 2 then return true
         return false
 
     tileIndexAtCoordinate: (x, y) ->
         entry = @entryAtCoordinate(x, y)
         return wallTileStartIndex + entry.walls.reduce( (((t, s) -> t + s)), 0)
+
+    positionWithGranularity: (position, granularity=@granularity) -> new Position(position.x - (position.x % granularity), position.y - (position.y % granularity))

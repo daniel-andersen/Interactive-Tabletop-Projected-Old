@@ -53,10 +53,16 @@ class Client
             "validLocations": validLocations
         })
 
-    reportBackWhenTileAtAnyOfPositions: (validLocations) ->
-        this.sendMessage("reportBackWhenTileAtAnyOfPositions", {
-            "validLocations": validLocations
-        })
+    reportBackWhenTileAtAnyOfPositions: (validLocations, id = null) ->
+        if id != null
+            this.sendMessage("reportBackWhenTileAtAnyOfPositions", {
+                "validLocations": validLocations,
+                "id": id
+            })
+        else
+            this.sendMessage("reportBackWhenTileAtAnyOfPositions", {
+                "validLocations": validLocations
+            })
 
     sendMessage: (action, payload) ->
         message = {

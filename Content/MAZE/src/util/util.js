@@ -17,6 +17,10 @@ Position = (function() {
     this.y = y != null ? y : 0;
   }
 
+  Position.prototype.equals = function(position) {
+    return this.x === position.x && this.y === position.y;
+  };
+
   return Position;
 
 })();
