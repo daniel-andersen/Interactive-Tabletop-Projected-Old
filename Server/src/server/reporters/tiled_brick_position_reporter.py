@@ -30,9 +30,11 @@ class TiledBrickPositionReporter(Reporter):
             self.board_descriptor.snapshot = self.board_recognizer.find_board(image, self.board_descriptor)
 
             if self.board_descriptor.is_recognized():
-                cv2.imwrite("output1.png", self.board_descriptor.snapshot.board_image)
+                cv2.imwrite("output_board_recognized.png", self.board_descriptor.snapshot.board_image)
                 tile = self.tile_brick_detector.find_brick_among_tiles(self.board_descriptor, self.valid_locations)
                 if tile is not None:
-                    cv2.imwrite("output2.png", image)
+                    cv2.imwrite("output_brick_recognized.png", image)
                     self.callback_function(tile)
                     self.stop()
+            else:
+                cv2.imwrite("output_board_not_recognized.png", self.board_descriptor.snapshot.board_image)
