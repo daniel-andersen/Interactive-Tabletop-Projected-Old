@@ -10,7 +10,7 @@ class Camera(object):
     raw_capture = None
     stream = None
 
-    def start(self, resolution=(320, 240), framerate=32):
+    def start(self, resolution=(640, 480), framerate=32):
         """
         Starts camera input in a new thread.
 
