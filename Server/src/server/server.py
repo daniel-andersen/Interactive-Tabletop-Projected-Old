@@ -46,6 +46,8 @@ class Server(WebSocket):
             return self.reset()
         if action == "resetReporters":
             return self.reset_reporters()
+        if action == "resetReporter":
+            return self.reset_reporter(payload)
         if action == "initializeTiledBoard":
             return self.initialize_tiled_board(payload)
         if action == "reportBackWhenTileAtAnyOfPositions":
@@ -101,7 +103,7 @@ class Server(WebSocket):
 
         reporter = TiledBrickPositionReporter(valid_locations, stable_count)
         self.reporters[id] = reporter
-        reporter.start(id, lambda tile: self.send_message("OK", "tileFoundAtPosition", {"id": id, "tile": tile}))
+        reporter.start(id, lambda tile: self.send_message("OK", "brickFoundAtPosition", {"id": id, "position": tile}))
         return "OK", {"id": id}
 
     def request_tiled_object_position(self, payload):
@@ -126,6 +128,34 @@ class Server(WebSocket):
         else:
             return "BOARD_NOT_RECOGNIZED"
 
+    def reset_reporters(self):
+        """
+        Stops and resets all reporters.
+        """
+        for (_, reporter) in self.reporters.iteritems():
+            reporter.stop()
+
+        self.reporters = {}
+
+        return "OK"
+
+    def reset_reporter(self, payload):
+        """
+        Stops and resets the reporter with given ID.
+
+        id: Reporter ID.
+        """
+        id = payload["id"]
+        self.reporters[id].stop()
+
+        return "OK"
+
+    def take_photo(self):
+        """
+        Returns the most recent photo from the camera.
+        """
+        return globals.camera.read()
+
     def send_message(self, result, action, payload={}):
         """
         Sends a new message to the client.
@@ -138,21 +168,6 @@ class Server(WebSocket):
                    "action": action,
                    "payload": payload}
         self.sendMessage(json.dumps(message, ensure_ascii=False, encoding='utf8'))
-
-    def take_photo(self):
-        """
-        Returns the most recent photo from the camera.
-        """
-        return globals.camera.read()
-
-    def reset_reporters(self):
-        """
-        Stops and resets all reporters.
-        """
-        for (_, reporter) in self.reporters.iteritems():
-            reporter.stop()
-
-        self.reporters = {}
 
     def handleConnected(self):
         print self.address, 'connected'

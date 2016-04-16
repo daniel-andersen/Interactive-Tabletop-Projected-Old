@@ -64,13 +64,13 @@ MazeModel = (function() {
   MazeModel.prototype.resetMaze = function() {
     var x, y;
     this.maze = (function() {
-      var i, ref, results;
+      var j, ref, results;
       results = [];
-      for (y = i = 1, ref = this.height; 1 <= ref ? i <= ref : i >= ref; y = 1 <= ref ? ++i : --i) {
+      for (y = j = 1, ref = this.height; 1 <= ref ? j <= ref : j >= ref; y = 1 <= ref ? ++j : --j) {
         results.push((function() {
-          var j, ref1, results1;
+          var k, ref1, results1;
           results1 = [];
-          for (x = j = 1, ref1 = this.width; 1 <= ref1 ? j <= ref1 : j >= ref1; x = 1 <= ref1 ? ++j : --j) {
+          for (x = k = 1, ref1 = this.width; 1 <= ref1 ? k <= ref1 : k >= ref1; x = 1 <= ref1 ? ++k : --k) {
             results1.push(new MazeEntry());
           }
           return results1;
@@ -79,13 +79,13 @@ MazeModel = (function() {
       return results;
     }).call(this);
     return this.validPositionMap = (function() {
-      var i, ref, results;
+      var j, ref, results;
       results = [];
-      for (y = i = 0, ref = this.height - 1; 0 <= ref ? i <= ref : i >= ref; y = 0 <= ref ? ++i : --i) {
+      for (y = j = 0, ref = this.height - 1; 0 <= ref ? j <= ref : j >= ref; y = 0 <= ref ? ++j : --j) {
         results.push((function() {
-          var j, ref1, results1;
+          var k, ref1, results1;
           results1 = [];
-          for (x = j = 0, ref1 = this.width - 1; 0 <= ref1 ? j <= ref1 : j >= ref1; x = 0 <= ref1 ? ++j : --j) {
+          for (x = k = 0, ref1 = this.width - 1; 0 <= ref1 ? k <= ref1 : k >= ref1; x = 0 <= ref1 ? ++k : --k) {
             results1.push(this.isCoordinateValid(x, y));
           }
           return results1;
@@ -96,12 +96,12 @@ MazeModel = (function() {
   };
 
   MazeModel.prototype.placePlayers = function() {
-    var _;
+    var i;
     this.players = (function() {
-      var i, ref, results;
+      var j, ref, results;
       results = [];
-      for (_ = i = 1, ref = this.numberOfPlayers; 1 <= ref ? i <= ref : i >= ref; _ = 1 <= ref ? ++i : --i) {
-        results.push(new Player());
+      for (i = j = 0, ref = this.numberOfPlayers - 1; 0 <= ref ? j <= ref : j >= ref; i = 0 <= ref ? ++j : --j) {
+        results.push(new Player(i));
       }
       return results;
     }).call(this);
@@ -112,7 +112,7 @@ MazeModel = (function() {
   };
 
   MazeModel.prototype.createMaze = function() {
-    var downPosition, entry, i, leftPosition, position, randomIndex, ref, results, rightPosition, stop, upPosition, wall, x, y;
+    var downPosition, entry, j, leftPosition, position, randomIndex, ref, results, rightPosition, stop, upPosition, wall, x, y;
     this.wallsToVisit = [];
 
     /*
@@ -157,11 +157,11 @@ MazeModel = (function() {
         @removeWalls(new Position(@players[2].position.x, y), new Position(@players[2].position.x, y + 1), granularity=1)
      */
     results = [];
-    for (y = i = 0, ref = this.height - 1; 0 <= ref ? i <= ref : i >= ref; y = 0 <= ref ? ++i : --i) {
+    for (y = j = 0, ref = this.height - 1; 0 <= ref ? j <= ref : j >= ref; y = 0 <= ref ? ++j : --j) {
       results.push((function() {
-        var j, ref1, ref2, ref3, ref4, ref5, results1;
+        var k, ref1, ref2, ref3, ref4, ref5, results1;
         results1 = [];
-        for (x = j = 0, ref1 = this.width - 1; 0 <= ref1 ? j <= ref1 : j >= ref1; x = 0 <= ref1 ? ++j : --j) {
+        for (x = k = 0, ref1 = this.width - 1; 0 <= ref1 ? k <= ref1 : k >= ref1; x = 0 <= ref1 ? ++k : --k) {
           position = new Position(x, y);
           entry = this.entryAtPosition(position);
           upPosition = new Position(x, y - 1);
@@ -198,13 +198,13 @@ MazeModel = (function() {
   };
 
   MazeModel.prototype.calculateTileIndices = function() {
-    var entry, i, ref, results, x, y;
+    var entry, j, ref, results, x, y;
     results = [];
-    for (y = i = 0, ref = this.height - 1; 0 <= ref ? i <= ref : i >= ref; y = 0 <= ref ? ++i : --i) {
+    for (y = j = 0, ref = this.height - 1; 0 <= ref ? j <= ref : j >= ref; y = 0 <= ref ? ++j : --j) {
       results.push((function() {
-        var j, ref1, results1;
+        var k, ref1, results1;
         results1 = [];
-        for (x = j = 0, ref1 = this.width - 1; 0 <= ref1 ? j <= ref1 : j >= ref1; x = 0 <= ref1 ? ++j : --j) {
+        for (x = k = 0, ref1 = this.width - 1; 0 <= ref1 ? k <= ref1 : k >= ref1; x = 0 <= ref1 ? ++k : --k) {
           entry = this.entryAtCoordinate(x, y);
           results1.push(entry.tileIndex = this.tileIndexAtCoordinate(x, y));
         }
@@ -232,14 +232,14 @@ MazeModel = (function() {
   };
 
   MazeModel.prototype.addAdjacentWallsToVisitList = function(position, granularity) {
-    var adjacentPosition, i, len, ref, results;
+    var adjacentPosition, j, len, ref, results;
     if (granularity == null) {
       granularity = this.granularity;
     }
     ref = this.adjacentPositions(position, granularity);
     results = [];
-    for (i = 0, len = ref.length; i < len; i++) {
-      adjacentPosition = ref[i];
+    for (j = 0, len = ref.length; j < len; j++) {
+      adjacentPosition = ref[j];
       results.push(this.wallsToVisit.push(new MazeWall(position, adjacentPosition)));
     }
     return results;
@@ -276,11 +276,11 @@ MazeModel = (function() {
       granularity = this.granularity;
     }
     return (function() {
-      var i, len, ref, results;
+      var j, len, ref, results;
       ref = this.adjacentPositions(position, granularity);
       results = [];
-      for (i = 0, len = ref.length; i < len; i++) {
-        p = ref[i];
+      for (j = 0, len = ref.length; j < len; j++) {
+        p = ref[j];
         if (this.arePositionsConnected(position, p, granularity)) {
           results.push(p);
         }
@@ -301,15 +301,15 @@ MazeModel = (function() {
   };
 
   MazeModel.prototype.positionsReachableFromPosition = function(position, maxDistance) {
-    var _, adjacentPosition, distance, distanceMap, granularity, i, len, positions, positionsToVisit, ref;
+    var _, adjacentPosition, distance, distanceMap, granularity, j, len, positions, positionsToVisit, ref;
     distanceMap = (function() {
-      var i, ref, results;
+      var j, ref, results;
       results = [];
-      for (_ = i = 1, ref = this.height; 1 <= ref ? i <= ref : i >= ref; _ = 1 <= ref ? ++i : --i) {
+      for (_ = j = 1, ref = this.height; 1 <= ref ? j <= ref : j >= ref; _ = 1 <= ref ? ++j : --j) {
         results.push((function() {
-          var j, ref1, results1;
+          var k, ref1, results1;
           results1 = [];
-          for (_ = j = 1, ref1 = this.width; 1 <= ref1 ? j <= ref1 : j >= ref1; _ = 1 <= ref1 ? ++j : --j) {
+          for (_ = k = 1, ref1 = this.width; 1 <= ref1 ? k <= ref1 : k >= ref1; _ = 1 <= ref1 ? ++k : --k) {
             results1.push(-1);
           }
           return results1;
@@ -328,8 +328,8 @@ MazeModel = (function() {
       }
       positions.push(position);
       ref = this.adjacentConnectedPositions(position, granularity = 1);
-      for (i = 0, len = ref.length; i < len; i++) {
-        adjacentPosition = ref[i];
+      for (j = 0, len = ref.length; j < len; j++) {
+        adjacentPosition = ref[j];
         if (distanceMap[adjacentPosition.y][adjacentPosition.x] === -1) {
           distanceMap[adjacentPosition.y][adjacentPosition.x] = distance + 1;
           positionsToVisit.push(adjacentPosition);

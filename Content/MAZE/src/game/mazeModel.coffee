@@ -49,7 +49,7 @@ class MazeModel
         @validPositionMap = ((@isCoordinateValid(x, y) for x in [0..@width - 1]) for y in [0..@height - 1])
 
     placePlayers: ->
-        @players = (new Player() for _ in [1..@numberOfPlayers])
+        @players = (new Player(i) for i in [0..@numberOfPlayers - 1])
 
         @players[0].position = new Position(@width / 2, 0)
         @players[1].position = new Position(@width - 1, @height / 2)

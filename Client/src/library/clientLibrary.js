@@ -45,12 +45,17 @@ Client = (function() {
   };
 
   Client.prototype.reset = function() {
-    var message;
-    message = {
-      action: "reset",
-      payload: {}
-    };
-    return this.socket.send(JSON.stringify(message));
+    return this.sendMessage("reset", {});
+  };
+
+  Client.prototype.resetReporters = function() {
+    return this.sendMessage("resetReporters", {});
+  };
+
+  Client.prototype.resetReporter = function(reporterId) {
+    return this.sendMessage("resetReporter", {
+      "id": reporterId
+    });
   };
 
   Client.prototype.initializeTiledBoard = function(tileCountX, tileCountY, borderPctX, borderPctY, cornerMarker) {

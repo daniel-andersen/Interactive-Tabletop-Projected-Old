@@ -33,11 +33,15 @@ class Client
             this.socket = null
 
     reset: () ->
-        message = {
-            action: "reset",
-            payload: {}
-        }
-        this.socket.send(JSON.stringify(message))
+        this.sendMessage("reset", {})
+
+    resetReporters: ->
+        this.sendMessage("resetReporters", {})
+
+    resetReporter: (reporterId) ->
+        this.sendMessage("resetReporter", {
+            "id": reporterId
+        })
 
     initializeTiledBoard: (tileCountX, tileCountY, borderPctX = 0.0, borderPctY = 0.0, cornerMarker = "DEFAULT") ->
         this.sendMessage("initializeTiledBoard", {

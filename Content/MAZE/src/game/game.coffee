@@ -28,7 +28,7 @@ MAZE.Game.update = ->
 GameState =
     INITIALIZING: 0
     INITIAL_PLACEMENT: 1
-    PLAYER_TURN: 2
+    PLAYING_GAME: 2
 
 
 
@@ -54,6 +54,7 @@ class MazeGame
         switch json["action"]
             when "reset" then @initializeBoard()
             when "initializeTiledBoard" then @ready()
+            when "brickFoundAtPosition" then @brickFoundAtPosition(payload=json["payload"])
 
 
 
@@ -61,7 +62,6 @@ class MazeGame
 
         # Prepare game state
         @gameState = GameState.INITIALIZING
-        @currentPlayerIndex = 0
 
         # Prepare map
         @visibleLayer = 0
@@ -115,6 +115,63 @@ class MazeGame
             positions = ([position.x, position.y] for position in @mazeModel.positionsReachableByPlayer(@mazeModel.players[i]))
             @client.reportBackWhenTileAtAnyOfPositions(positions, id=i)
 
+    brickFoundAtPosition: (payload) ->
+        player = @mazeModel.players[payload["id"]]
+        position = new Position(payload["position"][0], payload["position"][1])
+
+        switch @gameState
+            when GameState.INITIAL_PLACEMENT
+                if position.equals(player.position)
+                    @playerPlacedInitialBrick(player, position)
+                else
+                    @playerMovedInitialBrick(player, position)
+
+    playerPlacedInitialBrick: (player, position) ->
+        player.state = PlayerState.IDLE
+        @updateMaze()
+
+    playerMovedInitialBrick: (player, position) ->
+
+        # Disable players with no brick placed
+        @mazeModel.players = (player for player in @mazeModel.players when PlayerState == PlayerState.IDLE)
+
+        # Set player reach distances
+        for player in @mazeModel.players
+            player.reachDistance = playerDefaultReachDistance
+
+        # Move player
+        player.state = PlayerState.TURN
+        playerMovedBrick(position)
+
+    playerMovedBrick: (position) ->
+
+        # Reset reporters
+        @client.resetReporters()
+
+        # Move player
+        player.position = position
+        @updateMaze()
+
+        # Next players turn
+        nextPlayerIndex = (@currentPlayer.index + 1) % @mazeModel.players.length
+
+        @currentPlayer = @mazeModel.players[nextPlayerIndex]
+        @currentPlayer.state = PlayerState.TURN
+
+        player.state = PlayerState.IDLE
+
+        # Update maze
+        @updateMaze()
+
+        # Start brick move reporter
+        setTimeout(() =>
+            @requestPlayerPosition(@currentPlayer)
+        , 500)
+
+    requestPlayerPosition: (player) ->
+        positions = ([position.x, position.y] for position in @mazeModel.positionsReachableByPlayer(player))
+        @client.reportBackWhenTileAtAnyOfPositions(positions, id=player.index)
+
     ready: ->
         # Fade maze
         setTimeout(() =>
@@ -126,7 +183,6 @@ class MazeGame
             @waitForStartPositions()
         , 2500)
 
-
     resetMaze: ->
 
         # Draw transparent maze
@@ -137,10 +193,22 @@ class MazeGame
         # Create random maze and reset players
         @mazeModel.createRandomMaze()
 
-        # Place players mode
+        # Reset game state
         @gameState = GameState.INITIAL_PLACEMENT
+        @currentPlayer = @mazeModel.players[0]
+
+        # Clear updating state
+        @isUpdatingMaze = false
 
     updateMaze: ->
+
+        # Check already updating maze
+        if @isUpdatingMaze
+            setTimeout(() =>
+                @updateMaze()
+            , 1200)
+
+        @isUpdatingMaze = true
 
         # Shift layer
         @visibleLayer = if @visibleLayer == 0 then 1 else 0
@@ -154,6 +222,11 @@ class MazeGame
         fadeMazeTween = @kiwiState.game.tweens.create(@tileLayers[1]);
         fadeMazeTween.to({ alpha: destinationAlpha }, 1000, Kiwi.Animations.Tweens.Easing.Linear.In, true)
 
+        # Clear updating state
+        setTimeout(() =>
+            @isUpdatingMaze = false
+        , 1000)
+
     drawMaze: ->
 
         # Draw transparent tiles
@@ -165,9 +238,9 @@ class MazeGame
                     #@tileLayers[@visibleLayer].setTile(x, y, entry.tileIndex)
 
         # Draw player tiles
-        drawOrder = (i for i in [0..@mazeModel.numberOfPlayers - 1])
-        drawOrder.splice(@currentPlayerIndex, 1)
-        drawOrder.push(@currentPlayerIndex)
+        drawOrder = (i for i in [0..@mazeModel.players.length - 1])
+        drawOrder.splice(@currentPlayer.index, 1)
+        drawOrder.push(@currentPlayer.index)
 
         for playerIndex in drawOrder
             player = @mazeModel.players[playerIndex]
@@ -180,4 +253,6 @@ class MazeGame
         switch @gameState
             when GameState.INITIAL_PLACEMENT
                 if player.position.equals(position) then 0 else darkenTileOffset
+            when GameState.PLAYING_GAME
+                if @currentPlayer.index == player.index then 0 else darkenTileOffset
             else 0
