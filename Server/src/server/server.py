@@ -1,10 +1,9 @@
 import os
 import json
+import globals
 from random import randint
 from SimpleWebSocketServer import SimpleWebSocketServer, WebSocket
 from board.board_descriptor import BoardDescriptor
-from board.board_recognizer import BoardRecognizer
-from board.tile_brick_detector import TileBrickDetector
 from reporters.tiled_brick_position_reporter import TiledBrickPositionReporter
 
 if os.uname()[4][:3] == 'arm':
@@ -19,20 +18,15 @@ class Server(WebSocket):
     """
     Server which communicates with the client library.
     """
-    camera = None
-    board_descriptor = BoardDescriptor()
-    board_recognizer = BoardRecognizer()
-    brick_detector = TileBrickDetector()
-
     reporters = {}
 
     def initialize_video(self):
-        if self.camera is not None:
-            self.camera.stop()
-            self.camera = None
+        if globals.camera is not None:
+            globals.camera.stop()
+            globals.camera = None
 
-        self.camera = Camera()
-        self.camera.start()
+        globals.camera = Camera()
+        globals.camera.start()
 
     def handleMessage(self):
         """
@@ -63,11 +57,11 @@ class Server(WebSocket):
         """
         Resets the board.
         """
-        self.board_descriptor = BoardDescriptor()
-        self.board_descriptor.board_size = [1280, 800]
-        self.board_descriptor.tile_count = [32, 20]
-        self.board_descriptor.border_percentage_size = [0.0, 0.0]
-        self.board_descriptor.corner_marker = BoardDescriptor.BoardCornerMarker.DEFAULT
+        globals.board_descriptor = BoardDescriptor()
+        globals.board_descriptor.board_size = [1280, 800]
+        globals.board_descriptor.tile_count = [32, 20]
+        globals.board_descriptor.border_percentage_size = [0.0, 0.0]
+        globals.board_descriptor.corner_marker = BoardDescriptor.BoardCornerMarker.DEFAULT
 
         self.reset_reporters()
 
@@ -85,12 +79,12 @@ class Server(WebSocket):
         borderPctY: (Optional) Border height in percentage of board size.
         cornerMarker: (Optional) Corner marker
         """
-        self.board_descriptor.tile_count = [payload["tileCountX"], payload["tileCountY"]]
-        self.board_descriptor.border_percentage_size = [
+        globals.board_descriptor.tile_count = [payload["tileCountX"], payload["tileCountY"]]
+        globals.board_descriptor.border_percentage_size = [
             payload["borderPctX"] if "borderPctX" in payload else 0.0,
             payload["borderPctY"] if "borderPctY" in payload else 0.0
         ]
-        #self.board_descriptor.corner_marker = BoardDescriptor.BoardCornerMarker.DEFAULT
+        #globals.board_descriptor.corner_marker = BoardDescriptor.BoardCornerMarker.DEFAULT
         return "OK", {}
 
     def report_back_when_tile_at_any_of_positions(self, payload):
@@ -98,16 +92,14 @@ class Server(WebSocket):
         Reports back when object is found in any of the given locations.
 
         validLocations: Locations to search for object in.
+        stable_time: (Optional) Amount of time to wait for image to stabilize
         id: (Optional) Reporter id.
         """
         id = payload["id"] if "id" in payload else self.draw_reporter_id()
         valid_locations = payload["validLocations"]
+        stable_count = payload["stableTime"] if "stableTime" in payload else 2.0
 
-        reporter = TiledBrickPositionReporter(valid_locations,
-                                              self.board_recognizer,
-                                              self.board_descriptor,
-                                              self.brick_detector,
-                                              self.camera)
+        reporter = TiledBrickPositionReporter(valid_locations, stable_count)
         self.reporters[id] = reporter
         reporter.start(id, lambda tile: self.send_message("OK", "tileFoundAtPosition", {"id": id, "tile": tile}))
         return "OK", {"id": id}
@@ -119,12 +111,14 @@ class Server(WebSocket):
         validLocations: Locations to search for object in.
         """
         image = self.take_photo()
+
         if image is None:
             return "CAMERA_NOT_READY"
-        self.board_descriptor.snapshot = self.board_recognizer.find_board(image, self.board_descriptor)
-        if self.board_descriptor.is_recognized():
+
+        globals.board_descriptor.snapshot = globals.board_recognizer.find_board(image, globals.board_descriptor)
+        if globals.board_descriptor.is_recognized():
             valid_locations = payload["validLocations"]
-            position = self.brick_detector.find_brick_among_tiles(self.board_descriptor, valid_locations)
+            position = globals.brick_detector.find_brick_among_tiles(globals.board_descriptor, valid_locations)[0]
             if position is not None:
                 return "OK", {"position": position}
             else:
@@ -149,7 +143,7 @@ class Server(WebSocket):
         """
         Returns the most recent photo from the camera.
         """
-        return self.camera.read()
+        return globals.camera.read()
 
     def reset_reporters(self):
         """

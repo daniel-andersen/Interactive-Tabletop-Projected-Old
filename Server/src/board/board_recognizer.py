@@ -155,25 +155,17 @@ class BoardRecognizer(object):
 
     def find_corners(self, marker_contours, corner_marker, image):
 
-        # Find best contours
-        best_contour_indices = []
-
-        for i in range(0, len(marker_contours)):
-            score = self.score_for_contour(marker_contours[i], corner_marker)
-            best_contour_indices.append((i, score))
-
-        if len(best_contour_indices) < 4:
+        if len(marker_contours) < 4:
             return None
 
         # Find best combination of corners
         best_corners = []
 
-        for corner_indices in itertools.combinations(range(0, len(best_contour_indices)), 4):
+        for corner_indices in itertools.combinations(range(0, len(marker_contours)), 4):
 
             # Extract all points
             all_points = []
-            for best_contour_index in corner_indices:
-                index = best_contour_indices[best_contour_index][0]
+            for index in corner_indices:
                 for p in marker_contours[index]:
                     all_points.append(p[0])
 
@@ -289,14 +281,14 @@ class BoardRecognizer(object):
         if mode == self.ThresholdModes.OTSU:
             return self.otsu_image(image)
         else:
-            return self.canny_image(image, mode)
+            return self.adaptive_threshold_image(image, mode)
 
     def otsu_image(self, image):
         image = cv2.blur(image, (2, 2))
         ret, image = cv2.threshold(image, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
         return image
 
-    def canny_image(self, image, mode):
+    def adaptive_threshold_image(self, image, mode):
         if mode == self.ThresholdModes.AUTO:
             threshold_min, threshold_max = self.automatic_thresholding_for_image(image)
         elif mode == self.ThresholdModes.BRIGHT_ROOM:

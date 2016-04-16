@@ -3,6 +3,7 @@ import numpy as np
 from board.board_descriptor import BoardDescriptor
 from board.board_recognizer import BoardRecognizer
 from board.tile_brick_detector import TileBrickDetector
+import image_comparison
 
 
 def run_tests():
@@ -94,7 +95,7 @@ def run_tests():
 
             for brick_position, tile_array in tests:
                 valid_position = brick_position if suffix == "b" else None
-                tile = brick_detector.find_brick_among_tiles(board_descriptor, tile_array)
+                tile = brick_detector.find_brick_among_tiles(board_descriptor, tile_array)[0]
                 if tile != valid_position:
                     print("Test failed. Brick supposed to be at: %s but was at: %s. Image: %s" % (valid_position, tile, image_filename))
                     failed += 1
@@ -118,7 +119,7 @@ def test():
     #cap = cv2.VideoCapture(0)
 
     while True:
-        image = cv2.imread("board/training/board3.png")
+        image = cv2.imread("board/training/practice4a.png")
         #_, image = cap.read()
 
         board_descriptor.snapshot = board_recognizer.find_board(image, board_descriptor)
@@ -128,7 +129,7 @@ def test():
             cv2.drawContours(image, [contour], -1, (255,0,255), 2)
 
             tiles = [(13, 16), (12, 16), (12, 15), (14, 16), (14, 15), (13, 17), (13, 18)]
-            tile = brick_detector.find_brick_among_tiles(board_descriptor, tiles)
+            tile = brick_detector.find_brick_among_tiles(board_descriptor, tiles)[0]
             print(tile)
             #cv2.imshow('Snapshot', descriptor.snapshot.board_image)
             #cv2.imshow('Board Canvas', descriptor.board_canvas())
