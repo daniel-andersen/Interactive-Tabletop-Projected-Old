@@ -37,8 +37,8 @@ class TiledBrickPositionReporter(Reporter):
             globals.board_descriptor.snapshot = globals.board_recognizer.find_board(image, globals.board_descriptor)
 
             if globals.board_descriptor.is_recognized():
-                if globals.debug:
-                    cv2.imwrite("debug/output_board_recognized_{0}.png".format(self.reporter_id), globals.board_descriptor.snapshot.board_image)
+                #if globals.debug:
+                    #cv2.imwrite("debug/output_board_recognized_{0}.png".format(self.reporter_id), globals.board_descriptor.snapshot.board_image)
 
                 # Find brick
                 (tile, probabilities) = globals.brick_detector.find_brick_among_tiles(globals.board_descriptor, self.valid_locations)
@@ -72,5 +72,5 @@ class TiledBrickPositionReporter(Reporter):
                     self.stop()
             else:
                 if globals.debug:
-                    cv2.imwrite("debug/output_board_not_recognized_{0}.png".format(self.reporter_id), image)
+                    #cv2.imwrite("debug/output_board_not_recognized_{0}.png".format(self.reporter_id), image)
                     print("Board NOT recognized: %i" % self.reporter_id)
