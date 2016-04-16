@@ -149,6 +149,11 @@ MazeGame = (function() {
         } else {
           return this.playerMovedInitialBrick(player, position);
         }
+        break;
+      case GameState.PLAYING_GAME:
+        if (player.index === this.currentPlayer.index) {
+          return this.playerMovedBrick(position);
+        }
     }
   };
 
@@ -177,18 +182,19 @@ MazeGame = (function() {
       player.reachDistance = playerDefaultReachDistance;
     }
     player.state = PlayerState.TURN;
-    return playerMovedBrick(position);
+    this.currentPlayer = player;
+    return this.playerMovedBrick(position);
   };
 
   MazeGame.prototype.playerMovedBrick = function(position) {
     var nextPlayerIndex;
     this.client.resetReporters();
-    player.position = position;
+    this.currentPlayer.position = position;
     this.updateMaze();
+    this.currentPlayer.state = PlayerState.IDLE;
     nextPlayerIndex = (this.currentPlayer.index + 1) % this.mazeModel.players.length;
     this.currentPlayer = this.mazeModel.players[nextPlayerIndex];
     this.currentPlayer.state = PlayerState.TURN;
-    player.state = PlayerState.IDLE;
     this.updateMaze();
     return setTimeout((function(_this) {
       return function() {

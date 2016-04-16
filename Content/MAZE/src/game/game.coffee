@@ -126,6 +126,9 @@ class MazeGame
                     @playerPlacedInitialBrick(player, position)
                 else
                     @playerMovedInitialBrick(player, position)
+            when GameState.PLAYING_GAME
+                if player.index == @currentPlayer.index
+                    @playerMovedBrick(position)
 
     playerPlacedInitialBrick: (player, position) ->
         player.state = PlayerState.IDLE
@@ -142,6 +145,8 @@ class MazeGame
 
         # Move player
         player.state = PlayerState.TURN
+        @currentPlayer = player
+
         @playerMovedBrick(position)
 
     playerMovedBrick: (position) ->
@@ -150,16 +155,16 @@ class MazeGame
         @client.resetReporters()
 
         # Move player
-        player.position = position
+        @currentPlayer.position = position
         @updateMaze()
 
         # Next players turn
+        @currentPlayer.state = PlayerState.IDLE
+
         nextPlayerIndex = (@currentPlayer.index + 1) % @mazeModel.players.length
 
         @currentPlayer = @mazeModel.players[nextPlayerIndex]
         @currentPlayer.state = PlayerState.TURN
-
-        player.state = PlayerState.IDLE
 
         # Update maze
         @updateMaze()
