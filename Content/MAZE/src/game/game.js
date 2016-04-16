@@ -61,7 +61,8 @@ MazeGame = (function() {
   };
 
   MazeGame.prototype.reset = function() {
-    return this.client.reset();
+    this.client.reset();
+    return this.client.enableDebug();
   };
 
   MazeGame.prototype.onMessage = function(json) {

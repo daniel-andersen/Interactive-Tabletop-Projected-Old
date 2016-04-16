@@ -32,6 +32,9 @@ class Client
             this.socket.close()
             this.socket = null
 
+    enableDebug: () ->
+        this.sendMessage("enableDebug", {})
+
     reset: () ->
         this.sendMessage("reset", {})
 

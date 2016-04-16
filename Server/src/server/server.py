@@ -42,6 +42,8 @@ class Server(WebSocket):
                 self.send_message(result[0], action, result[1])
 
     def handle_action(self, action, payload):
+        if action == "enableDebug":
+            return self.enable_debug()
         if action == "reset":
             return self.reset()
         if action == "resetReporters":
@@ -70,6 +72,15 @@ class Server(WebSocket):
         self.initialize_video()
 
         return "OK", {}
+
+    def enable_debug(self):
+        """
+        Enables debug output.
+        """
+        globals.debug = True
+
+        return "OK", {}
+
 
     def initialize_tiled_board(self, payload):
         """

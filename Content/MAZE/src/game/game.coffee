@@ -49,6 +49,7 @@ class MazeGame
 
     reset: ->
         @client.reset()
+        @client.enableDebug()
 
     onMessage: (json) ->
         switch json["action"]

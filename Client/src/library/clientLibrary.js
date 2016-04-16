@@ -44,6 +44,10 @@ Client = (function() {
     }
   };
 
+  Client.prototype.enableDebug = function() {
+    return this.sendMessage("enableDebug", {});
+  };
+
   Client.prototype.reset = function() {
     return this.sendMessage("reset", {});
   };
