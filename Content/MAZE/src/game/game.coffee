@@ -142,7 +142,7 @@ class MazeGame
 
         # Move player
         player.state = PlayerState.TURN
-        playerMovedBrick(position)
+        @playerMovedBrick(position)
 
     playerMovedBrick: (position) ->
 
