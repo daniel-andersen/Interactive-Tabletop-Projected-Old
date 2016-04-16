@@ -300,10 +300,14 @@ MazeGame = (function() {
   MazeGame.prototype.tileOffset = function(player, position) {
     switch (this.gameState) {
       case GameState.INITIAL_PLACEMENT:
-        if (player.position.equals(position)) {
-          return 0;
+        if (player.state === PlayerState.INITIAL_PLACEMENT) {
+          if (player.position.equals(position)) {
+            return 0;
+          } else {
+            return darkenTileOffset;
+          }
         } else {
-          return darkenTileOffset;
+          return 0;
         }
         break;
       case GameState.PLAYING_GAME:
