@@ -59,7 +59,7 @@ class TiledBrickPositionReporter(Reporter):
 
                 if globals.debug:
                     max_probability, second_max_probability = heapq.nlargest(2, probabilities)[:2]
-                    print("Max/second max probabilities: %f, %f" % (max_probability, second_max_probability))
+                    print("%i: Max/second max probabilities: %f, %f" % (self.reporter_id, max_probability, second_max_probability))
 
                 # Check sufficient stability
                 if total_deviation > self.stability_level:
@@ -67,14 +67,14 @@ class TiledBrickPositionReporter(Reporter):
 
                 if self.is_position_ok(position):
                     if globals.debug:
-                        print("Brick recognized: %i" % self.reporter_id)
+                        print("%i: Brick recognized" % self.reporter_id)
                         cv2.imwrite("debug/output_brick_recognized_{0}.png".format(self.reporter_id), image)
                     self.callback_function(position)
                     self.stop()
             else:
                 if globals.debug:
                     #cv2.imwrite("debug/output_board_not_recognized_{0}.png".format(self.reporter_id), image)
-                    print("Board NOT recognized: %i" % self.reporter_id)
+                    print("%i: Board NOT recognized" % self.reporter_id)
 
     def is_position_ok(self, position):
         return position is not None
