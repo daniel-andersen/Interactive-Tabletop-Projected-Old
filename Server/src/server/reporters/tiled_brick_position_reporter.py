@@ -1,5 +1,6 @@
 import cv2
 import time
+import heapq
 from random import uniform
 from server import globals
 from reporter import Reporter
@@ -57,7 +58,8 @@ class TiledBrickPositionReporter(Reporter):
                     total_deviation /= float(len(self.valid_positions))
 
                 if globals.debug:
-                    print("Stability score: %f" % total_deviation)
+                    max_probability, second_max_probability = heapq.nlargest(2, probabilities)[:2]
+                    print("Max/second max probabilities: %f, %f" % (max_probability, second_max_probability))
 
                 # Check sufficient stability
                 if total_deviation > self.stability_level:
