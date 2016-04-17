@@ -55,12 +55,17 @@ class TileBrickDetector(object):
 
         # Extract brick image
         brick_image = board_descriptor.tile_from_strip_image(index, tile_strip_image)
+
+        # Remove border
+        tile_width, tile_height = board_descriptor.tile_size()
+        border_size = 2
+        brick_image = brick_image[border_size:int(tile_height) - border_size, border_size:int(tile_width) - border_size]
+
         #cv2.imshow('OTSU Board Tiles {0}'.format(index), brick_image)
 
         # Calculate histogram from b/w image
         histogram = histogram_util.histogram_from_bw_image(brick_image)
 
         # Return black percentage
-        tile_width, tile_height = board_descriptor.tile_size()
         #print("%f vs %f, %f" % (histogram[0][0], tile_width, tile_height))
-        return histogram[0][0] / (tile_width * tile_height)
+        return histogram[0][0] / ((tile_width - (border_size * 2.0)) * (tile_height - (border_size * 2.0)))

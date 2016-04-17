@@ -79,6 +79,15 @@ def run_tests():
         ],
         "practice6": [
             (None, [(31, 10), (30, 10), (29, 10), (30, 11)]),
+            (None, [(0, 10), (1, 10), (2, 10)]),
+            (None, [(16, 0), (16, 1), (16, 2)]),
+            (None, [(16, 19), (16, 18), (16, 17), (15, 18), (17, 18)]),
+        ],
+        "practice7": [
+            (None, [(31, 10), (30, 10), (29, 10)]),
+            (None, [(0, 10), (1, 10), (2, 10)]),
+            (None, [(16, 0), (16, 1), (16, 2)]),
+            (None, [(16, 19), (16, 18), (16, 17), (15, 18)]),
         ],
     }
 
@@ -128,7 +137,7 @@ def test():
     #cap = cv2.VideoCapture(0)
 
     while True:
-        image = cv2.imread("board/training/practice2b.png")
+        image = cv2.imread("board/training/practice7a.png")
         #_, image = cap.read()
 
         board_descriptor.snapshot = board_recognizer.find_board(image, board_descriptor)
@@ -137,7 +146,7 @@ def test():
             contour = np.int32(board_descriptor.snapshot.board_corners).reshape(-1, 1, 2)
             cv2.drawContours(image, [contour], -1, (255,0,255), 2)
 
-            tiles = [(26, 5), (26, 4), (27, 4), (26, 6), (26, 7), (26, 8), (25, 6)]
+            tiles = [(31, 10), (30, 10), (29, 10)]
             tile = brick_detector.find_brick_among_tiles(board_descriptor, tiles)[0]
             print(tile)
             #cv2.imshow('Snapshot', descriptor.snapshot.board_image)
