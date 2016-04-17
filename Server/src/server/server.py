@@ -111,14 +111,14 @@ class Server(WebSocket):
         stable_time: (Optional) Amount of time to wait for image to stabilize
         id: (Optional) Reporter id.
         """
-        id = payload["id"] if "id" in payload else self.draw_reporter_id()
+        reporter_id = payload["id"] if "id" in payload else self.draw_reporter_id()
         valid_locations = payload["validLocations"]
         stable_count = payload["stableTime"] if "stableTime" in payload else 2.0
 
         reporter = TiledBrickPositionReporter(valid_locations, stable_count)
-        self.reporters[id] = reporter
-        reporter.start(id, lambda tile: self.send_message("OK", "brickFoundAtPosition", {"id": id, "position": tile}))
-        return "OK", {"id": id}
+        self.reporters[reporter_id] = reporter
+        reporter.start(reporter_id, lambda tile: self.send_message("OK", "brickFoundAtPosition", {"id": reporter_id, "position": tile}))
+        return "OK", {"id": reporter_id}
 
     def report_back_when_tile_moved_to_any_of_positions(self, payload):
         """
@@ -129,15 +129,15 @@ class Server(WebSocket):
         stable_time: (Optional) Amount of time to wait for image to stabilize
         id: (Optional) Reporter id.
         """
-        id = payload["id"] if "id" in payload else self.draw_reporter_id()
+        reporter_id = payload["id"] if "id" in payload else self.draw_reporter_id()
         initial_location = payload["initialLocation"]
         valid_locations = payload["validLocations"]
         stable_count = payload["stableTime"] if "stableTime" in payload else 2.0
 
         reporter = TiledBrickMovedReporter(initial_location, valid_locations, stable_count)
-        self.reporters[id] = reporter
-        reporter.start(id, lambda tile: self.send_message("OK", "brickFoundAtPosition", {"id": id, "position": tile}))
-        return "OK", {"id": id}
+        self.reporters[reporter_id] = reporter
+        reporter.start(reporter_id, lambda tile: self.send_message("OK", "brickFoundAtPosition", {"id": reporter_id, "position": tile}))
+        return "OK", {"id": reporter_id}
 
     def request_tiled_object_position(self, payload):
         """
@@ -148,7 +148,7 @@ class Server(WebSocket):
         image = self.take_photo()
 
         if image is None:
-            return "CAMERA_NOT_READY"
+            return "CAMERA_NOT_READY", {}
 
         globals.board_descriptor.snapshot = globals.board_recognizer.find_board(image, globals.board_descriptor)
         if globals.board_descriptor.is_recognized():
@@ -157,9 +157,9 @@ class Server(WebSocket):
             if position is not None:
                 return "OK", {"position": position}
             else:
-                return "BRICK_NOT_FOUND"
+                return "BRICK_NOT_FOUND", {}
         else:
-            return "BOARD_NOT_RECOGNIZED"
+            return "BOARD_NOT_RECOGNIZED", {}
 
     def reset_reporters(self):
         """
@@ -170,7 +170,7 @@ class Server(WebSocket):
 
         self.reporters = {}
 
-        return "OK"
+        return "OK", {}
 
     def reset_reporter(self, payload):
         """
@@ -178,10 +178,10 @@ class Server(WebSocket):
 
         id: Reporter ID.
         """
-        id = payload["id"]
-        self.reporters[id].stop()
+        reporter_id = payload["id"]
+        self.reporters[reporter_id].stop()
 
-        return "OK"
+        return "OK", {}
 
     def take_photo(self):
         """
