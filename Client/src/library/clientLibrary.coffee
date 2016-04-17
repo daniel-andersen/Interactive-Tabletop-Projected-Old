@@ -71,6 +71,19 @@ class Client
                 "validLocations": validLocations
             })
 
+    reportBackWhenTileMovedToAnyOfPositions: (initialLocation, validLocations, id = null) ->
+        if id != null
+            this.sendMessage("reportBackWhenTileMovedToAnyOfPositions", {
+                "initialLocation": initialLocation,
+                "validLocations": validLocations,
+                "id": id
+            })
+        else
+            this.sendMessage("reportBackWhenTileMovedToAnyOfPositions", {
+                "initialLocation": initialLocation,
+                "validLocations": validLocations
+            })
+
     sendMessage: (action, payload) ->
         message = {
             action: action,

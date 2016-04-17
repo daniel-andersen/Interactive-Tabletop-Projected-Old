@@ -10,10 +10,6 @@ class TiledBrickPositionReporter(Reporter):
         """
         :param valid_locations Locations to search for brick in
         :param stable_time Amount of time to wait for image to stabilize
-        :param board_recognizer Board recognizer
-        :param board_descriptor Board descriptor
-        :param tile_brick_detector Tile brick detector
-        :param camera Camera
         """
         self.valid_locations = valid_locations
         self.stable_time = stable_time
@@ -67,7 +63,7 @@ class TiledBrickPositionReporter(Reporter):
                 if total_deviation > self.stability_level:
                     continue
 
-                if tile is not None:
+                if self.is_location_ok(tile):
                     if globals.debug:
                         print("Brick recognized: %i" % self.reporter_id)
                         cv2.imwrite("debug/output_brick_recognized_{0}.png".format(self.reporter_id), image)
@@ -77,3 +73,6 @@ class TiledBrickPositionReporter(Reporter):
                 if globals.debug:
                     #cv2.imwrite("debug/output_board_not_recognized_{0}.png".format(self.reporter_id), image)
                     print("Board NOT recognized: %i" % self.reporter_id)
+
+    def is_location_ok(self, location):
+        return location is not None

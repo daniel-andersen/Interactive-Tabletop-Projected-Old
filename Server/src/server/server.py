@@ -5,6 +5,7 @@ from random import randint
 from SimpleWebSocketServer import SimpleWebSocketServer, WebSocket
 from board.board_descriptor import BoardDescriptor
 from reporters.tiled_brick_position_reporter import TiledBrickPositionReporter
+from reporters.tiled_brick_moved_reporter import TiledBrickMovedReporter
 
 if os.uname()[4][:3] == 'arm':
     print("Using Raspberry Pi camera")
@@ -54,6 +55,8 @@ class Server(WebSocket):
             return self.initialize_tiled_board(payload)
         if action == "reportBackWhenTileAtAnyOfPositions":
             return self.report_back_when_tile_at_any_of_positions(payload)
+        if action == "reportBackWhenTileMovedToAnyOfPositions":
+            return self.report_back_when_tile_moved_to_any_of_positions(payload)
         if action == "requestTiledObjectPosition":
             return self.request_tiled_object_position(payload)
 
@@ -113,6 +116,25 @@ class Server(WebSocket):
         stable_count = payload["stableTime"] if "stableTime" in payload else 2.0
 
         reporter = TiledBrickPositionReporter(valid_locations, stable_count)
+        self.reporters[id] = reporter
+        reporter.start(id, lambda tile: self.send_message("OK", "brickFoundAtPosition", {"id": id, "position": tile}))
+        return "OK", {"id": id}
+
+    def report_back_when_tile_moved_to_any_of_positions(self, payload):
+        """
+        Reports back when object is found in any of the given locations other than the initial location.
+
+        initialLocation: Initial location.
+        validLocations: Locations to search for object in.
+        stable_time: (Optional) Amount of time to wait for image to stabilize
+        id: (Optional) Reporter id.
+        """
+        id = payload["id"] if "id" in payload else self.draw_reporter_id()
+        initial_location = payload["initialLocation"]
+        valid_locations = payload["validLocations"]
+        stable_count = payload["stableTime"] if "stableTime" in payload else 2.0
+
+        reporter = TiledBrickMovedReporter(initial_location, valid_locations, stable_count)
         self.reporters[id] = reporter
         reporter.start(id, lambda tile: self.send_message("OK", "brickFoundAtPosition", {"id": id, "position": tile}))
         return "OK", {"id": id}

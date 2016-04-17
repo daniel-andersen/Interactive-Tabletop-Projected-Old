@@ -112,9 +112,8 @@ class MazeGame
         @client.initializeTiledBoard(@mazeModel.width, @mazeModel.height)
 
     waitForStartPositions: ->
-        for i in [0..@mazeModel.players.length - 1]
-            positions = ([position.x, position.y] for position in @mazeModel.positionsReachableByPlayer(@mazeModel.players[i]))
-            @client.reportBackWhenTileAtAnyOfPositions(positions, id=i)
+        for player in @mazeModel.players
+            @requestPlayerInitialPosition(player)
 
     brickFoundAtPosition: (payload) ->
         player = @mazeModel.players[payload["id"]]
@@ -132,16 +131,13 @@ class MazeGame
 
     playerPlacedInitialBrick: (player, position) ->
         player.state = PlayerState.IDLE
+        player.reachDistance = playerDefaultReachDistance
         @updateMaze()
 
     playerMovedInitialBrick: (player, position) ->
 
         # Disable players with no brick placed
         @mazeModel.players = (player for player in @mazeModel.players when PlayerState == PlayerState.IDLE)
-
-        # Set player reach distances
-        for player in @mazeModel.players
-            player.reachDistance = playerDefaultReachDistance
 
         # Move player
         player.state = PlayerState.TURN
@@ -174,9 +170,13 @@ class MazeGame
             @requestPlayerPosition(@currentPlayer)
         , 500)
 
-    requestPlayerPosition: (player) ->
+    requestPlayerInitialPosition: (player) ->
         positions = ([position.x, position.y] for position in @mazeModel.positionsReachableByPlayer(player))
         @client.reportBackWhenTileAtAnyOfPositions(positions, id=player.index)
+
+    requestPlayerPosition: (player) ->
+        positions = ([position.x, position.y] for position in @mazeModel.positionsReachableByPlayer(player))
+        @client.reportBackWhenTileMovedToAnyOfPositions(player.position, positions, id=player.index)
 
     ready: ->
         # Fade maze

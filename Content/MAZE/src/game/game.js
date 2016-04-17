@@ -120,20 +120,12 @@ MazeGame = (function() {
   };
 
   MazeGame.prototype.waitForStartPositions = function() {
-    var i, id, j, position, positions, ref, results;
+    var j, len, player, ref, results;
+    ref = this.mazeModel.players;
     results = [];
-    for (i = j = 0, ref = this.mazeModel.players.length - 1; 0 <= ref ? j <= ref : j >= ref; i = 0 <= ref ? ++j : --j) {
-      positions = (function() {
-        var k, len, ref1, results1;
-        ref1 = this.mazeModel.positionsReachableByPlayer(this.mazeModel.players[i]);
-        results1 = [];
-        for (k = 0, len = ref1.length; k < len; k++) {
-          position = ref1[k];
-          results1.push([position.x, position.y]);
-        }
-        return results1;
-      }).call(this);
-      results.push(this.client.reportBackWhenTileAtAnyOfPositions(positions, id = i));
+    for (j = 0, len = ref.length; j < len; j++) {
+      player = ref[j];
+      results.push(this.requestPlayerInitialPosition(player));
     }
     return results;
   };
@@ -159,11 +151,11 @@ MazeGame = (function() {
 
   MazeGame.prototype.playerPlacedInitialBrick = function(player, position) {
     player.state = PlayerState.IDLE;
+    player.reachDistance = playerDefaultReachDistance;
     return this.updateMaze();
   };
 
   MazeGame.prototype.playerMovedInitialBrick = function(player, position) {
-    var j, len, ref;
     this.mazeModel.players = (function() {
       var j, len, ref, results;
       ref = this.mazeModel.players;
@@ -176,11 +168,6 @@ MazeGame = (function() {
       }
       return results;
     }).call(this);
-    ref = this.mazeModel.players;
-    for (j = 0, len = ref.length; j < len; j++) {
-      player = ref[j];
-      player.reachDistance = playerDefaultReachDistance;
-    }
     player.state = PlayerState.TURN;
     this.currentPlayer = player;
     return this.playerMovedBrick(position);
@@ -203,7 +190,7 @@ MazeGame = (function() {
     })(this), 500);
   };
 
-  MazeGame.prototype.requestPlayerPosition = function(player) {
+  MazeGame.prototype.requestPlayerInitialPosition = function(player) {
     var id, position, positions;
     positions = (function() {
       var j, len, ref, results;
@@ -216,6 +203,21 @@ MazeGame = (function() {
       return results;
     }).call(this);
     return this.client.reportBackWhenTileAtAnyOfPositions(positions, id = player.index);
+  };
+
+  MazeGame.prototype.requestPlayerPosition = function(player) {
+    var id, position, positions;
+    positions = (function() {
+      var j, len, ref, results;
+      ref = this.mazeModel.positionsReachableByPlayer(player);
+      results = [];
+      for (j = 0, len = ref.length; j < len; j++) {
+        position = ref[j];
+        results.push([position.x, position.y]);
+      }
+      return results;
+    }).call(this);
+    return this.client.reportBackWhenTileMovedToAnyOfPositions(player.position, positions, id = player.index);
   };
 
   MazeGame.prototype.ready = function() {

@@ -103,6 +103,24 @@ Client = (function() {
     }
   };
 
+  Client.prototype.reportBackWhenTileMovedToAnyOfPositions = function(initialLocation, validLocations, id) {
+    if (id == null) {
+      id = null;
+    }
+    if (id !== null) {
+      return this.sendMessage("reportBackWhenTileMovedToAnyOfPositions", {
+        "initialLocation": initialLocation,
+        "validLocations": validLocations,
+        "id": id
+      });
+    } else {
+      return this.sendMessage("reportBackWhenTileMovedToAnyOfPositions", {
+        "initialLocation": initialLocation,
+        "validLocations": validLocations
+      });
+    }
+  };
+
   Client.prototype.sendMessage = function(action, payload) {
     var message;
     message = {
