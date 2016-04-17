@@ -275,10 +275,11 @@ MazeGame = (function() {
   };
 
   MazeGame.prototype.drawMaze = function() {
-    var drawOrder, entry, i, j, k, l, len, player, playerIndex, position, ref, ref1, results, x, y;
+    var drawOrder, entry, i, j, k, l, len, player, playerIndex, position, ref, ref1, results, tileIndex, x, y;
     for (y = j = 0, ref = this.mazeModel.height - 1; 0 <= ref ? j <= ref : j >= ref; y = 0 <= ref ? ++j : --j) {
       for (x = k = 0, ref1 = this.mazeModel.width - 1; 0 <= ref1 ? k <= ref1 : k >= ref1; x = 0 <= ref1 ? ++k : --k) {
-        this.tileLayers[this.visibleLayer].setTile(x, y, transparentTileIndex);
+        tileIndex = this.mazeModel.isBorderAtCoordinate(x, y) ? transparentTileIndex : blackTileIndex;
+        this.tileLayers[this.visibleLayer].setTile(x, y, tileIndex);
       }
     }
     drawOrder = (function() {

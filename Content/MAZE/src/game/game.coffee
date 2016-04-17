@@ -238,10 +238,11 @@ class MazeGame
 
     drawMaze: ->
 
-        # Draw transparent tiles
+        # Draw black/transparent tiles
         for y in [0..@mazeModel.height - 1]
             for x in [0..@mazeModel.width - 1]
-                @tileLayers[@visibleLayer].setTile(x, y, transparentTileIndex)
+                tileIndex = if @mazeModel.isBorderAtCoordinate(x, y) then transparentTileIndex else blackTileIndex
+                @tileLayers[@visibleLayer].setTile(x, y, tileIndex)
                 #entry = @mazeModel.entryAtCoordinate(x, y)
                 #if entry.tileIndex != 22
                     #@tileLayers[@visibleLayer].setTile(x, y, entry.tileIndex)
