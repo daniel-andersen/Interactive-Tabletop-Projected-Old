@@ -1,7 +1,7 @@
 import cv2
 import time
+from random import uniform
 from server import globals
-from board import image_comparison
 from reporter import Reporter
 
 
@@ -27,6 +27,9 @@ class TiledBrickPositionReporter(Reporter):
         image_stable_history = []
 
         while not self.stopped:
+
+            # Prevent the poor Raspberry Pi from overheating
+            time.sleep(uniform(0.1, 0.2))
 
             # Read image from camera
             image = globals.camera.read()
