@@ -202,6 +202,8 @@ class Server(WebSocket):
                    "payload": payload}
         self.sendMessage(json.dumps(message, ensure_ascii=False, encoding='utf8'))
 
+        print("Sent message: %s" % message)
+
     def handleConnected(self):
         print self.address, 'connected'
 
@@ -211,9 +213,9 @@ class Server(WebSocket):
 
     def draw_reporter_id(self):
         while True:
-            id = randint(0, 100000)
-            if id not in self.reporters:
-                return id
+            reporter_id = randint(0, 100000)
+            if reporter_id not in self.reporters:
+                return reporter_id
 
 
 def start_server():
