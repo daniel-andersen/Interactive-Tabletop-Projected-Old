@@ -15,7 +15,7 @@ class TileBrickDetector(object):
         self.histogram_bin_count_fallback_2 = 8
 
         self.brick_detection_minimum_median_delta = 40
-        self.brick_detection_minimum_probability = 0.25
+        self.brick_detection_minimum_probability = 0.28
         self.brick_detection_maximum_deviation = 0.6
 
     def find_brick_among_tiles(self, board_descriptor, coordinates):
@@ -55,10 +55,12 @@ class TileBrickDetector(object):
 
         # Extract brick image
         brick_image = board_descriptor.tile_from_strip_image(index, tile_strip_image)
+        #cv2.imshow('OTSU Board Tiles {0}'.format(index), brick_image)
 
         # Calculate histogram from b/w image
         histogram = histogram_util.histogram_from_bw_image(brick_image)
 
         # Return black percentage
         tile_width, tile_height = board_descriptor.tile_size()
+        #print("%f vs %f, %f" % (histogram[0][0], tile_width, tile_height))
         return histogram[0][0] / (tile_width * tile_height)
