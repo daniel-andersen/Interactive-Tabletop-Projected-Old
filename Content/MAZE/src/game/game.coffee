@@ -263,7 +263,8 @@ class MazeGame
         switch @gameState
             when GameState.INITIAL_PLACEMENT
                 if player.state == PlayerState.INITIAL_PLACEMENT
-                    if player.position.equals(position) then 0 else darkenTileOffset
+                    #if player.position.equals(position) then 0 else darkenTileOffset
+                    return 0
                 else 0
             when GameState.PLAYING_GAME
                 if @currentPlayer.index == player.index then 0 else darkenTileOffset

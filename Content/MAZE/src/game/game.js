@@ -315,11 +315,7 @@ MazeGame = (function() {
     switch (this.gameState) {
       case GameState.INITIAL_PLACEMENT:
         if (player.state === PlayerState.INITIAL_PLACEMENT) {
-          if (player.position.equals(position)) {
-            return 0;
-          } else {
-            return darkenTileOffset;
-          }
+          return 0;
         } else {
           return 0;
         }

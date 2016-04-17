@@ -78,7 +78,7 @@ MazeModel = (function() {
       }
       return results;
     }).call(this);
-    return this.validPositionMap = (function() {
+    this.validPositionMap = (function() {
       var j, ref, results;
       results = [];
       for (y = j = 0, ref = this.height - 1; 0 <= ref ? j <= ref : j >= ref; y = 0 <= ref ? ++j : --j) {
@@ -93,6 +93,14 @@ MazeModel = (function() {
       }
       return results;
     }).call(this);
+    this.validPositionMap[this.players[0].position.y][this.players[0].position.x - this.granularity] = false;
+    this.validPositionMap[this.players[0].position.y][this.players[0].position.x + this.granularity] = false;
+    this.validPositionMap[this.players[1].position.y - this.granularity][this.players[1].position.x] = false;
+    this.validPositionMap[this.players[1].position.y + this.granularity][this.players[1].position.x] = false;
+    this.validPositionMap[this.players[2].position.y][this.players[2].position.x - this.granularity] = false;
+    this.validPositionMap[this.players[2].position.y][this.players[2].position.x + this.granularity] = false;
+    this.validPositionMap[this.players[3].position.y - this.granularity][this.players[3].position.x] = false;
+    return this.validPositionMap[this.players[3].position.y + this.granularity][this.players[3].position.x] = false;
   };
 
   MazeModel.prototype.placePlayers = function() {
@@ -114,24 +122,6 @@ MazeModel = (function() {
   MazeModel.prototype.createMaze = function() {
     var downPosition, entry, j, leftPosition, position, randomIndex, ref, results, rightPosition, stop, upPosition, wall, x, y;
     this.wallsToVisit = [];
-
-    /*
-    adjacentPosition = new Position(@players[0].position.x, @players[0].position.y + @granularity)
-    @removeWalls(@players[0].position, adjacentPosition)
-    @addAdjacentWallsToVisitList(adjacentPosition)
-    
-    adjacentPosition = new Position(@players[1].position.x - @granularity, @players[1].position.y)
-    @removeWalls(@players[1].position, adjacentPosition)
-    @addAdjacentWallsToVisitList(adjacentPosition)
-    
-    adjacentPosition = new Position(@players[2].position.x, @players[2].position.y - @granularity)
-    @removeWalls(@players[2].position, adjacentPosition)
-    @addAdjacentWallsToVisitList(adjacentPosition)
-    
-    adjacentPosition = new Position(@players[3].position.x + @granularity, @players[3].position.y)
-    @removeWalls(@players[3].position, adjacentPosition)
-    @addAdjacentWallsToVisitList(adjacentPosition)
-     */
     position = this.positionWithGranularity(new Position(this.width / 2, this.height / 2));
     this.removeWalls(position, new Position(position.x + 1, position.y));
     this.addAdjacentWallsToVisitList(position);
@@ -148,14 +138,6 @@ MazeModel = (function() {
     this.digWalls(this.players[1].position, Direction.LEFT, stop = WallType.ALL_SIDES);
     this.digWalls(this.players[2].position, Direction.UP, stop = WallType.ALL_SIDES);
     this.digWalls(this.players[3].position, Direction.RIGHT, stop = WallType.ALL_SIDES);
-
-    /*
-    for x in [(@players[1].position.x)..(@width - 2)]
-        @removeWalls(new Position(x, @players[1].position.y), new Position(x + 1, @players[1].position.y), granularity=1)
-    
-    for y in [(@players[2].position.y)..(@height - 2)]
-        @removeWalls(new Position(@players[2].position.x, y), new Position(@players[2].position.x, y + 1), granularity=1)
-     */
     results = [];
     for (y = j = 0, ref = this.height - 1; 0 <= ref ? j <= ref : j >= ref; y = 0 <= ref ? ++j : --j) {
       results.push((function() {

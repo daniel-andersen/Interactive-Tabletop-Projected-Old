@@ -40,7 +40,7 @@ class TiledBrickPositionReporter(Reporter):
                     #cv2.imwrite("debug/output_board_recognized_{0}.png".format(self.reporter_id), globals.board_descriptor.snapshot.board_image)
 
                 # Find brick
-                (tile, probabilities) = globals.brick_detector.find_brick_among_tiles(globals.board_descriptor, self.valid_positions)
+                (position, probabilities) = globals.brick_detector.find_brick_among_tiles(globals.board_descriptor, self.valid_positions)
 
                 # Update stability history
                 image_stable_history.append({"time": time.time, "probabilities": probabilities})
@@ -63,11 +63,11 @@ class TiledBrickPositionReporter(Reporter):
                 if total_deviation > self.stability_level:
                     continue
 
-                if self.is_position_ok(tile):
+                if self.is_position_ok(position):
                     if globals.debug:
                         print("Brick recognized: %i" % self.reporter_id)
                         cv2.imwrite("debug/output_brick_recognized_{0}.png".format(self.reporter_id), image)
-                    self.callback_function(tile)
+                    self.callback_function(position)
                     self.stop()
             else:
                 if globals.debug:

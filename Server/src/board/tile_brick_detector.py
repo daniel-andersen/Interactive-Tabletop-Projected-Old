@@ -24,7 +24,7 @@ class TileBrickDetector(object):
 
         :param board_descriptor: Board descriptor
         :param coordinates: Coordinates [(x, y), ...] on which to search for a brick
-        :return: [(x, y), [probabilities...]]. Coordinate (x, y) of the brick, or None if no brick is found, and list of probabilities.
+        :return: (x, y), [probabilities...] - where (x, y) is position of brick, or None if no brick is found, followed by list of probabilities.
         """
 
         # Extract tile strip
@@ -40,13 +40,13 @@ class TileBrickDetector(object):
         # Check probabilities
         #print("1) %f - %f vs %f" % (max_probability, second_max_probability, self.brick_detection_minimum_probability))
         if max_probability < self.brick_detection_minimum_probability:
-            return [None, probabilities]
+            return None, probabilities
 
         #print("2) %f - %f vs %f - %f" % (max_probability, second_max_probability, second_max_probability / max_probability, self.brick_detection_maximum_deviation))
         if second_max_probability / max_probability >= self.brick_detection_maximum_deviation:
-            return [None, probabilities]
+            return None, probabilities
 
-        return [coordinates[np.argmax(probabilities)], probabilities]
+        return coordinates[np.argmax(probabilities)], probabilities
 
     def probabilities_of_bricks(self, tile_strip_image, coordinates, board_descriptor):
         return [self.probability_of_brick(i, tile_strip_image, board_descriptor) for i in range(0, len(coordinates))]

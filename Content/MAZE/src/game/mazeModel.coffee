@@ -45,8 +45,23 @@ class MazeModel
         @calculateTileIndices()
 
     resetMaze: ->
+
+        # Reset maze
         @maze = ((new MazeEntry() for x in [1..@width]) for y in [1..@height])
         @validPositionMap = ((@isCoordinateValid(x, y) for x in [0..@width - 1]) for y in [0..@height - 1])
+
+        # Prevent hallways at players adjacent border tiles
+        @validPositionMap[@players[0].position.y][@players[0].position.x - @granularity] = false
+        @validPositionMap[@players[0].position.y][@players[0].position.x + @granularity] = false
+
+        @validPositionMap[@players[1].position.y - @granularity][@players[1].position.x] = false
+        @validPositionMap[@players[1].position.y + @granularity][@players[1].position.x] = false
+
+        @validPositionMap[@players[2].position.y][@players[2].position.x - @granularity] = false
+        @validPositionMap[@players[2].position.y][@players[2].position.x + @granularity] = false
+
+        @validPositionMap[@players[3].position.y - @granularity][@players[3].position.x] = false
+        @validPositionMap[@players[3].position.y + @granularity][@players[3].position.x] = false
 
     placePlayers: ->
         @players = (new Player(i) for i in [0..@numberOfPlayers - 1])
@@ -61,24 +76,7 @@ class MazeModel
         # Reset list of walls to visit
         @wallsToVisit = []
 
-        # Remove walls at players positions and add to visit list
-        ###
-        adjacentPosition = new Position(@players[0].position.x, @players[0].position.y + @granularity)
-        @removeWalls(@players[0].position, adjacentPosition)
-        @addAdjacentWallsToVisitList(adjacentPosition)
-
-        adjacentPosition = new Position(@players[1].position.x - @granularity, @players[1].position.y)
-        @removeWalls(@players[1].position, adjacentPosition)
-        @addAdjacentWallsToVisitList(adjacentPosition)
-
-        adjacentPosition = new Position(@players[2].position.x, @players[2].position.y - @granularity)
-        @removeWalls(@players[2].position, adjacentPosition)
-        @addAdjacentWallsToVisitList(adjacentPosition)
-
-        adjacentPosition = new Position(@players[3].position.x + @granularity, @players[3].position.y)
-        @removeWalls(@players[3].position, adjacentPosition)
-        @addAdjacentWallsToVisitList(adjacentPosition)
-        ###
+        # Remove walls at random starting position
         position = @positionWithGranularity(new Position(@width / 2, @height / 2))
         @removeWalls(position, new Position(position.x + 1, position.y))
         @addAdjacentWallsToVisitList(position)
@@ -105,15 +103,6 @@ class MazeModel
         @digWalls(@players[1].position, Direction.LEFT, stop=WallType.ALL_SIDES)
         @digWalls(@players[2].position, Direction.UP, stop=WallType.ALL_SIDES)
         @digWalls(@players[3].position, Direction.RIGHT, stop=WallType.ALL_SIDES)
-
-        # Adjust player positions to account for granularity
-        ###
-        for x in [(@players[1].position.x)..(@width - 2)]
-            @removeWalls(new Position(x, @players[1].position.y), new Position(x + 1, @players[1].position.y), granularity=1)
-
-        for y in [(@players[2].position.y)..(@height - 2)]
-            @removeWalls(new Position(@players[2].position.x, y), new Position(@players[2].position.x, y + 1), granularity=1)
-        ###
 
         # Dig walls to "non-granularity" tiles
         for y in [0..@height - 1]
@@ -260,10 +249,13 @@ class MazeModel
         return not @isBorderAtCoordinate(x, y)
 
     isBorderAtCoordinate: (x, y) ->
+
+        # Do not occupy corner markers
         if x <= 1 and y <= 1 then return true
         if x >= @width - 2 and y <= 1 then return true
         if x <= 1 and y >= @height - 2 then return true
         if x >= @width - 2 and y >= @height - 2 then return true
+
         return false
 
     tileIndexAtCoordinate: (x, y) ->
