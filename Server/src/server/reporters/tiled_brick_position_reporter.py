@@ -6,12 +6,12 @@ from reporter import Reporter
 
 
 class TiledBrickPositionReporter(Reporter):
-    def __init__(self, valid_locations, stable_time):
+    def __init__(self, valid_positions, stable_time):
         """
-        :param valid_locations Locations to search for brick in
+        :param valid_positions Positions to search for brick in
         :param stable_time Amount of time to wait for image to stabilize
         """
-        self.valid_locations = valid_locations
+        self.valid_positions = valid_positions
         self.stable_time = stable_time
         self.stability_level = 1.0
 
@@ -40,7 +40,7 @@ class TiledBrickPositionReporter(Reporter):
                     #cv2.imwrite("debug/output_board_recognized_{0}.png".format(self.reporter_id), globals.board_descriptor.snapshot.board_image)
 
                 # Find brick
-                (tile, probabilities) = globals.brick_detector.find_brick_among_tiles(globals.board_descriptor, self.valid_locations)
+                (tile, probabilities) = globals.brick_detector.find_brick_among_tiles(globals.board_descriptor, self.valid_positions)
 
                 # Update stability history
                 image_stable_history.append({"time": time.time, "probabilities": probabilities})
@@ -50,11 +50,11 @@ class TiledBrickPositionReporter(Reporter):
                 # Calculate image stability score
                 total_deviation = 0.0
 
-                for i in range(0, len(self.valid_locations)):
+                for i in range(0, len(self.valid_positions)):
                     tile_probabilities = [h["probabilities"][i] for h in image_stable_history]
                     total_deviation += max(tile_probabilities) - min(tile_probabilities)
 
-                    total_deviation /= float(len(self.valid_locations))
+                    total_deviation /= float(len(self.valid_positions))
 
                 if globals.debug:
                     print("Stability score: %f" % total_deviation)
@@ -63,7 +63,7 @@ class TiledBrickPositionReporter(Reporter):
                 if total_deviation > self.stability_level:
                     continue
 
-                if self.is_location_ok(tile):
+                if self.is_position_ok(tile):
                     if globals.debug:
                         print("Brick recognized: %i" % self.reporter_id)
                         cv2.imwrite("debug/output_brick_recognized_{0}.png".format(self.reporter_id), image)
@@ -74,5 +74,5 @@ class TiledBrickPositionReporter(Reporter):
                     #cv2.imwrite("debug/output_board_not_recognized_{0}.png".format(self.reporter_id), image)
                     print("Board NOT recognized: %i" % self.reporter_id)
 
-    def is_location_ok(self, location):
-        return location is not None
+    def is_position_ok(self, position):
+        return position is not None

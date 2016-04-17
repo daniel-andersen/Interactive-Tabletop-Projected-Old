@@ -81,42 +81,42 @@ Client = (function() {
     });
   };
 
-  Client.prototype.requestTiledObjectPosition = function(validLocations) {
-    return this.sendMessage("requestTiledObjectPosition", {
-      "validLocations": validLocations
+  Client.prototype.requestTiledObjectPosition = function(validPositions) {
+    return this.sendMessage("requestBrickPosition", {
+      "validPositions": validPositions
     });
   };
 
-  Client.prototype.reportBackWhenTileAtAnyOfPositions = function(validLocations, id) {
+  Client.prototype.reportBackWhenBrickFoundAtAnyOfPositions = function(validPositions, id) {
     if (id == null) {
       id = null;
     }
     if (id !== null) {
-      return this.sendMessage("reportBackWhenTileAtAnyOfPositions", {
-        "validLocations": validLocations,
+      return this.sendMessage("reportBackWhenBrickFoundAtAnyOfPositions", {
+        "validPositions": validPositions,
         "id": id
       });
     } else {
-      return this.sendMessage("reportBackWhenTileAtAnyOfPositions", {
-        "validLocations": validLocations
+      return this.sendMessage("reportBackWhenBrickFoundAtAnyOfPositions", {
+        "validPositions": validPositions
       });
     }
   };
 
-  Client.prototype.reportBackWhenTileMovedToAnyOfPositions = function(initialLocation, validLocations, id) {
+  Client.prototype.reportBackWhenTileMovedToAnyOfPositions = function(initialPosition, validPositions, id) {
     if (id == null) {
       id = null;
     }
     if (id !== null) {
-      return this.sendMessage("reportBackWhenTileMovedToAnyOfPositions", {
-        "initialLocation": initialLocation,
-        "validLocations": validLocations,
+      return this.sendMessage("reportBackWhenBrickMovedToAnyOfPositions", {
+        "initialPosition": initialPosition,
+        "validPositions": validPositions,
         "id": id
       });
     } else {
-      return this.sendMessage("reportBackWhenTileMovedToAnyOfPositions", {
-        "initialLocation": initialLocation,
-        "validLocations": validLocations
+      return this.sendMessage("reportBackWhenBrickMovedToAnyOfPositions", {
+        "initialPosition": initialPosition,
+        "validPositions": validPositions
       });
     }
   };

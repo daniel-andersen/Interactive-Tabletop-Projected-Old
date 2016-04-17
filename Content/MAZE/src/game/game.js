@@ -74,6 +74,8 @@ MazeGame = (function() {
         return this.ready();
       case "brickFoundAtPosition":
         return this.brickFoundAtPosition(payload = json["payload"]);
+      case "brickMovedToPosition":
+        return this.brickMovedToPosition(payload = json["payload"]);
     }
   };
 
@@ -134,14 +136,16 @@ MazeGame = (function() {
     var player, position;
     player = this.mazeModel.players[payload["id"]];
     position = new Position(payload["position"][0], payload["position"][1]);
+    return this.playerPlacedInitialBrick(player, position);
+  };
+
+  MazeGame.prototype.brickMovedToPosition = function(payload) {
+    var player, position;
+    player = this.mazeModel.players[payload["id"]];
+    position = new Position(payload["position"][0], payload["position"][1]);
     switch (this.gameState) {
       case GameState.INITIAL_PLACEMENT:
-        if (position.equals(player.position)) {
-          return this.playerPlacedInitialBrick(player, position);
-        } else {
-          return this.playerMovedInitialBrick(player, position);
-        }
-        break;
+        return this.playerMovedInitialBrick(player, position);
       case GameState.PLAYING_GAME:
         if (player.index === this.currentPlayer.index) {
           return this.playerMovedBrick(position);
@@ -202,7 +206,7 @@ MazeGame = (function() {
       }
       return results;
     }).call(this);
-    return this.client.reportBackWhenTileAtAnyOfPositions(positions, id = player.index);
+    return this.client.reportBackWhenBrickFoundAtAnyOfPositions(positions, id = player.index);
   };
 
   MazeGame.prototype.requestPlayerPosition = function(player) {

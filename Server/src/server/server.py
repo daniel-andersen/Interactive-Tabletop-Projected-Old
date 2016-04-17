@@ -53,12 +53,12 @@ class Server(WebSocket):
             return self.reset_reporter(payload)
         if action == "initializeTiledBoard":
             return self.initialize_tiled_board(payload)
-        if action == "reportBackWhenTileAtAnyOfPositions":
-            return self.report_back_when_tile_at_any_of_positions(payload)
-        if action == "reportBackWhenTileMovedToAnyOfPositions":
-            return self.report_back_when_tile_moved_to_any_of_positions(payload)
-        if action == "requestTiledObjectPosition":
-            return self.request_tiled_object_position(payload)
+        if action == "reportBackWhenBrickFoundAtAnyOfPositions":
+            return self.report_back_when_brick_found_at_any_of_positions(payload)
+        if action == "reportBackWhenBrickMovedToAnyOfPositions":
+            return self.report_back_when_brick_moved_to_any_of_positions(payload)
+        if action == "requestBrickPosition":
+            return self.request_brick_position(payload)
 
     def reset(self):
         """
@@ -103,47 +103,47 @@ class Server(WebSocket):
         #globals.board_descriptor.corner_marker = BoardDescriptor.BoardCornerMarker.DEFAULT
         return "OK", {}
 
-    def report_back_when_tile_at_any_of_positions(self, payload):
+    def report_back_when_brick_found_at_any_of_positions(self, payload):
         """
-        Reports back when object is found in any of the given locations.
+        Reports back when object is found in any of the given positions.
 
-        validLocations: Locations to search for object in.
+        validPositions: Positions to search for object in.
         stable_time: (Optional) Amount of time to wait for image to stabilize
         id: (Optional) Reporter id.
         """
         reporter_id = payload["id"] if "id" in payload else self.draw_reporter_id()
-        valid_locations = payload["validLocations"]
+        valid_positions = payload["validPositions"]
         stable_count = payload["stableTime"] if "stableTime" in payload else 2.0
 
-        reporter = TiledBrickPositionReporter(valid_locations, stable_count)
+        reporter = TiledBrickPositionReporter(valid_positions, stable_count)
         self.reporters[reporter_id] = reporter
         reporter.start(reporter_id, lambda tile: self.send_message("OK", "brickFoundAtPosition", {"id": reporter_id, "position": tile}))
         return "OK", {"id": reporter_id}
 
-    def report_back_when_tile_moved_to_any_of_positions(self, payload):
+    def report_back_when_brick_moved_to_any_of_positions(self, payload):
         """
-        Reports back when object is found in any of the given locations other than the initial location.
+        Reports back when object is found in any of the given positions other than the initial position.
 
-        initialLocation: Initial location.
-        validLocations: Locations to search for object in.
+        initialPosition: Initial position.
+        validPositions: Positions to search for object in.
         stable_time: (Optional) Amount of time to wait for image to stabilize
         id: (Optional) Reporter id.
         """
         reporter_id = payload["id"] if "id" in payload else self.draw_reporter_id()
-        initial_location = payload["initialLocation"]
-        valid_locations = payload["validLocations"]
+        initial_position = payload["initialPosition"]
+        valid_positions = payload["validPositions"]
         stable_count = payload["stableTime"] if "stableTime" in payload else 2.0
 
-        reporter = TiledBrickMovedReporter(initial_location, valid_locations, stable_count)
+        reporter = TiledBrickMovedReporter(initial_position, valid_positions, stable_count)
         self.reporters[reporter_id] = reporter
-        reporter.start(reporter_id, lambda tile: self.send_message("OK", "brickFoundAtPosition", {"id": reporter_id, "position": tile}))
+        reporter.start(reporter_id, lambda tile: self.send_message("OK", "brickMovedToPosition", {"id": reporter_id, "position": tile, "initialPosition": initial_position}))
         return "OK", {"id": reporter_id}
 
-    def request_tiled_object_position(self, payload):
+    def request_brick_position(self, payload):
         """
-        Returns object position from given locations.
+        Returns object position from given positions.
 
-        validLocations: Locations to search for object in.
+        validPositions: Positions to search for object in.
         """
         image = self.take_photo()
 
@@ -152,8 +152,8 @@ class Server(WebSocket):
 
         globals.board_descriptor.snapshot = globals.board_recognizer.find_board(image, globals.board_descriptor)
         if globals.board_descriptor.is_recognized():
-            valid_locations = payload["validLocations"]
-            position = globals.brick_detector.find_brick_among_tiles(globals.board_descriptor, valid_locations)[0]
+            valid_positions = payload["validPositions"]
+            position = globals.brick_detector.find_brick_among_tiles(globals.board_descriptor, valid_positions)[0]
             if position is not None:
                 return "OK", {"position": position}
             else:

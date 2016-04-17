@@ -55,33 +55,33 @@ class Client
             "cornerMarker": cornerMarker
         })
 
-    requestTiledObjectPosition: (validLocations) ->
-        this.sendMessage("requestTiledObjectPosition", {
-            "validLocations": validLocations
+    requestTiledObjectPosition: (validPositions) ->
+        this.sendMessage("requestBrickPosition", {
+            "validPositions": validPositions
         })
 
-    reportBackWhenTileAtAnyOfPositions: (validLocations, id = null) ->
+    reportBackWhenBrickFoundAtAnyOfPositions: (validPositions, id = null) ->
         if id != null
-            this.sendMessage("reportBackWhenTileAtAnyOfPositions", {
-                "validLocations": validLocations,
+            this.sendMessage("reportBackWhenBrickFoundAtAnyOfPositions", {
+                "validPositions": validPositions,
                 "id": id
             })
         else
-            this.sendMessage("reportBackWhenTileAtAnyOfPositions", {
-                "validLocations": validLocations
+            this.sendMessage("reportBackWhenBrickFoundAtAnyOfPositions", {
+                "validPositions": validPositions
             })
 
-    reportBackWhenTileMovedToAnyOfPositions: (initialLocation, validLocations, id = null) ->
+    reportBackWhenTileMovedToAnyOfPositions: (initialPosition, validPositions, id = null) ->
         if id != null
-            this.sendMessage("reportBackWhenTileMovedToAnyOfPositions", {
-                "initialLocation": initialLocation,
-                "validLocations": validLocations,
+            this.sendMessage("reportBackWhenBrickMovedToAnyOfPositions", {
+                "initialPosition": initialPosition,
+                "validPositions": validPositions,
                 "id": id
             })
         else
-            this.sendMessage("reportBackWhenTileMovedToAnyOfPositions", {
-                "initialLocation": initialLocation,
-                "validLocations": validLocations
+            this.sendMessage("reportBackWhenBrickMovedToAnyOfPositions", {
+                "initialPosition": initialPosition,
+                "validPositions": validPositions
             })
 
     sendMessage: (action, payload) ->

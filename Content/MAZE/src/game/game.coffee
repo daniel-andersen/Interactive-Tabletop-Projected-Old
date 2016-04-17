@@ -56,6 +56,7 @@ class MazeGame
             when "reset" then @initializeBoard()
             when "initializeTiledBoard" then @ready()
             when "brickFoundAtPosition" then @brickFoundAtPosition(payload=json["payload"])
+            when "brickMovedToPosition" then @brickMovedToPosition(payload=json["payload"])
 
 
 
@@ -118,13 +119,15 @@ class MazeGame
     brickFoundAtPosition: (payload) ->
         player = @mazeModel.players[payload["id"]]
         position = new Position(payload["position"][0], payload["position"][1])
+        @playerPlacedInitialBrick(player, position)
+
+    brickMovedToPosition: (payload) ->
+        player = @mazeModel.players[payload["id"]]
+        position = new Position(payload["position"][0], payload["position"][1])
 
         switch @gameState
             when GameState.INITIAL_PLACEMENT
-                if position.equals(player.position)
-                    @playerPlacedInitialBrick(player, position)
-                else
-                    @playerMovedInitialBrick(player, position)
+                @playerMovedInitialBrick(player, position)
             when GameState.PLAYING_GAME
                 if player.index == @currentPlayer.index
                     @playerMovedBrick(position)
@@ -172,7 +175,7 @@ class MazeGame
 
     requestPlayerInitialPosition: (player) ->
         positions = ([position.x, position.y] for position in @mazeModel.positionsReachableByPlayer(player))
-        @client.reportBackWhenTileAtAnyOfPositions(positions, id=player.index)
+        @client.reportBackWhenBrickFoundAtAnyOfPositions(positions, id=player.index)
 
     requestPlayerPosition: (player) ->
         positions = ([position.x, position.y] for position in @mazeModel.positionsReachableByPlayer(player))
