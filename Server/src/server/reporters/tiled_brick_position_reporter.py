@@ -59,7 +59,7 @@ class TiledBrickPositionReporter(Reporter):
 
                 if globals.debug:
                     max_probability, second_max_probability = heapq.nlargest(2, probabilities)[:2]
-                    print("%i: Max/second max probabilities: %f, %f" % (self.reporter_id, max_probability, second_max_probability))
+                    print("%i: Max/second max probabilities: %f, %f vs %f" % (self.reporter_id, max_probability, second_max_probability, total_deviation))
 
                 # Check sufficient stability
                 if total_deviation > self.stability_level:
