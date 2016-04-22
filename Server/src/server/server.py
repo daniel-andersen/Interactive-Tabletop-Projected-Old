@@ -1,5 +1,7 @@
 import os
 import json
+import time
+import cv2
 import globals
 from random import randint
 from SimpleWebSocketServer import SimpleWebSocketServer, WebSocket
@@ -51,6 +53,8 @@ class Server(WebSocket):
             return self.reset_reporters()
         if action == "resetReporter":
             return self.reset_reporter(payload)
+        if action == "takeScreenshot":
+            return self.take_screenshot(payload)
         if action == "initializeTiledBoard":
             return self.initialize_tiled_board(payload)
         if action == "reportBackWhenBrickFoundAtAnyOfPositions":
@@ -84,6 +88,20 @@ class Server(WebSocket):
 
         return "OK", {}
 
+    def take_screenshot(self, payload):
+        """
+        Take a screenshot and saves it to disk.
+
+        filename: (Optional) Screenshot filename
+        """
+        image = globals.camera.read()
+        if image is not None:
+            filename = "debug/board_{0}.png".format(time.strftime("%Y-%m-%d-%H%M%S"))\
+                if "filename" not in payload else payload["filename"]
+            cv2.imwrite(filename, image)
+            return "OK", {}
+        else:
+            return "CAMERA_NOT_READY", {}
 
     def initialize_tiled_board(self, payload):
         """

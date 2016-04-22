@@ -62,6 +62,19 @@ Client = (function() {
     });
   };
 
+  Client.prototype.takeScreenshot = function(filename) {
+    if (filename == null) {
+      filename = null;
+    }
+    if (filename !== null) {
+      return this.sendMessage("takeScreenshot", {
+        "filename": filename
+      });
+    } else {
+      return this.sendMessage("takeScreenshot", {});
+    }
+  };
+
   Client.prototype.initializeTiledBoard = function(tileCountX, tileCountY, borderPctX, borderPctY, cornerMarker) {
     if (borderPctX == null) {
       borderPctX = 0.0;

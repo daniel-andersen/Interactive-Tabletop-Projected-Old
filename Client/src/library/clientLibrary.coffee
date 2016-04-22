@@ -46,6 +46,14 @@ class Client
             "id": reporterId
         })
 
+    takeScreenshot: (filename = null) ->
+        if filename != null
+            this.sendMessage("takeScreenshot", {
+                "filename": filename
+            })
+        else
+            this.sendMessage("takeScreenshot", {})
+
     initializeTiledBoard: (tileCountX, tileCountY, borderPctX = 0.0, borderPctY = 0.0, cornerMarker = "DEFAULT") ->
         this.sendMessage("initializeTiledBoard", {
             "tileCountX": tileCountX,

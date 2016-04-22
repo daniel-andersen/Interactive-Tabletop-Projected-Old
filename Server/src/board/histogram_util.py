@@ -21,7 +21,7 @@ def histogram_median(histogram, image_size):
     """
     median = 0
     for i in range(0, len(histogram)):
-        median += histogram[i] * i / image_size
+        median += float(histogram[i]) * float(i) / float(image_size)
     return median
 
 
