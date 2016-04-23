@@ -257,6 +257,9 @@ class Server(WebSocket):
     def reporter_run(self):
         while True:
 
+            # Sleep a while
+            time.sleep(0.1)
+
             # Read image from camera
             if globals.camera is None:
                 continue
@@ -268,9 +271,6 @@ class Server(WebSocket):
             # Recognize board
             if globals.board_descriptor is not None:
                 globals.board_descriptor.snapshot = globals.board_recognizer.find_board(image, globals.board_descriptor)
-
-            # Sleep a while
-            time.sleep(0.1)
 
             # Run all reporters
             to_remove = []
