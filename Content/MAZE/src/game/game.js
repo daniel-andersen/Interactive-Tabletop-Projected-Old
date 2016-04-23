@@ -156,10 +156,16 @@ MazeGame = (function() {
   MazeGame.prototype.playerPlacedInitialBrick = function(player, position) {
     player.state = PlayerState.IDLE;
     player.reachDistance = playerDefaultReachDistance;
-    return this.updateMaze();
+    this.updateMaze();
+    return setTimeout((function(_this) {
+      return function() {
+        return _this.requestPlayerPosition(player);
+      };
+    })(this), 500);
   };
 
   MazeGame.prototype.playerMovedInitialBrick = function(player, position) {
+    var i, j, ref;
     this.mazeModel.players = (function() {
       var j, len, ref, results;
       ref = this.mazeModel.players;
@@ -172,8 +178,12 @@ MazeGame = (function() {
       }
       return results;
     }).call(this);
+    for (i = j = 0, ref = this.mazeModel.players.length - 1; 0 <= ref ? j <= ref : j >= ref; i = 0 <= ref ? ++j : --j) {
+      this.mazeModel.players[i].index = i;
+    }
     player.state = PlayerState.TURN;
     this.currentPlayer = player;
+    Console.log("--> " + this.currentPlayer);
     return this.playerMovedBrick(position);
   };
 
@@ -221,7 +231,7 @@ MazeGame = (function() {
       }
       return results;
     }).call(this);
-    return this.client.reportBackWhenTileMovedToAnyOfPositions(player.position, positions, id = player.index);
+    return this.client.reportBackWhenTileMovedToAnyOfPositions([player.position.x, player.position.y], positions, id = player.index);
   };
 
   MazeGame.prototype.ready = function() {

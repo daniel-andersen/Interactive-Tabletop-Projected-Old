@@ -148,7 +148,7 @@ class MazeGame
         @mazeModel.players = (player for player in @mazeModel.players when PlayerState == PlayerState.IDLE)
 
         # Adjust player indices
-        for i in 0..@mazeModel.players.length:
+        for i in [0..@mazeModel.players.length - 1]
             @mazeModel.players[i].index = i
 
         # Move player
