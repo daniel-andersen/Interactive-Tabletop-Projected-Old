@@ -44,7 +44,7 @@ class TiledBrickPositionReporter(Reporter):
         # Calculate image stability score
         total_deviation = 0.0
 
-        print("--------- {0}".format(self.reporter_id))
+        print("Running reporter: {0}".format(self.reporter_id))
         print(self.image_stable_history)
         for i in range(0, len(self.valid_positions)):
             print("--> {0}".format(len(self.valid_positions)))
