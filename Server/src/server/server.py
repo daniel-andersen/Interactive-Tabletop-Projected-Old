@@ -273,6 +273,8 @@ class Server(WebSocket):
             to_remove = []
             for (reporter_id, reporter) in self.reporters.iteritems():
 
+                print(reporter_id)
+
                 # Run reporter
                 reporter.run_iteration()
 
