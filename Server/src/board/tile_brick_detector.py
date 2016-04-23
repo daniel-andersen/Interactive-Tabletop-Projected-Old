@@ -40,7 +40,7 @@ class TileBrickDetector(object):
         if second_min_median - min_median < self.brick_detection_minimum_probability:
             return None, medians
 
-        return coordinates[np.argmin(medians)], [1.0 - (float(median - min_median) / float(max_median - min_median)) for median in medians]
+        return coordinates[np.argmin(medians)], medians
 
     def medians_of_tiles(self, tile_strip_image, coordinates, board_descriptor):
         return [self.median_of_tile(i, tile_strip_image, board_descriptor) for i in range(0, len(coordinates))]
