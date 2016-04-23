@@ -258,6 +258,9 @@ class Server(WebSocket):
         while True:
 
             # Read image from camera
+            if globals.camera is None:
+                continue
+
             image = globals.camera.read()
             if image is None:
                 continue
