@@ -145,7 +145,7 @@ class MazeGame
     playerMovedInitialBrick: (player, position) ->
 
         # Disable players with no brick placed
-        @mazeModel.players = (player for player in @mazeModel.players when PlayerState == PlayerState.IDLE)
+        @mazeModel.players = (player for player in @mazeModel.players when player.state == PlayerState.IDLE)
 
         # Adjust player indices
         for i in [0..@mazeModel.players.length - 1]
