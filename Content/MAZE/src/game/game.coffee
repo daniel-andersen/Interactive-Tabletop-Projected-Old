@@ -184,7 +184,7 @@ class MazeGame
 
     requestPlayerPosition: (player) ->
         positions = ([position.x, position.y] for position in @mazeModel.positionsReachableByPlayer(player))
-        @client.reportBackWhenTileMovedToAnyOfPositions(player.position, positions, id=player.index)
+        @client.reportBackWhenTileMovedToAnyOfPositions([player.position.x, player.position.y], positions, id=player.index)
 
     ready: ->
         # Fade maze
