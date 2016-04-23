@@ -17,7 +17,7 @@ class TiledBrickPositionReporter(Reporter):
         self.image_stable_history = []
         self.valid_positions = valid_positions
         self.stable_time = stable_time
-        self.stability_level = 35.0
+        self.stability_level = 0.1
 
     def run_iteration(self):
 
