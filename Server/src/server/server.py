@@ -273,7 +273,7 @@ class Server(WebSocket):
                 globals.board_descriptor.snapshot = globals.board_recognizer.find_board(image, globals.board_descriptor)
 
             # Run all reporters
-            to_remove = []
+            reporter_ids_to_remove = []
 
             for (reporter_id, reporter) in self.reporters.copy().iteritems():
 
@@ -282,13 +282,13 @@ class Server(WebSocket):
 
                 # Check if stopped
                 if reporter.stopped:
-                    to_remove.append(reporter_id)
+                    reporter_ids_to_remove.append(reporter_id)
 
                 # Sleep a while
                 time.sleep(0.1)
 
             # Remove stopped reporters
-            for reporter_id in to_remove:
+            for reporter_id in reporter_ids_to_remove:
                 self.reporters.pop(reporter_id)
 
 
