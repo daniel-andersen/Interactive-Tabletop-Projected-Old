@@ -274,8 +274,6 @@ class Server(WebSocket):
 
             for (reporter_id, reporter) in self.reporters.copy().iteritems():
 
-                print("Serving reporter: {0}".format(reporter_id))
-
                 # Run reporter
                 reporter.run_iteration()
 

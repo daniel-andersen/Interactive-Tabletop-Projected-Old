@@ -41,6 +41,7 @@ class TiledBrickPositionReporter(Reporter):
         while len(self.image_stable_history) > 0 and self.image_stable_history[0]["time"] < time.time() - self.stable_time:
             self.image_stable_history.pop(0)
 
+        print("{0}: --> {1}".format(self.reporter_id, len(self.image_stable_history)))
         # Calculate image stability score
         total_deviation = 0.0
 
