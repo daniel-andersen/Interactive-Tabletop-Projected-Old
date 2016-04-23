@@ -139,7 +139,7 @@ class MazeGame
 
         # Start brick move reporter
         setTimeout(() =>
-            @requestPlayerPosition(@currentPlayer)
+            @requestPlayerPosition(player)
         , 500)
 
     playerMovedInitialBrick: (player, position) ->
