@@ -4,6 +4,7 @@ import time
 import cv2
 import globals
 from random import randint
+from threading import Thread
 from SimpleWebSocketServer import SimpleWebSocketServer, WebSocket
 from board.board_descriptor import BoardDescriptor
 from reporters.tiled_brick_position_reporter import TiledBrickPositionReporter
@@ -22,6 +23,7 @@ class Server(WebSocket):
     Server which communicates with the client library.
     """
     reporters = {}
+    reporter_thread = None
 
     def initialize_video(self):
         if globals.camera is not None:
@@ -30,6 +32,12 @@ class Server(WebSocket):
 
         globals.camera = Camera()
         globals.camera.start()
+
+    def initialize_reporter_thread(self):
+        if self.reporter_thread is None:
+            self.reporter_thread = Thread(target=self.reporter_run, args=())
+            self.reporter_thread.daemon = True
+            self.reporter_thread.start()
 
     def handleMessage(self):
         """
@@ -74,6 +82,7 @@ class Server(WebSocket):
         globals.board_descriptor.border_percentage_size = [0.0, 0.0]
         globals.board_descriptor.corner_marker = BoardDescriptor.BoardCornerMarker.DEFAULT
 
+        self.initialize_reporter_thread()
         self.reset_reporters()
 
         self.initialize_video()
@@ -131,11 +140,16 @@ class Server(WebSocket):
         """
         reporter_id = payload["id"] if "id" in payload else self.draw_reporter_id()
         valid_positions = payload["validPositions"]
-        stable_count = payload["stableTime"] if "stableTime" in payload else 2.0
+        stable_time = payload["stableTime"] if "stableTime" in payload else 2.0
 
-        reporter = TiledBrickPositionReporter(valid_positions, stable_count)
+        reporter = TiledBrickPositionReporter(
+            valid_positions,
+            stable_time,
+            reporter_id,
+            callback_function=lambda tile: self.send_message("OK", "brickFoundAtPosition", {"id": reporter_id, "position": tile})
+        )
         self.reporters[reporter_id] = reporter
-        reporter.start(reporter_id, lambda tile: self.send_message("OK", "brickFoundAtPosition", {"id": reporter_id, "position": tile}))
+
         return "OK", {"id": reporter_id}
 
     def report_back_when_brick_moved_to_any_of_positions(self, payload):
@@ -150,11 +164,16 @@ class Server(WebSocket):
         reporter_id = payload["id"] if "id" in payload else self.draw_reporter_id()
         initial_position = payload["initialPosition"]
         valid_positions = payload["validPositions"]
-        stable_count = payload["stableTime"] if "stableTime" in payload else 2.0
+        stable_time = payload["stableTime"] if "stableTime" in payload else 2.0
 
-        reporter = TiledBrickMovedReporter(initial_position, valid_positions, stable_count)
+        reporter = TiledBrickMovedReporter(
+            initial_position,
+            valid_positions,
+            stable_time,
+            reporter_id,
+            callback_function=lambda tile: self.send_message("OK", "brickMovedToPosition", {"id": reporter_id, "position": tile, "initialPosition": initial_position}))
         self.reporters[reporter_id] = reporter
-        reporter.start(reporter_id, lambda tile: self.send_message("OK", "brickMovedToPosition", {"id": reporter_id, "position": tile, "initialPosition": initial_position}))
+
         return "OK", {"id": reporter_id}
 
     def request_brick_position(self, payload):
@@ -234,6 +253,36 @@ class Server(WebSocket):
             reporter_id = randint(0, 100000)
             if reporter_id not in self.reporters:
                 return reporter_id
+
+    def reporter_run(self):
+        while True:
+
+            # Sleep a while
+            time.sleep(0.1)
+
+            # Read image from camera
+            image = globals.camera.read()
+            if image is None:
+                continue
+
+            # Recognize board
+            if globals.board_descriptor is not None:
+                globals.board_descriptor.snapshot = globals.board_recognizer.find_board(image, globals.board_descriptor)
+
+            # Run all reporters
+            to_remove = []
+            for (reporter_id, reporter) in self.reporters.iteritems():
+
+                # Run reporter
+                reporter.run_iteration()
+
+                # Check if stopped
+                if reporter.stopped:
+                    to_remove.append(reporter_id)
+
+            # Remove stopped reporters
+            for reporter_id in to_remove:
+                self.reporters.pop(reporter_id)
 
 
 def start_server():
