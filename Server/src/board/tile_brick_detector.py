@@ -31,9 +31,9 @@ class TileBrickDetector(object):
         min_median, second_min_median = heapq.nsmallest(2, medians)[:2]
 
         # Check medians
-        #print("1) %f - %f vs %f" % (min_median, second_min_median, second_min_median - min_median))
+        #print("1) %f - %f = %f" % (min_median, second_min_median, second_min_median - min_median))
         if second_min_median - min_median < self.brick_detection_minimum_median_delta:
-            return None, medians
+            return None, [0.0 for _ in medians]
 
         # OTSU strip
         _, tile_strip_image = cv2.threshold(tile_strip_image, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
@@ -43,7 +43,7 @@ class TileBrickDetector(object):
         max_probability, second_max_probability = heapq.nlargest(2, probabilities)[:2]
 
         # Check probabilities
-        #print("2) %f - %f vs %f" % (max_probability, second_max_probability, max_probability - second_max_probability))
+        #print("2) %f - %f = %f" % (max_probability, second_max_probability, max_probability - second_max_probability))
         #print(probabilities)
         if max_probability < self.brick_detection_minimum_probability:
             return None, probabilities
