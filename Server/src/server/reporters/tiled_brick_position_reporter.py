@@ -6,7 +6,6 @@ from reporter import Reporter
 
 
 class TiledBrickPositionReporter(Reporter):
-    image_stable_history = []
 
     def __init__(self, valid_positions, stable_time, reporter_id, callback_function):
         """
@@ -15,6 +14,7 @@ class TiledBrickPositionReporter(Reporter):
         """
         super(TiledBrickPositionReporter, self).__init__(reporter_id, callback_function)
 
+        self.image_stable_history = []
         self.valid_positions = valid_positions
         self.stable_time = stable_time
         self.stability_level = 1.0
