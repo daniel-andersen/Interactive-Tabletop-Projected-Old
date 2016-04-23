@@ -281,6 +281,9 @@ class Server(WebSocket):
                 if reporter.stopped:
                     to_remove.append(reporter_id)
 
+                # Sleep a while
+                time.sleep(0.02)
+
             # Remove stopped reporters
             for reporter_id in to_remove:
                 self.reporters.pop(reporter_id)

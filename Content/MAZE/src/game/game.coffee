@@ -137,6 +137,11 @@ class MazeGame
         player.reachDistance = playerDefaultReachDistance
         @updateMaze()
 
+        # Start brick move reporter
+        setTimeout(() =>
+            @requestPlayerPosition(@currentPlayer)
+        , 500)
+
     playerMovedInitialBrick: (player, position) ->
 
         # Disable players with no brick placed
