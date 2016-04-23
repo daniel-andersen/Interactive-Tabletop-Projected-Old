@@ -34,7 +34,7 @@ class TiledBrickPositionReporter(Reporter):
             #cv2.imwrite("debug/output_board_recognized_{0}.png".format(self.reporter_id), globals.board_descriptor.snapshot.board_image)
 
         # Find brick
-        (position, probabilities) = globals.brick_detector.find_brick_among_tiles(globals.board_descriptor, self.valid_positions)
+        position, probabilities = globals.brick_detector.find_brick_among_tiles(globals.board_descriptor, self.valid_positions)
 
         # Update stability history
         self.image_stable_history.append({"time": time.time, "probabilities": probabilities})
@@ -45,6 +45,9 @@ class TiledBrickPositionReporter(Reporter):
         total_deviation = 0.0
 
         for i in range(0, len(self.valid_positions)):
+            print("--> {0}".format(len(self.valid_positions)))
+            for h in self.image_stable_history:
+                print(len(h["probabilities"]))
             tile_probabilities = [h["probabilities"][i] for h in self.image_stable_history]
             total_deviation += max(tile_probabilities) - min(tile_probabilities)
 

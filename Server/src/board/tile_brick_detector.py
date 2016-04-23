@@ -32,7 +32,6 @@ class TileBrickDetector(object):
         # Calculate medians
         medians = self.medians_of_tiles(tile_strip_image, coordinates, board_descriptor)
         min_median, second_min_median = heapq.nsmallest(2, medians)[:2]
-        max_median = max(medians)
 
         # Check medians
         #print(probabilities)
