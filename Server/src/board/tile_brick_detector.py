@@ -51,8 +51,8 @@ class TileBrickDetector(object):
 
         # Remove border
         tile_width, tile_height = board_descriptor.tile_size()
-        border_width = float(tile_width) * 0.1
-        border_height = float(tile_height) * 0.1
+        border_width = int(float(tile_width) * 0.1)
+        border_height = int(float(tile_height) * 0.1)
         brick_image = brick_image[border_height:int(tile_height) - border_height, border_width:int(tile_width) - border_width]
 
         #cv2.imshow('OTSU Board Tiles {0}'.format(index), brick_image)
@@ -61,4 +61,4 @@ class TileBrickDetector(object):
         histogram = histogram_util.histogram_from_bw_image(brick_image)
 
         # Return median
-        return histogram_util.histogram_median(histogram, ((tile_width - (border_width * 2.0)) * (tile_height - (border_height * 2.0))))
+        return histogram_util.histogram_median(histogram, ((tile_width - (border_width * 2)) * (tile_height - (border_height * 2))))

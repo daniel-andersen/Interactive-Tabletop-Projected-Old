@@ -25,11 +25,6 @@ class TiledBrickPositionReporter(Reporter):
         if not globals.board_descriptor.is_recognized():
             return
 
-        # Read image from camera
-        image = globals.camera.read()
-        if image is None:
-            return
-
         #if globals.debug:
             #cv2.imwrite("debug/output_board_recognized_{0}.png".format(self.reporter_id), globals.board_descriptor.snapshot.board_image)
 
@@ -59,8 +54,10 @@ class TiledBrickPositionReporter(Reporter):
 
         if self.is_position_ok(position):
             if globals.debug:
-                print("%i: Brick recognized" % self.reporter_id)
-                cv2.imwrite("debug/output_brick_recognized_{0}.png".format(self.reporter_id), image)
+                print("%i: Brick recognized: %s" % (self.reporter_id, probabilities))
+                image = globals.camera.read()
+                if image is not None:
+                    cv2.imwrite("debug/output_brick_recognized_{0}.png".format(self.reporter_id), image)
             self.callback_function(position)
             self.stop()
 
