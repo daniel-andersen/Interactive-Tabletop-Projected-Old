@@ -10,12 +10,7 @@ class TileBrickDetector(object):
     """
 
     def __init__(self):
-        self.histogram_bin_count = 4
-        self.histogram_bin_count_fallback = 2
-        self.histogram_bin_count_fallback_2 = 8
-
-        self.brick_detection_minimum_probability = 25.0
-        self.brick_detection_maximum_deviation = 0.6
+        self.brick_detection_minimum_probability = 35.0
 
     def find_brick_among_tiles(self, board_descriptor, coordinates):
         """
@@ -32,6 +27,8 @@ class TileBrickDetector(object):
         # Calculate medians
         medians = self.medians_of_tiles(tile_strip_image, coordinates, board_descriptor)
         min_median, second_min_median = heapq.nsmallest(2, medians)[:2]
+        #print(medians)
+        #print("%s vs %s" % (min_median, second_min_median))
 
         # Check medians
         #print(probabilities)
