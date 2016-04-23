@@ -41,17 +41,12 @@ class TiledBrickPositionReporter(Reporter):
         while len(self.image_stable_history) > 0 and self.image_stable_history[0]["time"] < time.time() - self.stable_time:
             self.image_stable_history.pop(0)
 
-        if len(self.image_stable_history) > 0:
-            print("{0}: --> {1}".format(self.reporter_id, len(self.image_stable_history)))
-
         # Calculate image stability score
         total_deviation = 0.0
 
         for i in range(0, len(self.valid_positions)):
             tile_probabilities = [h["probabilities"][i] for h in self.image_stable_history]
-            total_deviation += max(tile_probabilities) - min(tile_probabilities)
-
-        total_deviation /= float(len(self.valid_positions))
+            total_deviation = max(total_deviation, max(tile_probabilities) - min(tile_probabilities))
 
         if globals.debug:
             print("%i: %f" % (self.reporter_id, total_deviation))
