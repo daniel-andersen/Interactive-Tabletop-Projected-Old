@@ -37,12 +37,12 @@ class TiledBrickPositionReporter(Reporter):
         position, probabilities = globals.brick_detector.find_brick_among_tiles(globals.board_descriptor, self.valid_positions)
 
         # Update stability history
-        self.image_stable_history.append({"time": time.time, "probabilities": probabilities})
+        self.image_stable_history.append({"time": time.time(), "probabilities": probabilities})
         while len(self.image_stable_history) > 0 and self.image_stable_history[0]["time"] < time.time() - self.stable_time:
             self.image_stable_history.pop(0)
 
         if len(self.image_stable_history) > 0:
-            print("{0}: --> {1} - {2} - {3}".format(self.reporter_id, time.time(), self.image_stable_history[0]["time"], self.stable_time))
+            print("{0}: --> {1}".format(self.reporter_id, len(self.image_stable_history)))
 
         # Calculate image stability score
         total_deviation = 0.0
