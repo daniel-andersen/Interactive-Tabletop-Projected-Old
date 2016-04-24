@@ -157,7 +157,7 @@ class MazeGame
         # Move player
         player.state = PlayerState.TURN
         @currentPlayer = player
-        console.log("--> " + @currentPlayer)
+        console.log("--> " + @currentPlayer.position)
 
         @playerMovedBrick(position)
 
@@ -167,16 +167,22 @@ class MazeGame
         @client.resetReporters()
 
         # Move player
+        console.log("1")
         @currentPlayer.position = position
+        console.log("2")
         @updateMaze()
+        console.log("3")
 
         # Next players turn
         @currentPlayer.state = PlayerState.IDLE
 
         nextPlayerIndex = (@currentPlayer.index + 1) % @mazeModel.players.length
+        console.log("4")
 
         @currentPlayer = @mazeModel.players[nextPlayerIndex]
+        console.log("5")
         @currentPlayer.state = PlayerState.TURN
+        console.log("6")
 
         # Update maze
         @updateMaze()
