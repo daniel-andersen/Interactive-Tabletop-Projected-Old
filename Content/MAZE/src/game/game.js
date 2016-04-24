@@ -165,37 +165,24 @@ MazeGame = (function() {
   };
 
   MazeGame.prototype.playerMovedInitialBrick = function(player, position) {
-    var i, j, ref;
-    this.mazeModel.players = (function() {
-      var j, len, ref, results;
-      ref = this.mazeModel.players;
-      results = [];
-      for (j = 0, len = ref.length; j < len; j++) {
-        player = ref[j];
-        if (PlayerState === PlayerState.IDLE) {
-          results.push(player);
-        }
+    var aPlayer, j, len, ref;
+    ref = this.mazeModel.players;
+    for (j = 0, len = ref.length; j < len; j++) {
+      aPlayer = ref[j];
+      if (aPlayer.state !== PlayerState.IDLE) {
+        aPlayer.state = PlayerState.DISABLED;
       }
-      return results;
-    }).call(this);
-    for (i = j = 0, ref = this.mazeModel.players.length - 1; 0 <= ref ? j <= ref : j >= ref; i = 0 <= ref ? ++j : --j) {
-      this.mazeModel.players[i].index = i;
     }
     player.state = PlayerState.TURN;
     this.currentPlayer = player;
-    Console.log("--> " + this.currentPlayer);
     return this.playerMovedBrick(position);
   };
 
   MazeGame.prototype.playerMovedBrick = function(position) {
-    var nextPlayerIndex;
     this.client.resetReporters();
     this.currentPlayer.position = position;
     this.updateMaze();
-    this.currentPlayer.state = PlayerState.IDLE;
-    nextPlayerIndex = (this.currentPlayer.index + 1) % this.mazeModel.players.length;
-    this.currentPlayer = this.mazeModel.players[nextPlayerIndex];
-    this.currentPlayer.state = PlayerState.TURN;
+    this.nextPlayerTurn();
     this.updateMaze();
     return setTimeout((function(_this) {
       return function() {
@@ -260,6 +247,26 @@ MazeGame = (function() {
     return this.isUpdatingMaze = false;
   };
 
+  MazeGame.prototype.nextPlayerTurn = function() {
+    var index, j, len, player, ref;
+    index = this.currentPlayer.index;
+    while (true) {
+      index = (index + 1) % this.mazeModel.players.length;
+      if (this.mazeModel.players[index].state !== PlayerState.DISABLED) {
+        this.currentPlayer = this.mazeModel.players[index];
+        break;
+      }
+    }
+    ref = this.mazeModel.players;
+    for (j = 0, len = ref.length; j < len; j++) {
+      player = ref[j];
+      if (player.state !== PlayerState.DISABLED) {
+        player.state = PlayerState.IDLE;
+      }
+    }
+    return this.currentPlayer.state = PlayerState.TURN;
+  };
+
   MazeGame.prototype.updateMaze = function() {
     var destinationAlpha, fadeMazeTween;
     if (this.isUpdatingMaze) {
@@ -306,6 +313,9 @@ MazeGame = (function() {
     for (l = 0, len = drawOrder.length; l < len; l++) {
       playerIndex = drawOrder[l];
       player = this.mazeModel.players[playerIndex];
+      if (player.state === PlayerState.DISABLED) {
+        continue;
+      }
       results.push((function() {
         var len1, m, ref2, results1;
         ref2 = this.mazeModel.positionsReachableByPlayer(player);

@@ -145,24 +145,13 @@ class MazeGame
     playerMovedInitialBrick: (player, position) ->
 
         # Disable players with no brick placed
-        players = []
-        index = 0
-        for i in [0..@mazeModel.players.length - 1]
-            aPlayer = @mazeModel.players[i]
-            if otherPlayer.state == PlayerState.IDLE
-                aPlayer.index = index
-                index = index + 1
-                players.push(aPlayer)
-
-        @mazeModel.players = players
+        for aPlayer in @mazeModel.players
+            if aPlayer.state != PlayerState.IDLE
+                aPlayer.state = PlayerState.DISABLED
 
         # Move player
         player.state = PlayerState.TURN
         @currentPlayer = player
-
-        for i in [0..@mazeModel.players.length - 1]
-            console.log("==> " + @mazeModel.players[i].index)
-            console.log("--> " + @mazeModel.players[i].position.x + ", " + @mazeModel.players[i].position.y)
 
         @playerMovedBrick(position)
 
@@ -176,12 +165,7 @@ class MazeGame
         @updateMaze()
 
         # Next players turn
-        @currentPlayer.state = PlayerState.IDLE
-
-        nextPlayerIndex = (@currentPlayer.index + 1) % @mazeModel.players.length
-
-        @currentPlayer = @mazeModel.players[nextPlayerIndex]
-        @currentPlayer.state = PlayerState.TURN
+        @nextPlayerTurn()
 
         # Update maze
         @updateMaze()
@@ -226,6 +210,20 @@ class MazeGame
 
         # Clear updating state
         @isUpdatingMaze = false
+
+    nextPlayerTurn: ->
+        index = @currentPlayer.index
+
+        while true
+            index = (index + 1) % @mazeModel.players.length
+            if @mazeModel.players[index].state != PlayerState.DISABLED
+                @currentPlayer = @mazeModel.players[index]
+                break
+
+        for player in @mazeModel.players
+            if player.state != PlayerState.DISABLED
+                player.state = PlayerState.IDLE
+        @currentPlayer.state = PlayerState.TURN
 
     updateMaze: ->
 
@@ -272,6 +270,8 @@ class MazeGame
 
         for playerIndex in drawOrder
             player = @mazeModel.players[playerIndex]
+            if player.state == PlayerState.DISABLED
+                continue
 
             for position in @mazeModel.positionsReachableByPlayer(player)
                 entry = @mazeModel.entryAtPosition(position)
