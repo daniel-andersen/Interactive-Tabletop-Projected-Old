@@ -152,6 +152,10 @@ class MazeGame
         # Get starting playing game
         @gameState = GameState.PLAYING_GAME
 
+        # Fade logo away
+        fadeLogoTween = @kiwiState.game.tweens.create(@logo);
+        fadeLogoTween.to({ alpha: 0.0 }, 1000, Kiwi.Animations.Tweens.Easing.Linear.In, true)
+
         # Move player
         player.state = PlayerState.TURN
         @currentPlayer = player
@@ -176,7 +180,7 @@ class MazeGame
         # Start brick move reporter
         setTimeout(() =>
             @requestPlayerPosition(@currentPlayer)
-        , 1500)
+        , 2000)
 
     requestPlayerInitialPosition: (player) ->
         positions = ([position.x, position.y] for position in @mazeModel.positionsReachableByPlayer(player))
@@ -235,6 +239,7 @@ class MazeGame
             setTimeout(() =>
                 @updateMaze()
             , 1500)
+            return
 
         @isUpdatingMaze = true
 
@@ -284,8 +289,8 @@ class MazeGame
         switch @gameState
             when GameState.INITIAL_PLACEMENT
                 if player.state == PlayerState.INITIAL_PLACEMENT
-                    #if player.position.equals(position) then 0 else darkenTileOffset
-                    return 0
+                    if player.position.equals(position) then 0 else darkenTileOffset
+                    #return 0
                 else 0
             when GameState.PLAYING_GAME
                 if @currentPlayer.index == player.index then 0 else darkenTileOffset
