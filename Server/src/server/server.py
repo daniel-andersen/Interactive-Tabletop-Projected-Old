@@ -205,8 +205,6 @@ class Server(WebSocket):
         for (_, reporter) in self.reporters.iteritems():
             reporter.stop()
 
-        self.reporters = {}
-
         return "OK", {}
 
     def reset_reporter(self, payload):
