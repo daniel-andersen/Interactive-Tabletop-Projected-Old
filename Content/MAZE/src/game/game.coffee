@@ -140,7 +140,7 @@ class MazeGame
         # Start brick move reporter
         setTimeout(() =>
             @requestPlayerPosition(player)
-        , 500)
+        , 1500)
 
     playerMovedInitialBrick: (player, position) ->
 
@@ -148,6 +148,9 @@ class MazeGame
         for aPlayer in @mazeModel.players
             if aPlayer.state != PlayerState.IDLE
                 aPlayer.state = PlayerState.DISABLED
+
+        # Get starting playing game
+        @gameState = GameState.PLAYING_GAME
 
         # Move player
         player.state = PlayerState.TURN
@@ -173,7 +176,7 @@ class MazeGame
         # Start brick move reporter
         setTimeout(() =>
             @requestPlayerPosition(@currentPlayer)
-        , 500)
+        , 1500)
 
     requestPlayerInitialPosition: (player) ->
         positions = ([position.x, position.y] for position in @mazeModel.positionsReachableByPlayer(player))
@@ -231,7 +234,7 @@ class MazeGame
         if @isUpdatingMaze
             setTimeout(() =>
                 @updateMaze()
-            , 1200)
+            , 1500)
 
         @isUpdatingMaze = true
 
