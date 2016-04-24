@@ -146,11 +146,13 @@ class MazeGame
 
         # Disable players with no brick placed
         players = []
+        index = 0
         for i in [0..@mazeModel.players.length - 1]
-            otherPlayer = @mazeModel.players[i]
+            aPlayer = @mazeModel.players[i]
             if otherPlayer.state == PlayerState.IDLE
-                otherPlayer.index = i
-                players.push(otherPlayer)
+                aPlayer.index = index
+                index = index + 1
+                players.push(aPlayer)
 
         @mazeModel.players = players
 
