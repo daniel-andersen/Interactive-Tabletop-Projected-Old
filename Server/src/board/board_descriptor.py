@@ -50,7 +50,7 @@ class BoardDescriptor(object):
         :return: (width, height) in image
         """
         height, width = self.snapshot.board_image.shape[:2]
-        return width * self.border_percentage_size[0], height * self.border_percentage_size[1]
+        return float(width) * float(self.border_percentage_size[0]), float(height) * float(self.border_percentage_size[1])
 
     def board_region(self):
         """
@@ -60,12 +60,12 @@ class BoardDescriptor(object):
         image_height, image_width = self.snapshot.board_image.shape[:2]
         border_width, border_height = self.border_size()
 
-        return (border_width,
-                border_height,
-                image_width - border_width,
-                image_height - border_height,
-                image_width - (border_width * 2),
-                image_height - (border_height * 2))
+        return (float(border_width),
+                float(border_height),
+                float(image_width) - float(border_width),
+                float(image_height) - float(border_height),
+                float(image_width) - float((border_width * 2)),
+                float(image_height) - float((border_height * 2)))
 
     def board_canvas(self):
         """
@@ -84,8 +84,8 @@ class BoardDescriptor(object):
         :return: Tile (width, height)
         """
         board_width, board_height = self.board_region()[4:6]
-        return (board_width / self.tile_count[0],
-                board_height / self.tile_count[1])
+        return (float(board_width) / float(self.tile_count[0]),
+                float(board_height) / float(self.tile_count[1]))
 
     def tile_region(self, x, y):
         """
@@ -98,12 +98,12 @@ class BoardDescriptor(object):
 
         tile_width, tile_height = self.tile_size()
 
-        return (int(board_x1 + (x * tile_width)),
-                int(board_y1 + (y * tile_height)),
-                int(board_x1 + (x * tile_width)) + int(tile_width),
-                int(board_y1 + (y * tile_height)) + int(tile_height),
-                tile_width,
-                tile_height)
+        return (int(board_x1 + (float(x) * tile_width)),
+                int(board_y1 + (float(y) * tile_height)),
+                int(board_x1 + (float(x) * tile_width)) + int(tile_width),
+                int(board_y1 + (float(y) * tile_height)) + int(tile_height),
+                int(tile_width),
+                int(tile_height))
 
     def tile(self, x, y, source_image=None, grayscaled=False):
         """
@@ -134,17 +134,17 @@ class BoardDescriptor(object):
 
         channels = source_image.shape[2] if len(source_image.shape) > 2 else 1
         if channels > 1:
-            size = (tile_height, len(coordinates) * tile_width, channels)
+            size = (int(tile_height), int(float(len(coordinates)) * tile_width), channels)
         else:
-            size = (tile_height, len(coordinates) * tile_width)
+            size = (int(tile_height), int(float(len(coordinates)) * tile_width))
 
         image = np.zeros(size, source_image.dtype)
 
-        offset = 0
+        offset = 0.0
         for (x, y) in coordinates:
             x1, y1, x2, y2 = self.tile_region(x, y)[:4]
             tile_image = source_image[y1:y2, x1:x2]
-            image[0:int(tile_height), offset:offset + int(tile_width)] = tile_image
+            image[0:int(tile_height), int(offset):int(offset) + int(tile_width)] = tile_image
             offset += tile_width
 
         return image
@@ -157,6 +157,6 @@ class BoardDescriptor(object):
         :return: The tile at the given index
         """
         tile_width, tile_height = self.tile_size()
-        x1 = index * tile_width
+        x1 = int(float(index) * tile_width)
         x2 = x1 + int(tile_width)
         return tile_strip_image[0:int(tile_height), x1:x2]
