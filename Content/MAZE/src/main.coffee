@@ -1,5 +1,5 @@
 gameOptions =
-  renderer: Kiwi.RENDERER_CANVAS
+  renderer: Kiwi.RENDERER_WEBGL
   width: 1280
   height: 800
 
