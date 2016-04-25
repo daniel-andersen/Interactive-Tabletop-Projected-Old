@@ -100,12 +100,14 @@ class MazeGame
         @kiwiState.addChild(@logo)
 
         # Setup debug log
+        ###
         statusTextField = new Kiwi.HUD.Widget.TextField(@kiwiState.game, "", 100, 10)
         statusTextField.style.color = "#00ff00"
         statusTextField.style.fontSize = "14px"
         statusTextField.style.textShadow = "-1px -1px 5px black, 1px -1px 5px black, -1px 1px 5px black, 1px 1px 5px black"
         @client.debug_textField = statusTextField
         @kiwiState.game.huds.defaultHUD.addWidget(statusTextField)
+        ###
 
 
 

@@ -97,7 +97,6 @@ MazeGame = (function() {
   };
 
   MazeGame.prototype.setupUi = function() {
-    var statusTextField;
     this.logo = new Kiwi.GameObjects.StaticImage(this.kiwiState, this.kiwiState.textures.logo, 0, 0);
     this.logo.alpha = 0.0;
     this.tilemap = new Kiwi.GameObjects.Tilemap.TileMap(this.kiwiState, "tilemap", this.kiwiState.textures.tiles);
@@ -108,13 +107,16 @@ MazeGame = (function() {
     this.kiwiState.addChild(this.borderLayer);
     this.kiwiState.addChild(this.tileLayers[0]);
     this.kiwiState.addChild(this.tileLayers[1]);
-    this.kiwiState.addChild(this.logo);
-    statusTextField = new Kiwi.HUD.Widget.TextField(this.kiwiState.game, "", 100, 10);
-    statusTextField.style.color = "#00ff00";
-    statusTextField.style.fontSize = "14px";
-    statusTextField.style.textShadow = "-1px -1px 5px black, 1px -1px 5px black, -1px 1px 5px black, 1px 1px 5px black";
-    this.client.debug_textField = statusTextField;
-    return this.kiwiState.game.huds.defaultHUD.addWidget(statusTextField);
+    return this.kiwiState.addChild(this.logo);
+
+    /*
+    statusTextField = new Kiwi.HUD.Widget.TextField(@kiwiState.game, "", 100, 10)
+    statusTextField.style.color = "#00ff00"
+    statusTextField.style.fontSize = "14px"
+    statusTextField.style.textShadow = "-1px -1px 5px black, 1px -1px 5px black, -1px 1px 5px black, 1px 1px 5px black"
+    @client.debug_textField = statusTextField
+    @kiwiState.game.huds.defaultHUD.addWidget(statusTextField)
+     */
   };
 
   MazeGame.prototype.initializeBoard = function() {
@@ -161,11 +163,11 @@ MazeGame = (function() {
       return function() {
         return _this.requestPlayerPosition(player);
       };
-    })(this), 500);
+    })(this), 1500);
   };
 
   MazeGame.prototype.playerMovedInitialBrick = function(player, position) {
-    var aPlayer, j, len, ref;
+    var aPlayer, fadeLogoTween, j, len, ref;
     ref = this.mazeModel.players;
     for (j = 0, len = ref.length; j < len; j++) {
       aPlayer = ref[j];
@@ -173,6 +175,11 @@ MazeGame = (function() {
         aPlayer.state = PlayerState.DISABLED;
       }
     }
+    this.gameState = GameState.PLAYING_GAME;
+    fadeLogoTween = this.kiwiState.game.tweens.create(this.logo);
+    fadeLogoTween.to({
+      alpha: 0.0
+    }, 1000, Kiwi.Animations.Tweens.Easing.Linear.In, true);
     player.state = PlayerState.TURN;
     this.currentPlayer = player;
     return this.playerMovedBrick(position);
@@ -188,7 +195,7 @@ MazeGame = (function() {
       return function() {
         return _this.requestPlayerPosition(_this.currentPlayer);
       };
-    })(this), 500);
+    })(this), 2000);
   };
 
   MazeGame.prototype.requestPlayerInitialPosition = function(player) {
@@ -274,7 +281,8 @@ MazeGame = (function() {
         return function() {
           return _this.updateMaze();
         };
-      })(this), 1200);
+      })(this), 1500);
+      return;
     }
     this.isUpdatingMaze = true;
     this.visibleLayer = this.visibleLayer === 0 ? 1 : 0;
@@ -335,7 +343,11 @@ MazeGame = (function() {
     switch (this.gameState) {
       case GameState.INITIAL_PLACEMENT:
         if (player.state === PlayerState.INITIAL_PLACEMENT) {
-          return 0;
+          if (player.position.equals(position)) {
+            return 0;
+          } else {
+            return darkenTileOffset;
+          }
         } else {
           return 0;
         }
