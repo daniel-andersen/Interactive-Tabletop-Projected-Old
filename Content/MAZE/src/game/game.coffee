@@ -9,6 +9,7 @@ MAZE.Game.preload = ->
     @addJSON("tilemap", "assets/maps/maze.json")
     @addSpriteSheet("tiles", "assets/img/tiles/board_tiles.png", 40, 40)
     @addImage("logo", "assets/img/menu/title.png")
+    @addImage("treasure", "assets/img/tiles/treasure.png")
 
 MAZE.Game.create = ->
     Kiwi.State::create.call(this)
@@ -71,6 +72,8 @@ class MazeGame
         @tileLayers[0].alpha = 1.0
         @tileLayers[1].alpha = 0.0
 
+        @treasure.alpha = 0.0
+
         @resetMaze()
 
         # Fade logo
@@ -85,6 +88,12 @@ class MazeGame
         @logo = new Kiwi.GameObjects.StaticImage(@kiwiState, @kiwiState.textures.logo, 0, 0)
         @logo.alpha = 0.0
 
+        # Setup treasure
+        @treasure = new Kiwi.GameObjects.StaticImage(@kiwiState, @kiwiState.textures.treasure, 0, 0)
+        @treasure.alpha = 0.0
+        @treasure.anchorPointX = 0.0
+        @treasure.anchorPointY = 0.0
+
         # Setup tilemap
         @tilemap = new Kiwi.GameObjects.Tilemap.TileMap(@kiwiState, "tilemap", @kiwiState.textures.tiles)
         @borderLayer = @tilemap.getLayerByName("Border Layer")
@@ -97,6 +106,7 @@ class MazeGame
         @kiwiState.addChild(@borderLayer)
         @kiwiState.addChild(@tileLayers[0])
         @kiwiState.addChild(@tileLayers[1])
+        @kiwiState.addChild(@treasure)
         @kiwiState.addChild(@logo)
 
         # Setup debug log
@@ -157,6 +167,15 @@ class MazeGame
         # Fade logo away
         fadeLogoTween = @kiwiState.game.tweens.create(@logo);
         fadeLogoTween.to({ alpha: 0.0 }, 1000, Kiwi.Animations.Tweens.Easing.Linear.In, true)
+
+        # Show treasure
+        @treasure.x = (@kiwiState.game.stage.width * @mazeModel.treasurePosition.x) / @mazeModel.width
+        @treasure.y = (@kiwiState.game.stage.height * @mazeModel.treasurePosition.y) / @mazeModel.height
+
+        setTimeout(() =>
+            fadeTreasureTween = @kiwiState.game.tweens.create(@treasure);
+            fadeTreasureTween.to({ alpha: 1.0 }, 1000, Kiwi.Animations.Tweens.Easing.Linear.In, true)
+        , 1000)
 
         # Move player
         player.state = PlayerState.TURN

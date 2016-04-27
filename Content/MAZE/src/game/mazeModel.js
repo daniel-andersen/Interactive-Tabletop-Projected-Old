@@ -58,7 +58,9 @@ MazeModel = (function() {
     this.placePlayers();
     this.resetMaze();
     this.createMaze();
-    return this.calculateTileIndices();
+    this.calculateTileIndices();
+    this.placeTreasure();
+    return console.log("Treasure position: " + this.treasurePosition.x + ", " + this.treasurePosition.y);
   };
 
   MazeModel.prototype.resetMaze = function() {
@@ -119,8 +121,91 @@ MazeModel = (function() {
     return this.players[3].position = new Position(0, this.height / 2);
   };
 
+  MazeModel.prototype.placeTreasure = function() {
+    var bestScore, distance, distanceMaps, i, isValid, j, k, len, maxDistance, minDistance, player, ref, ref1, results, score, x, y;
+    distanceMaps = [];
+    ref = this.players;
+    for (j = 0, len = ref.length; j < len; j++) {
+      player = ref[j];
+      distanceMaps.push(this.distanceMapForPlayer(player));
+    }
+    this.treasurePosition = null;
+    bestScore = null;
+    results = [];
+    for (y = k = 0, ref1 = this.height - 1; 0 <= ref1 ? k <= ref1 : k >= ref1; y = 0 <= ref1 ? ++k : --k) {
+      results.push((function() {
+        var l, m, n, ref2, ref3, ref4, results1;
+        results1 = [];
+        for (x = l = 0, ref2 = this.width - 1; 0 <= ref2 ? l <= ref2 : l >= ref2; x = 0 <= ref2 ? ++l : --l) {
+          isValid = true;
+          for (i = m = 0, ref3 = this.players.length - 1; 0 <= ref3 ? m <= ref3 : m >= ref3; i = 0 <= ref3 ? ++m : --m) {
+            if (distanceMaps[i][y][x] === -1) {
+              isValid = false;
+            }
+          }
+          if (!isValid) {
+            continue;
+          }
+          maxDistance = null;
+          minDistance = null;
+          score = 0;
+          for (i = n = 0, ref4 = this.players.length - 1; 0 <= ref4 ? n <= ref4 : n >= ref4; i = 0 <= ref4 ? ++n : --n) {
+            distance = distanceMaps[i][y][x];
+            score += distance;
+            maxDistance = maxDistance === null ? distance : Math.max(maxDistance, distance);
+            minDistance = minDistance === null ? distance : Math.min(minDistance, distance);
+          }
+          score = minDistance;
+          if (bestScore === null || score > bestScore) {
+            bestScore = score;
+            results1.push(this.treasurePosition = new Position(x, y));
+          } else {
+            results1.push(void 0);
+          }
+        }
+        return results1;
+      }).call(this));
+    }
+    return results;
+  };
+
+  MazeModel.prototype.distanceMapForPlayer = function(player) {
+    var _, adjacentPosition, currentDistance, distanceMap, granularity, j, len, position, ref, unvisitedPositions;
+    distanceMap = (function() {
+      var j, ref, results;
+      results = [];
+      for (_ = j = 1, ref = this.height; 1 <= ref ? j <= ref : j >= ref; _ = 1 <= ref ? ++j : --j) {
+        results.push((function() {
+          var k, ref1, results1;
+          results1 = [];
+          for (_ = k = 1, ref1 = this.width; 1 <= ref1 ? k <= ref1 : k >= ref1; _ = 1 <= ref1 ? ++k : --k) {
+            results1.push(-1);
+          }
+          return results1;
+        }).call(this));
+      }
+      return results;
+    }).call(this);
+    distanceMap[player.position.y][player.position.x] = 0;
+    unvisitedPositions = [];
+    unvisitedPositions.push(player.position);
+    while (unvisitedPositions.length > 0) {
+      position = unvisitedPositions.splice(0, 1)[0];
+      currentDistance = distanceMap[position.y][position.x];
+      ref = this.adjacentConnectedPositions(position, granularity = 1);
+      for (j = 0, len = ref.length; j < len; j++) {
+        adjacentPosition = ref[j];
+        if (distanceMap[adjacentPosition.y][adjacentPosition.x] === -1) {
+          distanceMap[adjacentPosition.y][adjacentPosition.x] = currentDistance + 1;
+          unvisitedPositions.push(adjacentPosition);
+        }
+      }
+    }
+    return distanceMap;
+  };
+
   MazeModel.prototype.createMaze = function() {
-    var downPosition, entry, j, leftPosition, position, randomIndex, ref, results, rightPosition, stop, upPosition, wall, x, y;
+    var downPosition, entry, j, leftPosition, position, randomIndex, ref, results, rightPosition, upPosition, wall, x, y;
     this.wallsToVisit = [];
     position = this.positionWithGranularity(new Position(this.width / 2, this.height / 2));
     this.removeWalls(position, new Position(position.x + 1, position.y));
@@ -134,10 +219,10 @@ MazeModel = (function() {
       this.removeWalls(wall.position1, wall.position2);
       this.addAdjacentWallsToVisitList(wall.position2);
     }
-    this.digWalls(this.players[0].position, Direction.DOWN, stop = WallType.ALL_SIDES);
-    this.digWalls(this.players[1].position, Direction.LEFT, stop = WallType.ALL_SIDES);
-    this.digWalls(this.players[2].position, Direction.UP, stop = WallType.ALL_SIDES);
-    this.digWalls(this.players[3].position, Direction.RIGHT, stop = WallType.ALL_SIDES);
+    this.digWalls(this.players[0].position, Direction.DOWN);
+    this.digWalls(this.players[1].position, Direction.LEFT);
+    this.digWalls(this.players[2].position, Direction.UP);
+    this.digWalls(this.players[3].position, Direction.RIGHT);
     results = [];
     for (y = j = 0, ref = this.height - 1; 0 <= ref ? j <= ref : j >= ref; y = 0 <= ref ? ++j : --j) {
       results.push((function() {
@@ -321,13 +406,10 @@ MazeModel = (function() {
     return positions;
   };
 
-  MazeModel.prototype.digWalls = function(position, direction, stop) {
+  MazeModel.prototype.digWalls = function(position, direction) {
     var entry, granularity, nextPosition;
-    if (stop == null) {
-      stop = WallType.ALL_SIDES;
-    }
     entry = this.entryAtPosition(position);
-    while (this.wallMaskAtPosition(position) !== WallType.ALL_SIDES) {
+    while (this.wallMaskAtPosition(position) === WallType.ALL_SIDES) {
       nextPosition = this.positionInDirection(position, direction);
       if (!this.isPositionValid(nextPosition)) {
         return;

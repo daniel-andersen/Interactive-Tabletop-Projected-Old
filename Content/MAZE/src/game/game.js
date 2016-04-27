@@ -11,7 +11,8 @@ mazeGame = null;
 MAZE.Game.preload = function() {
   this.addJSON("tilemap", "assets/maps/maze.json");
   this.addSpriteSheet("tiles", "assets/img/tiles/board_tiles.png", 40, 40);
-  return this.addImage("logo", "assets/img/menu/title.png");
+  this.addImage("logo", "assets/img/menu/title.png");
+  return this.addImage("treasure", "assets/img/tiles/treasure.png");
 };
 
 MAZE.Game.create = function() {
@@ -84,6 +85,7 @@ MazeGame = (function() {
     this.visibleLayer = 0;
     this.tileLayers[0].alpha = 1.0;
     this.tileLayers[1].alpha = 0.0;
+    this.treasure.alpha = 0.0;
     this.resetMaze();
     return setTimeout((function(_this) {
       return function() {
@@ -99,6 +101,10 @@ MazeGame = (function() {
   MazeGame.prototype.setupUi = function() {
     this.logo = new Kiwi.GameObjects.StaticImage(this.kiwiState, this.kiwiState.textures.logo, 0, 0);
     this.logo.alpha = 0.0;
+    this.treasure = new Kiwi.GameObjects.StaticImage(this.kiwiState, this.kiwiState.textures.treasure, 0, 0);
+    this.treasure.alpha = 0.0;
+    this.treasure.anchorPointX = 0.0;
+    this.treasure.anchorPointY = 0.0;
     this.tilemap = new Kiwi.GameObjects.Tilemap.TileMap(this.kiwiState, "tilemap", this.kiwiState.textures.tiles);
     this.borderLayer = this.tilemap.getLayerByName("Border Layer");
     this.tileLayers = [];
@@ -107,6 +113,7 @@ MazeGame = (function() {
     this.kiwiState.addChild(this.borderLayer);
     this.kiwiState.addChild(this.tileLayers[0]);
     this.kiwiState.addChild(this.tileLayers[1]);
+    this.kiwiState.addChild(this.treasure);
     return this.kiwiState.addChild(this.logo);
 
     /*
@@ -180,6 +187,17 @@ MazeGame = (function() {
     fadeLogoTween.to({
       alpha: 0.0
     }, 1000, Kiwi.Animations.Tweens.Easing.Linear.In, true);
+    this.treasure.x = (this.kiwiState.game.stage.width * this.mazeModel.treasurePosition.x) / this.mazeModel.width;
+    this.treasure.y = (this.kiwiState.game.stage.height * this.mazeModel.treasurePosition.y) / this.mazeModel.height;
+    setTimeout((function(_this) {
+      return function() {
+        var fadeTreasureTween;
+        fadeTreasureTween = _this.kiwiState.game.tweens.create(_this.treasure);
+        return fadeTreasureTween.to({
+          alpha: 1.0
+        }, 1000, Kiwi.Animations.Tweens.Easing.Linear.In, true);
+      };
+    })(this), 1000);
     player.state = PlayerState.TURN;
     this.currentPlayer = player;
     return this.playerMovedBrick(position);

@@ -43,6 +43,9 @@ class MazeModel
         @resetMaze()
         @createMaze()
         @calculateTileIndices()
+        @placeTreasure()
+
+        console.log("Treasure position: " + @treasurePosition.x + ", " + @treasurePosition.y)
 
     resetMaze: ->
 
@@ -70,6 +73,61 @@ class MazeModel
         @players[1].position = new Position(@width - 1, @height / 2)
         @players[2].position = new Position(@width / 2, @height - 1)
         @players[3].position = new Position(0, @height / 2)
+
+    placeTreasure: ->
+
+        # Calculate distance maps
+        distanceMaps = []
+        for player in @players
+            distanceMaps.push(@distanceMapForPlayer(player))
+
+        # Calculate treasure position
+        @treasurePosition = null
+        bestScore = null
+
+        for y in [0..@height - 1]
+            for x in [0..@width - 1]
+
+                # Check valid position
+                isValid = true
+                for i in [0..@players.length - 1]
+                    if distanceMaps[i][y][x] == -1
+                        isValid = false
+                if not isValid
+                    continue
+
+                # Calculate score
+                maxDistance = null
+                minDistance = null
+                score = 0
+                for i in [0..@players.length - 1]
+                    distance = distanceMaps[i][y][x]
+                    score += distance
+                    maxDistance = if maxDistance == null then distance else Math.max(maxDistance, distance)
+                    minDistance = if minDistance == null then distance else Math.min(minDistance, distance)
+
+                score = minDistance
+                if bestScore == null or score > bestScore
+                    bestScore = score
+                    @treasurePosition = new Position(x, y)
+
+    distanceMapForPlayer: (player) ->
+        distanceMap = ((-1 for _ in [1..@width]) for _ in [1..@height])
+        distanceMap[player.position.y][player.position.x] = 0
+
+        unvisitedPositions = []
+        unvisitedPositions.push(player.position)
+
+        while unvisitedPositions.length > 0
+            position = unvisitedPositions.splice(0, 1)[0]
+            currentDistance = distanceMap[position.y][position.x]
+
+            for adjacentPosition in @adjacentConnectedPositions(position, granularity = 1)
+                if distanceMap[adjacentPosition.y][adjacentPosition.x] == -1
+                    distanceMap[adjacentPosition.y][adjacentPosition.x] = currentDistance + 1
+                    unvisitedPositions.push(adjacentPosition)
+
+        return distanceMap
 
     createMaze: ->
 
@@ -99,10 +157,10 @@ class MazeModel
             @addAdjacentWallsToVisitList(wall.position2)
 
         # Dig walls to players
-        @digWalls(@players[0].position, Direction.DOWN, stop=WallType.ALL_SIDES)
-        @digWalls(@players[1].position, Direction.LEFT, stop=WallType.ALL_SIDES)
-        @digWalls(@players[2].position, Direction.UP, stop=WallType.ALL_SIDES)
-        @digWalls(@players[3].position, Direction.RIGHT, stop=WallType.ALL_SIDES)
+        @digWalls(@players[0].position, Direction.DOWN)
+        @digWalls(@players[1].position, Direction.LEFT)
+        @digWalls(@players[2].position, Direction.UP)
+        @digWalls(@players[3].position, Direction.RIGHT)
 
         # Dig walls to "non-granularity" tiles
         for y in [0..@height - 1]
@@ -203,10 +261,10 @@ class MazeModel
 
         return positions
 
-    digWalls: (position, direction, stop=WallType.ALL_SIDES) ->
+    digWalls: (position, direction) ->
         entry = @entryAtPosition(position)
 
-        while @wallMaskAtPosition(position) != WallType.ALL_SIDES
+        while @wallMaskAtPosition(position) == WallType.ALL_SIDES
             nextPosition = @positionInDirection(position, direction)
             if not @isPositionValid(nextPosition) then return
 
