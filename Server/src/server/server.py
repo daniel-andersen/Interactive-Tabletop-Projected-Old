@@ -8,7 +8,8 @@ from threading import Thread
 from SimpleWebSocketServer import SimpleWebSocketServer, WebSocket
 from board.board_descriptor import BoardDescriptor
 from reporters.tiled_brick_position_reporter import TiledBrickPositionReporter
-from reporters.tiled_brick_moved_reporter import TiledBrickMovedReporter
+from reporters.tiled_brick_moved_reporters import TiledBrickMovedToAnyOfPositionsReporter
+from reporters.tiled_brick_moved_reporters import TiledBrickMovedToPositionReporter
 
 if os.uname()[4][:3] == 'arm':
     print("Using Raspberry Pi camera")
@@ -69,6 +70,8 @@ class Server(WebSocket):
             return self.report_back_when_brick_found_at_any_of_positions(payload)
         if action == "reportBackWhenBrickMovedToAnyOfPositions":
             return self.report_back_when_brick_moved_to_any_of_positions(payload)
+        if action == "reportBackWhenBrickMovedToPosition":
+            return self.report_back_when_brick_moved_to_position(payload)
         if action == "requestBrickPosition":
             return self.request_brick_position(payload)
 
@@ -135,12 +138,12 @@ class Server(WebSocket):
         Reports back when object is found in any of the given positions.
 
         validPositions: Positions to search for object in.
-        stable_time: (Optional) Amount of time to wait for image to stabilize
+        stableTime: (Optional) Amount of time to wait for image to stabilize
         id: (Optional) Reporter id.
         """
         reporter_id = payload["id"] if "id" in payload else self.draw_reporter_id()
         valid_positions = payload["validPositions"]
-        stable_time = payload["stableTime"] if "stableTime" in payload else 1.0
+        stable_time = payload["stableTime"] if "stableTime" in payload else 1.5
 
         reporter = TiledBrickPositionReporter(
             valid_positions,
@@ -164,9 +167,9 @@ class Server(WebSocket):
         reporter_id = payload["id"] if "id" in payload else self.draw_reporter_id()
         initial_position = payload["initialPosition"]
         valid_positions = payload["validPositions"]
-        stable_time = payload["stableTime"] if "stableTime" in payload else 2.0
+        stable_time = payload["stableTime"] if "stableTime" in payload else 1.5
 
-        reporter = TiledBrickMovedReporter(
+        reporter = TiledBrickMovedToAnyOfPositionsReporter(
             initial_position,
             valid_positions,
             stable_time,
@@ -175,6 +178,31 @@ class Server(WebSocket):
         self.reporters[reporter_id] = reporter
 
         return "OK", {"id": reporter_id}
+
+    def report_back_when_brick_moved_to_position(self, payload):
+        """
+        Reports back when object is found at the given position.
+
+        position: Position for brick to be found.
+        validPositions: Positions to search for object in.
+        stable_time: (Optional) Amount of time to wait for image to stabilize
+        id: (Optional) Reporter id.
+        """
+        reporter_id = payload["id"] if "id" in payload else self.draw_reporter_id()
+        position = payload["position"]
+        valid_positions = payload["validPositions"]
+        stable_time = payload["stableTime"] if "stableTime" in payload else 1.5
+
+        reporter = TiledBrickMovedToPositionReporter(
+            position,
+            valid_positions,
+            stable_time,
+            reporter_id,
+            callback_function=lambda tile: self.send_message("OK", "brickMovedToPosition", {"id": reporter_id, "position": tile}))
+        self.reporters[reporter_id] = reporter
+
+        return "OK", {"id": reporter_id}
+
 
     def request_brick_position(self, payload):
         """

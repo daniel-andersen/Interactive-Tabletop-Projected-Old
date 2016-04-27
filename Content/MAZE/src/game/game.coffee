@@ -233,11 +233,11 @@ class MazeGame
 
     requestPlayerInitialPosition: (player) ->
         positions = ([position.x, position.y] for position in @mazeModel.positionsReachableByPlayer(player))
-        @client.reportBackWhenBrickFoundAtAnyOfPositions(positions, id=player.index)
+        @client.reportBackWhenBrickMovedToPosition([player.position.x, player.position.y], positions, id=player.index)
 
     requestPlayerPosition: (player) ->
         positions = ([position.x, position.y] for position in @mazeModel.positionsReachableByPlayer(player))
-        @client.reportBackWhenTileMovedToAnyOfPositions([player.position.x, player.position.y], positions, id=player.index)
+        @client.reportBackWhenBrickMovedToAnyOfPositions([player.position.x, player.position.y], positions, id=player.index)
 
     ready: ->
         # Fade maze

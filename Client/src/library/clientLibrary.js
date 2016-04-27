@@ -100,7 +100,10 @@ Client = (function() {
     });
   };
 
-  Client.prototype.reportBackWhenBrickFoundAtAnyOfPositions = function(validPositions, id) {
+  Client.prototype.reportBackWhenBrickFoundAtAnyOfPositions = function(validPositions, stableTime, id) {
+    if (stableTime == null) {
+      stableTime = 1.5;
+    }
     if (id == null) {
       id = null;
     }
@@ -116,7 +119,10 @@ Client = (function() {
     }
   };
 
-  Client.prototype.reportBackWhenTileMovedToAnyOfPositions = function(initialPosition, validPositions, id) {
+  Client.prototype.reportBackWhenBrickMovedToAnyOfPositions = function(initialPosition, validPositions, stableTime, id) {
+    if (stableTime == null) {
+      stableTime = 1.5;
+    }
     if (id == null) {
       id = null;
     }
@@ -129,6 +135,27 @@ Client = (function() {
     } else {
       return this.sendMessage("reportBackWhenBrickMovedToAnyOfPositions", {
         "initialPosition": initialPosition,
+        "validPositions": validPositions
+      });
+    }
+  };
+
+  Client.prototype.reportBackWhenBrickMovedToPosition = function(position, validPositions, stableTime, id) {
+    if (stableTime == null) {
+      stableTime = 1.5;
+    }
+    if (id == null) {
+      id = null;
+    }
+    if (id !== null) {
+      return this.sendMessage("reportBackWhenBrickMovedToPosition", {
+        "position": position,
+        "validPositions": validPositions,
+        "id": id
+      });
+    } else {
+      return this.sendMessage("reportBackWhenBrickMovedToAnyOfPositions", {
+        "position": position,
         "validPositions": validPositions
       });
     }

@@ -265,7 +265,7 @@ MazeGame = (function() {
       }
       return results;
     }).call(this);
-    return this.client.reportBackWhenBrickFoundAtAnyOfPositions(positions, id = player.index);
+    return this.client.reportBackWhenBrickMovedToPosition([player.position.x, player.position.y], positions, id = player.index);
   };
 
   MazeGame.prototype.requestPlayerPosition = function(player) {
@@ -280,7 +280,7 @@ MazeGame = (function() {
       }
       return results;
     }).call(this);
-    return this.client.reportBackWhenTileMovedToAnyOfPositions([player.position.x, player.position.y], positions, id = player.index);
+    return this.client.reportBackWhenBrickMovedToAnyOfPositions([player.position.x, player.position.y], positions, id = player.index);
   };
 
   MazeGame.prototype.ready = function() {

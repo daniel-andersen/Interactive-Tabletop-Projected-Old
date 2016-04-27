@@ -68,7 +68,7 @@ class Client
             "validPositions": validPositions
         })
 
-    reportBackWhenBrickFoundAtAnyOfPositions: (validPositions, id = null) ->
+    reportBackWhenBrickFoundAtAnyOfPositions: (validPositions, stableTime = 1.5, id = null) ->
         if id != null
             this.sendMessage("reportBackWhenBrickFoundAtAnyOfPositions", {
                 "validPositions": validPositions,
@@ -79,7 +79,7 @@ class Client
                 "validPositions": validPositions
             })
 
-    reportBackWhenTileMovedToAnyOfPositions: (initialPosition, validPositions, id = null) ->
+    reportBackWhenBrickMovedToAnyOfPositions: (initialPosition, validPositions, stableTime = 1.5, id = null) ->
         if id != null
             this.sendMessage("reportBackWhenBrickMovedToAnyOfPositions", {
                 "initialPosition": initialPosition,
@@ -89,6 +89,19 @@ class Client
         else
             this.sendMessage("reportBackWhenBrickMovedToAnyOfPositions", {
                 "initialPosition": initialPosition,
+                "validPositions": validPositions
+            })
+
+    reportBackWhenBrickMovedToPosition: (position, validPositions, stableTime = 1.5, id = null) ->
+        if id != null
+            this.sendMessage("reportBackWhenBrickMovedToPosition", {
+                "position": position,
+                "validPositions": validPositions,
+                "id": id
+            })
+        else
+            this.sendMessage("reportBackWhenBrickMovedToAnyOfPositions", {
+                "position": position,
                 "validPositions": validPositions
             })
 

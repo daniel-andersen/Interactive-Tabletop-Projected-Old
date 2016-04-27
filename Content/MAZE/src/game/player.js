@@ -9,7 +9,7 @@ PlayerState = {
 
 playerPlacementReachDistance = 3;
 
-playerDefaultReachDistance = 3;
+playerDefaultReachDistance = 4;
 
 Player = (function() {
   function Player(index) {
