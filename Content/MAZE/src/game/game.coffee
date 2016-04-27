@@ -69,7 +69,7 @@ class MazeGame
         # Prepare map
         @visibleLayer = 0
 
-        @tileLayers[0].alpha = 1.0
+        @tileLayers[0].alpha = 0.0
         @tileLayers[1].alpha = 0.0
 
         @treasure.alpha = 0.0
@@ -169,8 +169,9 @@ class MazeGame
         fadeLogoTween.to({ alpha: 0.0 }, 1000, Kiwi.Animations.Tweens.Easing.Linear.In, true)
 
         # Show treasure
-        @treasure.x = (@kiwiState.game.stage.width * @mazeModel.treasurePosition.x) / @mazeModel.width
-        @treasure.y = (@kiwiState.game.stage.height * @mazeModel.treasurePosition.y) / @mazeModel.height
+        p = @positionOnMap(@mazeModel.treasurePosition.x, @mazeModel.treasurePosition.y)
+        @treasure.x = p.x
+        @treasure.y = p.y
 
         setTimeout(() =>
             fadeTreasureTween = @kiwiState.game.tweens.create(@treasure);
@@ -189,19 +190,46 @@ class MazeGame
         @client.resetReporters()
 
         # Move player
+        oldPosition = @currentPlayer.position
         @currentPlayer.position = position
         @updateMaze()
 
-        # Next players turn
-        @nextPlayerTurn()
+        # Check finished
+        if @currentPlayer.position.equals(@mazeModel.treasurePosition)
+            @playerDidFindTreasure(oldPosition)
+        else
+            @nextPlayerTurn()
 
-        # Update maze
-        @updateMaze()
+    playerDidFindTreasure: (fromPosition) ->
 
-        # Start brick move reporter
+        # Animate treasure to former position
         setTimeout(() =>
-            @requestPlayerPosition(@currentPlayer)
-        , 2000)
+            p = @positionOnMap(fromPosition.x, fromPosition.y)
+            moveTreasureTween = @kiwiState.game.tweens.create(@treasure);
+            moveTreasureTween.to({ x: p.x, y: p.y }, 1000, Kiwi.Animations.Tweens.Easing.Quadratic.InOut, true)
+        , 1000)
+
+        # Disappear
+        setTimeout(() =>
+
+            # Disable players
+            for player in @mazeModel.players
+                player.state = PlayerState.DISABLED
+
+            # Fade treasure
+            fadeTreasureTween = @kiwiState.game.tweens.create(@treasure);
+            fadeTreasureTween.to({ alpha: 0.0 }, 2000, Kiwi.Animations.Tweens.Easing.Linear.In, true)
+
+            # Clear maze
+            @clearMaze()
+            @updateMaze()
+        , 4000)
+
+        # Restart game
+        setTimeout(() =>
+            @startNewGame()
+            @reset()
+        , 7000)
 
     requestPlayerInitialPosition: (player) ->
         positions = ([position.x, position.y] for position in @mazeModel.positionsReachableByPlayer(player))
@@ -224,10 +252,9 @@ class MazeGame
 
     resetMaze: ->
 
-        # Draw transparent maze
-        for y in [0..@mazeModel.height - 1]
-            for x in [0..@mazeModel.width - 1]
-                @tileLayers[@visibleLayer].setTile(x, y, transparentTileIndex)
+        # Clear maze
+        @clearMaze()
+        @tileLayers[0].alpha = 1.0
 
         # Create random maze and reset players
         @mazeModel.createRandomMaze()
@@ -240,6 +267,8 @@ class MazeGame
         @isUpdatingMaze = false
 
     nextPlayerTurn: ->
+
+        # Find next player
         index = @currentPlayer.index
 
         while true
@@ -252,6 +281,21 @@ class MazeGame
             if player.state != PlayerState.DISABLED
                 player.state = PlayerState.IDLE
         @currentPlayer.state = PlayerState.TURN
+
+        # Update maze
+        @updateMaze()
+
+        # Start brick move reporter
+        setTimeout(() =>
+            @requestPlayerPosition(@currentPlayer)
+        , 2000)
+
+    clearMaze: ->
+        for y in [0..@mazeModel.height - 1]
+            for x in [0..@mazeModel.width - 1]
+                @tileLayers[@visibleLayer].setTile(x, y, transparentTileIndex)
+
+        @drawMaze()
 
     updateMaze: ->
 
@@ -292,6 +336,9 @@ class MazeGame
                 #if entry.tileIndex != 22
                     #@tileLayers[@visibleLayer].setTile(x, y, entry.tileIndex)
 
+        if not @mazeModel.players?
+            return
+
         # Draw player tiles
         drawOrder = (i for i in [0..@mazeModel.players.length - 1])
         drawOrder.splice(@currentPlayer.index, 1)
@@ -316,3 +363,11 @@ class MazeGame
             when GameState.PLAYING_GAME
                 if @currentPlayer.index == player.index then 0 else darkenTileOffset
             else 0
+
+    positionOnMap: (position) ->
+        return @positionOnMap(position.x, position.y)
+
+    positionOnMap: (x, y) ->
+        return new Position(
+            (@kiwiState.game.stage.width * x) / @mazeModel.width,
+            (@kiwiState.game.stage.height * y) / @mazeModel.height)

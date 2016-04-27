@@ -83,7 +83,7 @@ MazeGame = (function() {
   MazeGame.prototype.startNewGame = function() {
     this.gameState = GameState.INITIALIZING;
     this.visibleLayer = 0;
-    this.tileLayers[0].alpha = 1.0;
+    this.tileLayers[0].alpha = 0.0;
     this.tileLayers[1].alpha = 0.0;
     this.treasure.alpha = 0.0;
     this.resetMaze();
@@ -174,7 +174,7 @@ MazeGame = (function() {
   };
 
   MazeGame.prototype.playerMovedInitialBrick = function(player, position) {
-    var aPlayer, fadeLogoTween, j, len, ref;
+    var aPlayer, fadeLogoTween, j, len, p, ref;
     ref = this.mazeModel.players;
     for (j = 0, len = ref.length; j < len; j++) {
       aPlayer = ref[j];
@@ -187,8 +187,9 @@ MazeGame = (function() {
     fadeLogoTween.to({
       alpha: 0.0
     }, 1000, Kiwi.Animations.Tweens.Easing.Linear.In, true);
-    this.treasure.x = (this.kiwiState.game.stage.width * this.mazeModel.treasurePosition.x) / this.mazeModel.width;
-    this.treasure.y = (this.kiwiState.game.stage.height * this.mazeModel.treasurePosition.y) / this.mazeModel.height;
+    p = this.positionOnMap(this.mazeModel.treasurePosition.x, this.mazeModel.treasurePosition.y);
+    this.treasure.x = p.x;
+    this.treasure.y = p.y;
     setTimeout((function(_this) {
       return function() {
         var fadeTreasureTween;
@@ -204,16 +205,52 @@ MazeGame = (function() {
   };
 
   MazeGame.prototype.playerMovedBrick = function(position) {
+    var oldPosition;
     this.client.resetReporters();
+    oldPosition = this.currentPlayer.position;
     this.currentPlayer.position = position;
     this.updateMaze();
-    this.nextPlayerTurn();
-    this.updateMaze();
+    if (this.currentPlayer.position.equals(this.mazeModel.treasurePosition)) {
+      return this.playerDidFindTreasure(oldPosition);
+    } else {
+      return this.nextPlayerTurn();
+    }
+  };
+
+  MazeGame.prototype.playerDidFindTreasure = function(fromPosition) {
+    setTimeout((function(_this) {
+      return function() {
+        var moveTreasureTween, p;
+        p = _this.positionOnMap(fromPosition.x, fromPosition.y);
+        moveTreasureTween = _this.kiwiState.game.tweens.create(_this.treasure);
+        return moveTreasureTween.to({
+          x: p.x,
+          y: p.y
+        }, 1000, Kiwi.Animations.Tweens.Easing.Quadratic.InOut, true);
+      };
+    })(this), 1000);
+    setTimeout((function(_this) {
+      return function() {
+        var fadeTreasureTween, j, len, player, ref;
+        ref = _this.mazeModel.players;
+        for (j = 0, len = ref.length; j < len; j++) {
+          player = ref[j];
+          player.state = PlayerState.DISABLED;
+        }
+        fadeTreasureTween = _this.kiwiState.game.tweens.create(_this.treasure);
+        fadeTreasureTween.to({
+          alpha: 0.0
+        }, 2000, Kiwi.Animations.Tweens.Easing.Linear.In, true);
+        _this.clearMaze();
+        return _this.updateMaze();
+      };
+    })(this), 4000);
     return setTimeout((function(_this) {
       return function() {
-        return _this.requestPlayerPosition(_this.currentPlayer);
+        _this.startNewGame();
+        return _this.reset();
       };
-    })(this), 2000);
+    })(this), 7000);
   };
 
   MazeGame.prototype.requestPlayerInitialPosition = function(player) {
@@ -260,12 +297,8 @@ MazeGame = (function() {
   };
 
   MazeGame.prototype.resetMaze = function() {
-    var j, k, ref, ref1, x, y;
-    for (y = j = 0, ref = this.mazeModel.height - 1; 0 <= ref ? j <= ref : j >= ref; y = 0 <= ref ? ++j : --j) {
-      for (x = k = 0, ref1 = this.mazeModel.width - 1; 0 <= ref1 ? k <= ref1 : k >= ref1; x = 0 <= ref1 ? ++k : --k) {
-        this.tileLayers[this.visibleLayer].setTile(x, y, transparentTileIndex);
-      }
-    }
+    this.clearMaze();
+    this.tileLayers[0].alpha = 1.0;
     this.mazeModel.createRandomMaze();
     this.gameState = GameState.INITIAL_PLACEMENT;
     this.currentPlayer = this.mazeModel.players[0];
@@ -289,7 +322,23 @@ MazeGame = (function() {
         player.state = PlayerState.IDLE;
       }
     }
-    return this.currentPlayer.state = PlayerState.TURN;
+    this.currentPlayer.state = PlayerState.TURN;
+    this.updateMaze();
+    return setTimeout((function(_this) {
+      return function() {
+        return _this.requestPlayerPosition(_this.currentPlayer);
+      };
+    })(this), 2000);
+  };
+
+  MazeGame.prototype.clearMaze = function() {
+    var j, k, ref, ref1, x, y;
+    for (y = j = 0, ref = this.mazeModel.height - 1; 0 <= ref ? j <= ref : j >= ref; y = 0 <= ref ? ++j : --j) {
+      for (x = k = 0, ref1 = this.mazeModel.width - 1; 0 <= ref1 ? k <= ref1 : k >= ref1; x = 0 <= ref1 ? ++k : --k) {
+        this.tileLayers[this.visibleLayer].setTile(x, y, transparentTileIndex);
+      }
+    }
+    return this.drawMaze();
   };
 
   MazeGame.prototype.updateMaze = function() {
@@ -324,6 +373,9 @@ MazeGame = (function() {
         tileIndex = this.mazeModel.isBorderAtCoordinate(x, y) ? transparentTileIndex : blackTileIndex;
         this.tileLayers[this.visibleLayer].setTile(x, y, tileIndex);
       }
+    }
+    if (this.mazeModel.players == null) {
+      return;
     }
     drawOrder = (function() {
       var l, ref2, results;
@@ -380,6 +432,14 @@ MazeGame = (function() {
       default:
         return 0;
     }
+  };
+
+  MazeGame.prototype.positionOnMap = function(position) {
+    return this.positionOnMap(position.x, position.y);
+  };
+
+  MazeGame.prototype.positionOnMap = function(x, y) {
+    return new Position((this.kiwiState.game.stage.width * x) / this.mazeModel.width, (this.kiwiState.game.stage.height * y) / this.mazeModel.height);
   };
 
   return MazeGame;
