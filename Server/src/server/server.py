@@ -283,7 +283,7 @@ class Server(WebSocket):
                     reporter_ids_to_remove.append(reporter_id)
 
                 # Sleep a while
-                time.sleep(0.1)
+                time.sleep(0.05)
 
             # Remove stopped reporters
             for reporter_id in reporter_ids_to_remove:
