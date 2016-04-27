@@ -16,7 +16,7 @@ class TiledBrickPositionReporter(Reporter):
         self.image_stable_history = []
         self.valid_positions = valid_positions
         self.stable_time = stable_time
-        self.stability_level = 0.1
+        self.stability_level = 3
 
     def run_iteration(self):
 
@@ -27,29 +27,31 @@ class TiledBrickPositionReporter(Reporter):
         #if globals.debug:
             #cv2.imwrite("debug/output_board_recognized_{0}.png".format(self.reporter_id), globals.board_descriptor.snapshot.board_image)
 
-        # Find brick
-        position, probabilities = globals.brick_detector.find_brick_among_tiles(globals.board_descriptor, self.valid_positions)
+        # Calculate medians
+        tile_strip_image = globals.board_descriptor.tile_strip(self.valid_positions, grayscaled=True)
+        medians = globals.brick_detector.medians_of_tiles(tile_strip_image, self.valid_positions, globals.board_descriptor)
 
         # Update stability history
-        self.image_stable_history.append({"time": time.time(), "probabilities": probabilities})
+        self.image_stable_history.append({"time": time.time(), "medians": medians})
         while len(self.image_stable_history) > 0 and self.image_stable_history[0]["time"] < time.time() - self.stable_time:
             self.image_stable_history.pop(0)
 
         # Calculate image stability score
-        total_deviation = 0.0
+        max_deviation = 0.0
 
         for i in range(0, len(self.valid_positions)):
             tile_probabilities = [h["probabilities"][i] for h in self.image_stable_history]
-            total_deviation = max(tile_probabilities) - min(tile_probabilities)
-
-        total_deviation /= float(len(self.valid_positions))
+            max_deviation = max(tile_probabilities)
 
         if globals.debug:
-            print("%i: %f" % (self.reporter_id, total_deviation))
+            print("%i: Median deviation: %f" % (self.reporter_id, max_deviation))
 
         # Check sufficient stability
-        if total_deviation > self.stability_level:
+        if max_deviation > self.stability_level:
             return
+
+        # Find brick
+        position, probabilities = globals.brick_detector.find_brick_among_tiles(globals.board_descriptor, self.valid_positions)
 
         if self.is_position_ok(position):
             if globals.debug:
