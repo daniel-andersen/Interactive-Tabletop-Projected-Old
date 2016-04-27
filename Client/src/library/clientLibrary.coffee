@@ -100,7 +100,7 @@ class Client
                 "id": id
             })
         else
-            this.sendMessage("reportBackWhenBrickMovedToAnyOfPositions", {
+            this.sendMessage("reportBackWhenBrickMovedToPosition", {
                 "position": position,
                 "validPositions": validPositions
             })
