@@ -40,7 +40,7 @@ class TiledBrickPositionReporter(Reporter):
         max_deviation = 0.0
 
         for i in range(0, len(self.valid_positions)):
-            tile_probabilities = [h["probabilities"][i] for h in self.image_stable_history]
+            tile_probabilities = [h["medians"][i] for h in self.image_stable_history]
             max_deviation = max(tile_probabilities)
 
         if globals.debug:
