@@ -140,7 +140,7 @@ class Server(WebSocket):
         """
         reporter_id = payload["id"] if "id" in payload else self.draw_reporter_id()
         valid_positions = payload["validPositions"]
-        stable_time = payload["stableTime"] if "stableTime" in payload else 2.0
+        stable_time = payload["stableTime"] if "stableTime" in payload else 1.0
 
         reporter = TiledBrickPositionReporter(
             valid_positions,

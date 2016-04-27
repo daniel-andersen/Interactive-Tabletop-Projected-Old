@@ -16,7 +16,7 @@ class TiledBrickPositionReporter(Reporter):
         self.image_stable_history = []
         self.valid_positions = valid_positions
         self.stable_time = stable_time
-        self.stability_level = 20.0
+        self.stability_level = 10.0
 
     def run_iteration(self):
 
@@ -33,22 +33,22 @@ class TiledBrickPositionReporter(Reporter):
 
         # Update stability history
         self.image_stable_history.append({"time": time.time(), "medians": medians})
-        while len(self.image_stable_history) > 0 and self.image_stable_history[0]["time"] < time.time() - self.stable_time:
+        while len(self.image_stable_history) > 1 and self.image_stable_history[0]["time"] < time.time() - self.stable_time:
             self.image_stable_history.pop(0)
 
         # Calculate image stability score
         max_deviation = 0.0
 
         for i in range(0, len(self.valid_positions)):
-            tile_probabilities = [h["medians"][i] for h in self.image_stable_history]
-            max_deviation = max(tile_probabilities)
-            min_deviation = min(tile_probabilities)
+            tile_medians = [h["medians"][i] for h in self.image_stable_history]
+            deviation = max(tile_medians) - min(tile_medians)
+            max_deviation = max(max_deviation, deviation)
 
         if globals.debug:
-            print("%i: Median deviation: %f - %f" % (self.reporter_id, min_deviation, max_deviation))
+            print("%i: Median deviation: %f" % (self.reporter_id, max_deviation))
 
         # Check sufficient stability
-        if max_deviation - min_deviation > self.stability_level:
+        if max_deviation > self.stability_level:
             return
 
         # Find brick
