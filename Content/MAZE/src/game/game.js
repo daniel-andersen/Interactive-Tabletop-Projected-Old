@@ -154,7 +154,12 @@ MazeGame = (function() {
     position = new Position(payload["position"][0], payload["position"][1]);
     switch (this.gameState) {
       case GameState.INITIAL_PLACEMENT:
-        return this.playerMovedInitialBrick(player, position);
+        if (position.equals(player.position)) {
+          return this.playerPlacedInitialBrick(player, position);
+        } else {
+          return this.playerMovedInitialBrick(player, position);
+        }
+        break;
       case GameState.PLAYING_GAME:
         if (player.index === this.currentPlayer.index) {
           return this.playerMovedBrick(position);

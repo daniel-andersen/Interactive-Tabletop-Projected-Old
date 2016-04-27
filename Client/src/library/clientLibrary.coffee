@@ -68,41 +68,47 @@ class Client
             "validPositions": validPositions
         })
 
-    reportBackWhenBrickFoundAtAnyOfPositions: (validPositions, stableTime = 1.5, id = null) ->
+    reportBackWhenBrickFoundAtAnyOfPositions: (validPositions, id = null, stableTime = 1.5) ->
         if id != null
             this.sendMessage("reportBackWhenBrickFoundAtAnyOfPositions", {
                 "validPositions": validPositions,
+                "stableTime": stableTime,
                 "id": id
             })
         else
             this.sendMessage("reportBackWhenBrickFoundAtAnyOfPositions", {
-                "validPositions": validPositions
+                "validPositions": validPositions,
+                "stableTime": stableTime
             })
 
-    reportBackWhenBrickMovedToAnyOfPositions: (initialPosition, validPositions, stableTime = 1.5, id = null) ->
+    reportBackWhenBrickMovedToAnyOfPositions: (initialPosition, validPositions, id = null, stableTime = 1.5) ->
         if id != null
             this.sendMessage("reportBackWhenBrickMovedToAnyOfPositions", {
                 "initialPosition": initialPosition,
                 "validPositions": validPositions,
+                "stableTime": stableTime,
                 "id": id
             })
         else
             this.sendMessage("reportBackWhenBrickMovedToAnyOfPositions", {
                 "initialPosition": initialPosition,
-                "validPositions": validPositions
+                "validPositions": validPositions,
+                "stableTime": stableTime
             })
 
-    reportBackWhenBrickMovedToPosition: (position, validPositions, stableTime = 1.5, id = null) ->
+    reportBackWhenBrickMovedToPosition: (position, validPositions, id = null, stableTime = 1.5) ->
         if id != null
             this.sendMessage("reportBackWhenBrickMovedToPosition", {
                 "position": position,
                 "validPositions": validPositions,
+                "stableTime": stableTime,
                 "id": id
             })
         else
             this.sendMessage("reportBackWhenBrickMovedToPosition", {
                 "position": position,
-                "validPositions": validPositions
+                "validPositions": validPositions,
+                "stableTime": stableTime
             })
 
     sendMessage: (action, payload) ->

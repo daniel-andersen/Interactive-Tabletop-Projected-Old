@@ -100,63 +100,69 @@ Client = (function() {
     });
   };
 
-  Client.prototype.reportBackWhenBrickFoundAtAnyOfPositions = function(validPositions, stableTime, id) {
-    if (stableTime == null) {
-      stableTime = 1.5;
-    }
+  Client.prototype.reportBackWhenBrickFoundAtAnyOfPositions = function(validPositions, id, stableTime) {
     if (id == null) {
       id = null;
+    }
+    if (stableTime == null) {
+      stableTime = 1.5;
     }
     if (id !== null) {
       return this.sendMessage("reportBackWhenBrickFoundAtAnyOfPositions", {
         "validPositions": validPositions,
+        "stableTime": stableTime,
         "id": id
       });
     } else {
       return this.sendMessage("reportBackWhenBrickFoundAtAnyOfPositions", {
-        "validPositions": validPositions
+        "validPositions": validPositions,
+        "stableTime": stableTime
       });
     }
   };
 
-  Client.prototype.reportBackWhenBrickMovedToAnyOfPositions = function(initialPosition, validPositions, stableTime, id) {
-    if (stableTime == null) {
-      stableTime = 1.5;
-    }
+  Client.prototype.reportBackWhenBrickMovedToAnyOfPositions = function(initialPosition, validPositions, id, stableTime) {
     if (id == null) {
       id = null;
+    }
+    if (stableTime == null) {
+      stableTime = 1.5;
     }
     if (id !== null) {
       return this.sendMessage("reportBackWhenBrickMovedToAnyOfPositions", {
         "initialPosition": initialPosition,
         "validPositions": validPositions,
+        "stableTime": stableTime,
         "id": id
       });
     } else {
       return this.sendMessage("reportBackWhenBrickMovedToAnyOfPositions", {
         "initialPosition": initialPosition,
-        "validPositions": validPositions
+        "validPositions": validPositions,
+        "stableTime": stableTime
       });
     }
   };
 
-  Client.prototype.reportBackWhenBrickMovedToPosition = function(position, validPositions, stableTime, id) {
-    if (stableTime == null) {
-      stableTime = 1.5;
-    }
+  Client.prototype.reportBackWhenBrickMovedToPosition = function(position, validPositions, id, stableTime) {
     if (id == null) {
       id = null;
+    }
+    if (stableTime == null) {
+      stableTime = 1.5;
     }
     if (id !== null) {
       return this.sendMessage("reportBackWhenBrickMovedToPosition", {
         "position": position,
         "validPositions": validPositions,
+        "stableTime": stableTime,
         "id": id
       });
     } else {
-      return this.sendMessage("reportBackWhenBrickMovedToAnyOfPositions", {
+      return this.sendMessage("reportBackWhenBrickMovedToPosition", {
         "position": position,
-        "validPositions": validPositions
+        "validPositions": validPositions,
+        "stableTime": stableTime
       });
     }
   };

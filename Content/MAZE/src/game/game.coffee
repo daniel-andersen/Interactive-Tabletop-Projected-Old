@@ -139,7 +139,10 @@ class MazeGame
 
         switch @gameState
             when GameState.INITIAL_PLACEMENT
-                @playerMovedInitialBrick(player, position)
+                if position.equals(player.position)
+                    @playerPlacedInitialBrick(player, position)
+                else
+                    @playerMovedInitialBrick(player, position)
             when GameState.PLAYING_GAME
                 if player.index == @currentPlayer.index
                     @playerMovedBrick(position)
