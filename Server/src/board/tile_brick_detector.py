@@ -12,7 +12,7 @@ class TileBrickDetector(object):
     def __init__(self):
         self.brick_detection_minimum_median_delta = 20.0
         self.brick_detection_minimum_probability = 0.15
-        self.brick_detection_minimum_probability_delta = 0.15
+        self.brick_detection_minimum_probability_delta = 0.25
 
     def find_brick_among_tiles(self, board_descriptor, coordinates):
         """
