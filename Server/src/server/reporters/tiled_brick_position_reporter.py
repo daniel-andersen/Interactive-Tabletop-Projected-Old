@@ -16,7 +16,7 @@ class TiledBrickPositionReporter(Reporter):
         self.image_stable_history = []
         self.valid_positions = valid_positions
         self.stable_time = stable_time
-        self.stability_level = 3
+        self.stability_level = 3.0
 
     def run_iteration(self):
 
@@ -41,6 +41,7 @@ class TiledBrickPositionReporter(Reporter):
 
         for i in range(0, len(self.valid_positions)):
             tile_probabilities = [h["medians"][i] for h in self.image_stable_history]
+            print(tile_probabilities)
             max_deviation = max(tile_probabilities)
 
         if globals.debug:
