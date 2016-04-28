@@ -23,19 +23,12 @@ class BoardRecognizer(object):
     marker_search_width = 0
     marker_search_height = 0
 
-    marker_area_min = 0
-    marker_area_max = 0
-
-    marker_arc_length_max = 0
-
-    marker_score_max = 0.3
-
     board_area_min = 0
 
     board_aspect_ratio = 0.0
-    aspect_ratio_deviation_max = 0.25
+    board_aspect_ratio_deviation_max = 0.25
 
-    cosinus_max_deviation = math.cos(75.0 * math.pi / 180.0)
+    board_cosinus_max_deviation = math.cos(75.0 * math.pi / 180.0)
 
     image_width = 0
     image_height = 0
@@ -75,16 +68,11 @@ class BoardRecognizer(object):
                 transformed_image = transform.transform_image(image, corners)
                 return BoardDescriptor.Snapshot(transformed_image, corners)
 
-        print("NO!")
         return None
 
     def prepare_constants_from_image(self, image, board_descriptor):
         self.image_height, self.image_width = image.shape[:2]
         board_width, board_height = board_descriptor.board_size
-
-        self.marker_area_min = (self.image_width * 0.005) * (self.image_height * 0.005)
-        self.marker_area_max = (self.image_width * 0.025) * (self.image_height * 0.025)
-        self.marker_arc_length_max = (self.image_width * 0.05 * 2.0) + (self.image_height * 0.05 * 2.0)
 
         self.board_area_min = (self.image_width * 0.65) * (self.image_height * 0.65)
 
@@ -197,14 +185,14 @@ class BoardRecognizer(object):
         if not self.has_correct_aspect_ratio(contour):
             return False
 
-        if misc_math.max_cosine_from_contour(contour) > self.cosinus_max_deviation:
+        if misc_math.max_cosine_from_contour(contour) > self.board_cosinus_max_deviation:
             return False
 
         return True
 
     def has_correct_aspect_ratio(self, contour):
         aspect_ratio = self.contour_aspect_ratio(contour)
-        return abs(aspect_ratio - self.board_aspect_ratio) <= self.aspect_ratio_deviation_max
+        return abs(aspect_ratio - self.board_aspect_ratio) <= self.board_aspect_ratio_deviation_max
 
     def contour_aspect_ratio(self, contour):
         (_, _), (width, height), _ = cv2.minAreaRect(contour)
