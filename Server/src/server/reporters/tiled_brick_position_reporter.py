@@ -57,7 +57,9 @@ class TiledBrickPositionReporter(Reporter):
         if self.is_position_ok(position):
             if globals.debug:
                 print("%i: Brick recognized: %s" % (self.reporter_id, probabilities))
-                cv2.imwrite("debug/output_brick_recognized_{0}.png".format(self.reporter_id), globals.board_descriptor.snapshot.board_image)
+                image = globals.camera.read()
+                cv2.imwrite("debug/output_brick_recognized_{0}.png".format(self.reporter_id), image)
+                cv2.imwrite("debug/output_brick_recognized_{0}_board.png".format(self.reporter_id), globals.board_descriptor.snapshot.board_image)
                 cv2.imwrite("debug/output_brick_recognized_{0}_strip.png".format(self.reporter_id), globals.board_descriptor.tile_strip(self.valid_positions))
             self.callback_function(position)
             self.stop()
