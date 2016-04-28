@@ -83,7 +83,6 @@ class Server(WebSocket):
         globals.board_descriptor.board_size = [1280, 800]
         globals.board_descriptor.tile_count = [32, 20]
         globals.board_descriptor.border_percentage_size = [0.0, 0.0]
-        globals.board_descriptor.corner_marker = BoardDescriptor.BoardCornerMarker.DEFAULT
 
         self.initialize_reporter_thread()
         self.reset_reporters()
@@ -130,7 +129,6 @@ class Server(WebSocket):
             payload["borderPctX"] if "borderPctX" in payload else 0.0,
             payload["borderPctY"] if "borderPctY" in payload else 0.0
         ]
-        #globals.board_descriptor.corner_marker = BoardDescriptor.BoardCornerMarker.DEFAULT
         return "OK", {}
 
     def report_back_when_brick_found_at_any_of_positions(self, payload):

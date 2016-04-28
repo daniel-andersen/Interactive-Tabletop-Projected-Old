@@ -17,7 +17,7 @@ class BoardRecognizer(object):
     """
     Class capable of recognizing a game board.
     """
-    ThresholdModes = enum.Enum('OTSU', 'AUTO', 'ADAPTIVE', 'NORMAL', 'BRIGHT_ROOM', 'DARK_ROOM')
+    ThresholdModes = enum.Enum('OTSU', 'AUTO', 'ADAPTIVE')
 
     # Constants
     marker_search_width = 0
@@ -75,6 +75,7 @@ class BoardRecognizer(object):
                 transformed_image = transform.transform_image(image, corners)
                 return BoardDescriptor.Snapshot(transformed_image, corners)
 
+        print("NO!")
         return None
 
     def prepare_constants_from_image(self, image, board_descriptor):
