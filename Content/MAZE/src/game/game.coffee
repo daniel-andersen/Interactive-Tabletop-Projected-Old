@@ -84,6 +84,10 @@ class MazeGame
 
     setupUi: ->
 
+        # Show canvas
+        content = document.getElementById("content")
+        content.style.visibility = "visible"
+
         # Setup logo
         @logo = new Kiwi.GameObjects.StaticImage(@kiwiState, @kiwiState.textures.logo, 0, 0)
         @logo.alpha = 0.0

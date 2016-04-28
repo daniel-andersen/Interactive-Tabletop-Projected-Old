@@ -99,6 +99,9 @@ MazeGame = (function() {
   };
 
   MazeGame.prototype.setupUi = function() {
+    var content;
+    content = document.getElementById("content");
+    content.style.visibility = "visible";
     this.logo = new Kiwi.GameObjects.StaticImage(this.kiwiState, this.kiwiState.textures.logo, 0, 0);
     this.logo.alpha = 0.0;
     this.treasure = new Kiwi.GameObjects.StaticImage(this.kiwiState, this.kiwiState.textures.treasure, 0, 0);
