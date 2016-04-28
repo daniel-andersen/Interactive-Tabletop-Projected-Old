@@ -1,4 +1,5 @@
 import cv2
+import time
 from threading import Thread
 
 
@@ -42,6 +43,7 @@ class Camera(object):
         Grabs next image from camera.
         """
         while not self.stopped:
+            time.sleep(0.01)
             self.grab_image()
 
     def grab_image(self):

@@ -1,3 +1,5 @@
+import cv2
+import time
 from threading import Thread
 from picamera.array import PiRGBArray
 from picamera import PiCamera
@@ -51,6 +53,11 @@ class Camera(object):
         Grabs next image from camera.
         """
         for f in self.stream:
+
+            # Sleep a while
+            time.sleep(0.01)
+
+            # Grab image
             rotated_image = f.array
             self.raw_capture.truncate(0)
 
