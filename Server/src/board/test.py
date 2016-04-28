@@ -9,7 +9,6 @@ def run_tests():
     board_descriptor = BoardDescriptor()
     board_descriptor.board_size = [1280, 800]
     board_descriptor.border_percentage_size = [0.0, 0.0]
-    board_descriptor.corner_marker = BoardDescriptor.BoardCornerMarker.DEFAULT
     board_descriptor.tile_count = [32, 20]
 
     board_recognizer = BoardRecognizer()
@@ -157,7 +156,6 @@ def test():
     board_descriptor = BoardDescriptor()
     board_descriptor.board_size = [1280, 800]
     board_descriptor.border_percentage_size = [0.0, 0.0]
-    board_descriptor.corner_marker = BoardDescriptor.BoardCornerMarker.DEFAULT
     board_descriptor.tile_count = [32, 20]
 
     board_recognizer = BoardRecognizer()
@@ -167,7 +165,7 @@ def test():
     #cap = cv2.VideoCapture(0)
 
     while True:
-        image = cv2.imread("board/training/practice14a.png")
+        image = cv2.imread("board/training/board6.png")
         #_, image = cap.read()
 
         board_descriptor.snapshot = board_recognizer.find_board(image, board_descriptor)

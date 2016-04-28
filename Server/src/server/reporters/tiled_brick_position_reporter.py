@@ -20,9 +20,6 @@ class TiledBrickPositionReporter(Reporter):
 
     def run_iteration(self):
 
-        image = globals.camera.read()
-        cv2.imwrite("debug/output_board_{0}.png".format(self.reporter_id), image)
-        xxx
         # Check if we have recognized the board
         if not globals.board_descriptor.is_recognized():
             return

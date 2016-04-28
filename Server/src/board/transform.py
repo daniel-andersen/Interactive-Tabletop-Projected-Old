@@ -55,7 +55,8 @@ def distance(p1, p2):
 
 
 def transform_image(image, corners):
-    """Perspective transform source image into rectangle.
+    """
+    Perspective transform source image into rectangle.
     :param image: Source image to transform
     :param corners: Corners in source image
     :return: Transformed image

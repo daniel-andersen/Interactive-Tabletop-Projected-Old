@@ -1,7 +1,6 @@
-from util import enum
 import numpy as np
 import cv2
-
+from markers.triangle_marker import TriangleMarker
 
 class BoardDescriptor(object):
     """
@@ -14,8 +13,6 @@ class BoardDescriptor(object):
     tile_count -- [width, height]
     corner_marker -- Corner marker to use as detection
     """
-    BoardCornerMarker = enum.Enum('DEFAULT')
-
     class Snapshot:
         """Represents a snapshot (current camera feed image) of a board.
 
@@ -35,7 +32,7 @@ class BoardDescriptor(object):
         self.board_size = None
         self.border_percentage_size = None
         self.tile_count = None
-        self.corner_marker = self.BoardCornerMarker.DEFAULT
+        self.corner_marker = TriangleMarker()
 
     def is_recognized(self):
         """

@@ -1,19 +1,28 @@
+import cv2
+import numpy as np
+import math
 from util import enum
+from util import misc_math
 from board.board_descriptor import BoardDescriptor
 from board import transform
-import cv2
-import math
-import itertools
-import numpy as np
+from board import histogram_util
+
+class BoardRecognizedState(object):
+    def __init__(self):
+        self.marker_rects = [None, None, None, None]
+        self.threshold_mode = BoardRecognizer.ThresholdModes.OTSU
 
 
 class BoardRecognizer(object):
     """
     Class capable of recognizing a game board.
     """
-    ThresholdModes = enum.Enum('OTSU', 'AUTO', 'NORMAL', 'BRIGHT_ROOM', 'DARK_ROOM')
+    ThresholdModes = enum.Enum('OTSU', 'AUTO', 'ADAPTIVE', 'NORMAL', 'BRIGHT_ROOM', 'DARK_ROOM')
 
     # Constants
+    marker_search_width = 0
+    marker_search_height = 0
+
     marker_area_min = 0
     marker_area_max = 0
 
@@ -28,13 +37,11 @@ class BoardRecognizer(object):
 
     cosinus_max_deviation = math.cos(75.0 * math.pi / 180.0)
 
-    marker_contour_cache = {}
-
     image_width = 0
     image_height = 0
 
     def __init__(self):
-        pass
+        self.state = BoardRecognizedState()
 
     def find_board(self, image, board_descriptor):
         """
@@ -52,14 +59,18 @@ class BoardRecognizer(object):
         for (threshold_mode, _) in self.ThresholdModes.tuples():
 
             # Find markers in all four part of image
-            markers = []
-            markers += self.find_markers(source_image, 0, 0, threshold_mode, board_descriptor.corner_marker)
-            markers += self.find_markers(source_image, 1, 0, threshold_mode, board_descriptor.corner_marker)
-            markers += self.find_markers(source_image, 0, 1, threshold_mode, board_descriptor.corner_marker)
-            markers += self.find_markers(source_image, 1, 1, threshold_mode, board_descriptor.corner_marker)
+            marker_contours = [None, None, None, None]
+            self.state.marker_rects[2], marker_contours[2] = self.find_marker(source_image, 0, 1, self.state.marker_rects[2], threshold_mode, board_descriptor.corner_marker)
+            self.state.marker_rects[0], marker_contours[0] = self.find_marker(source_image, 0, 0, self.state.marker_rects[0], threshold_mode, board_descriptor.corner_marker)
+            self.state.marker_rects[1], marker_contours[1] = self.find_marker(source_image, 1, 0, self.state.marker_rects[1], threshold_mode, board_descriptor.corner_marker)
+            self.state.marker_rects[3], marker_contours[3] = self.find_marker(source_image, 1, 1, self.state.marker_rects[3], threshold_mode, board_descriptor.corner_marker)
+
+            # Check if all markers are found
+            if marker_contours[0] is None or marker_contours[1] is None or marker_contours[2] is None or marker_contours[3] is None:
+                continue
 
             # Find corners
-            corners = self.find_corners(markers, board_descriptor.corner_marker, image)
+            corners = self.find_corners(marker_contours, image)
             if corners is not None:
                 transformed_image = transform.transform_image(image, corners)
                 return BoardDescriptor.Snapshot(transformed_image, corners)
@@ -70,137 +81,113 @@ class BoardRecognizer(object):
         self.image_height, self.image_width = image.shape[:2]
         board_width, board_height = board_descriptor.board_size
 
-        self.marker_area_min = (self.image_width * 0.01) * (self.image_height * 0.01)
+        self.marker_area_min = (self.image_width * 0.005) * (self.image_height * 0.005)
         self.marker_area_max = (self.image_width * 0.025) * (self.image_height * 0.025)
         self.marker_arc_length_max = (self.image_width * 0.05 * 2.0) + (self.image_height * 0.05 * 2.0)
-
-        self.marker_image_margin_max = [self.image_width * 0.25, self.image_height * 0.25]
 
         self.board_area_min = (self.image_width * 0.65) * (self.image_height * 0.65)
 
         self.board_aspect_ratio = float(max(board_width, board_height)) / float(min(board_width, board_height))
 
+        self.marker_search_width = int(self.image_width * 0.1)
+        self.marker_search_height = int(self.image_height * 0.1)
+
     def prepare_image(self, image):
         grayscaled_image = cv2.cvtColor(image.copy(), cv2.COLOR_BGR2GRAY)
-        blurred_image = cv2.medianBlur(grayscaled_image, 3)
+        blurred_image = grayscaled_image #cv2.medianBlur(grayscaled_image, 1)
         return blurred_image
 
-    def find_markers(self, image, part_x, part_y, threshold_mode, corner_marker):
+    def find_marker(self, image, part_x, part_y, current_marker_rect, threshold_mode, corner_marker):
 
-        # Extract part image
-        x = part_x * (self.image_width / 2)
-        y = part_y * (self.image_height / 2)
-        image = image[y:(y + (self.image_height / 2)), x:(x + (self.image_width / 2))]
+        # Calculate part rect
+        part_width = int(self.image_width / 2)
+        part_height = int(self.image_height / 2)
+
+        part_offset_x = part_x * part_width
+        part_offset_y = part_y * part_height
+
+        # Find marker in previous marker rect
+        #if part_x == 0 and part_y == 0:
+            #current_marker_rect = [72 - self.marker_search_width / 2, 132 - self.marker_search_height, 72 + self.marker_search_width, 132 + self.marker_search_height]
+        #if part_x == 1 and part_y == 0:
+            #current_marker_rect = [567 - self.marker_search_width / 2, 153 - self.marker_search_height, 567 + self.marker_search_width, 153 + self.marker_search_height]
+        #if part_x == 0 and part_y == 1:
+            #current_marker_rect = [54 - self.marker_search_width / 2, 450 - self.marker_search_height, 54 + self.marker_search_width, 450 + self.marker_search_height]
+        #if part_x == 1 and part_y == 1:
+            #current_marker_rect = [567 - self.marker_search_width / 2, 450 - self.marker_search_height, 567 + self.marker_search_width, 450 + self.marker_search_height]
+
+        if current_marker_rect is not None:
+            #print("Searching in current rect")
+            contour = self.find_marker_in_rect(image, current_marker_rect, threshold_mode, corner_marker)
+            if contour is not None:
+                #print("Marker same as previous")
+                return self.centered_search_rect(contour), contour
+
+        # Go through whole image
+        for y in range(part_offset_y, part_offset_y + part_height, self.marker_search_height / 2):
+            for x in range(part_offset_x, part_offset_x + part_width, self.marker_search_width / 2):
+
+                # Check bounds
+                bx = min(x, part_offset_x + part_width - self.marker_search_width)
+                by = min(y, part_offset_y + part_height - self.marker_search_height)
+
+                # Calculate search rect
+                search_rect = [bx, by, bx + self.marker_search_width, by + self.marker_search_height]
+
+                # Search for contour
+                contour = self.find_marker_in_rect(image, search_rect, threshold_mode, corner_marker)
+                if contour is not None:
+                    return self.centered_search_rect(contour), contour
+
+        # No marker found
+        #print("NO MARKER FOUND")
+        return None, None
+
+    def centered_search_rect(self, contour):
+        x, y, width, height = cv2.boundingRect(contour)
+
+        # Calculate offset
+        offset_x = max(0, min(self.image_width - self.marker_search_width, x + ( width - self.marker_search_width) / 2))
+        offset_y = max(0, min(self.image_height - self.marker_search_height, y + (height - self.marker_search_height) / 2))
+
+        return [offset_x, offset_y, offset_x + self.marker_search_width, offset_y + self.marker_search_height]
+
+    def find_marker_in_rect(self, image, search_rect, threshold_mode, corner_marker):
+
+        # Extract rect
+        image = image[search_rect[1]:search_rect[3], search_rect[0]:search_rect[2]]
 
         # Threshold image
         thresholded_image = self.threshold_image(image, threshold_mode)
-        #cv2.imshow("Contours", thresholded_image)
-        #cv2.waitKey(0)
 
-        # Dilate image
-        dilated_image = cv2.dilate(thresholded_image, (1, 1))
-
-        # Find contours
-        contours, hierarchy =\
-            cv2.findContours(dilated_image, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-
-        if len(contours) == 0:
-            return []
-
-        # Calculate approx multiplier
-        approx_multiplier = self.approx_multiplier_for_marker(corner_marker)
-
-        # Simplify contours
-        approxed_contours = []
-        for contour in contours:
-
-            # Approx contour
-            approxed_contour = cv2.approxPolyDP(contour, cv2.arcLength(contour, True) * approx_multiplier, True)
-
-            # Convex hull contour
-            approxed_contour = cv2.convexHull(approxed_contour)
-
-            # Add to list
-            approxed_contours.append(approxed_contour)
-
-        # Find valid contours
-        valid_contour_indexes = []
-
-        for i in range(0, len(approxed_contours)):
-            #image2 = image.copy()
-            #cv2.drawContours(image2, [approxed_contours[i]], -1, (255, 0, 255), 1)
-            #cv2.imshow('Contours', image2)
-            #cv2.waitKey(0)
-            if self.are_marker_conditions_satisfied_for_contour(contours[i], approxed_contours[i], corner_marker):
-                valid_contour_indexes.append(i)
-
-        ###
-        cts = [approxed_contours[i] for i in valid_contour_indexes]
-        #cts = approxed_contours
-        #image2 = image.copy()
-        #cv2.drawContours(image2, cts, -1, (255, 0, 255), 1)
-        #cv2.imshow('Contours', image2)
-        #cv2.waitKey(0)
-        ###
-
-        valid_contours = [approxed_contours[i] for i in valid_contour_indexes]
-
-        # Translate points to fit image part
-        for i in range(0, len(valid_contours)):
-            for j in range(0, len(valid_contours[i])):
-                valid_contours[i][j][0][0] += x
-                valid_contours[i][j][0][1] += y
-
-        return valid_contours
-
-    def find_corners(self, marker_contours, corner_marker, image):
-
-        if len(marker_contours) < 4:
+        # Find marker contour
+        contour = corner_marker.find_marker_in_thresholded_image(thresholded_image)
+        if contour is None:
             return None
 
-        # Find best combination of corners
-        best_corners = []
+        # Translate points to offset
+        for i in range(0, len(contour)):
+            contour[i][0][0] += search_rect[0]
+            contour[i][0][1] += search_rect[1]
 
-        for corner_indices in itertools.combinations(range(0, len(marker_contours)), 4):
+        return contour
 
-            # Extract all points
-            all_points = []
-            for index in corner_indices:
-                for p in marker_contours[index]:
-                    all_points.append(p[0])
+    def find_corners(self, marker_contours, image):
 
-            # Find corners
-            corners = transform.order_corners(all_points)
-            contour = np.int32(corners).reshape(-1, 1, 2)
+        # Find corner points
+        all_points = []
+        for contour in marker_contours:
+            for p in contour:
+                all_points.append(p[0])
 
-            # Check if valid
-            if not self.is_corner_combination_valid(contour):
-                continue
+        corners = transform.order_corners(all_points)
+        contour = np.int32(corners).reshape(-1, 1, 2)
 
-            ###
-            #image2 = image.copy()
-            #cv2.drawContours(image2, [contour], -1, (255, 0, 255), 2)
-            #cv2.imshow('Contours', image2)
-            #cv2.waitKey(0)
-            ###
-
-            # Calculate score
-            score = self.score_for_corners(contour)
-            best_corners.append((corners, score))
-
-        if len(best_corners) == 0:
+        # Check if valid
+        if not self.is_corner_combination_valid(contour):
             return None
 
-        # Return best combination
-        best_corners = sorted(best_corners, key=lambda c: c[1], reverse=True)
-
-        ###
-        #image2 = image.copy()
-        #cv2.drawContours(image2, [np.int32(best_corners[0][0]).reshape(-1, 1, 2)], -1, (0, 255, 0), 2)
-        #cv2.imshow('Contours', image2)
-        #cv2.waitKey(0)
-        ###
-        return best_corners[0][0]
+        return [c[0] for c in contour]
 
     def is_corner_combination_valid(self, contour):
         if abs(cv2.contourArea(contour)) < self.board_area_min:
@@ -209,7 +196,7 @@ class BoardRecognizer(object):
         if not self.has_correct_aspect_ratio(contour):
             return False
 
-        if self.max_cosine_from_contour(contour) > self.cosinus_max_deviation:
+        if misc_math.max_cosine_from_contour(contour) > self.cosinus_max_deviation:
             return False
 
         return True
@@ -223,59 +210,9 @@ class BoardRecognizer(object):
         return max(float(width) / float(height), float(height) / float(width))
 
     def score_for_corners(self, contour):
-        l1 = self.lineLength(contour[0][0], contour[2][0])
-        l2 = self.lineLength(contour[1][0], contour[3][0])
+        l1 = misc_math.line_length(contour[0][0], contour[2][0])
+        l2 = misc_math.line_length(contour[1][0], contour[3][0])
         return (1.0 / abs(l1 - l2)) * cv2.contourArea(contour, False)
-
-    def lineLength(self, p1, p2):
-        return math.sqrt(((p1[0] - p2[0]) * (p1[0] - p2[0])) + ((p1[1] - p2[1]) * (p1[1] - p2[1])))
-
-    def score_for_contour(self, contour, corner_marker):
-        marker_contour = self.marker_contour_for_marker(corner_marker)
-        return cv2.matchShapes(contour, marker_contour, 1, 0.0)
-
-    def are_marker_conditions_satisfied_for_contour(self, contour, approxed_contour, corner_marker):
-
-        # Check number of lines
-        if len(approxed_contour) != 3:
-            #print("Len lines: %i" % len(approxed_contour))
-            return False
-
-        # Check area
-        area = cv2.contourArea(approxed_contour, False)
-        if area < self.marker_area_min or area > self.marker_area_max:
-            #print("Area: %f" % area)
-            return False
-
-        # Check arc length
-        length = cv2.arcLength(approxed_contour, True)
-        if length > self.marker_arc_length_max:
-            #print("Arc length: %f" % length)
-            return False
-
-        # Check angles - must have two 45 degrees and one 90 degrees
-        angle_count_45 = 0
-        angle_count_90 = 0
-
-        for i in range(2, len(approxed_contour) + 2):
-            cosine = abs(self.angle(approxed_contour[i % len(approxed_contour)][0],
-                                    approxed_contour[(i - 2) % len(approxed_contour)][0],
-                                    approxed_contour[(i - 1) % len(approxed_contour)][0]))
-            if abs(math.cos(45 * math.pi / 180.0) - cosine) <= 0.2:
-                angle_count_45 += 1
-            if abs(math.cos(90 * math.pi / 180.0) - cosine) <= 0.3:
-                angle_count_90 += 1
-
-        if angle_count_45 != 2 or angle_count_90 != 1:
-            #print("Angle: %i vs %i" % (angle_count_45, angle_count_90))
-            return False
-
-        # Match shape
-        #if self.score_for_contour(approxed_contour, corner_marker) > self.marker_score_max:
-            #print("Score: %f" % self.score_for_contour(contour, corner_marker))
-            #return False
-
-        return True
 
     def threshold_image(self, image, mode):
         if mode == self.ThresholdModes.OTSU:
@@ -289,7 +226,9 @@ class BoardRecognizer(object):
         return image
 
     def adaptive_threshold_image(self, image, mode):
-        if mode == self.ThresholdModes.AUTO:
+        if mode == self.ThresholdModes.ADAPTIVE:
+            return cv2.adaptiveThreshold(image, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 11, 2)
+        elif mode == self.ThresholdModes.AUTO:
             threshold_min, threshold_max = self.automatic_thresholding_for_image(image)
         elif mode == self.ThresholdModes.BRIGHT_ROOM:
             threshold_min, threshold_max = 40, 70
@@ -298,12 +237,12 @@ class BoardRecognizer(object):
         else:
             threshold_min, threshold_max = 60, 120
 
-        #return cv2.Canny(image, threshold_min, threshold_max)
-        return cv2.adaptiveThreshold(image, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 11, 2)
+        return cv2.Canny(image, threshold_min, threshold_max)
 
     def automatic_thresholding_for_image(self, image):
+
         # Calculate histogram
-        histogram = self.calculate_histogram_from_image(image)
+        histogram = histogram_util.histogram_from_image(image, 256)
 
         # Calculate mean
         min_index = 255
@@ -319,52 +258,3 @@ class BoardRecognizer(object):
 
         # Threshold values
         return mean * 2.0 / 3.0, mean * 4.0 / 3.0
-
-    def approx_multiplier_for_marker(self, corner_marker):
-        if corner_marker == BoardDescriptor.BoardCornerMarker.DEFAULT:
-            return 0.075
-        else:
-            return 0.02
-
-    def marker_contour_for_marker(self, corner_marker):
-        # Check cache
-        if corner_marker in self.marker_contour_cache:
-            return self.marker_contour_cache[corner_marker]
-
-        # Read corner marker image
-        filename = "default"
-        image = cv2.imread("assets/corner_markers/" + filename + ".png", cv2.IMREAD_GRAYSCALE)
-
-        # Find contour
-        contours = cv2.findContours(image, 2, 1)
-        contour = np.int32(contours[0][0]).reshape(-1, 1, 2)
-
-        approxed_contour = cv2.approxPolyDP(contour, cv2.arcLength(contour, True) * 0.075, True)
-        approxed_contour = cv2.convexHull(approxed_contour)
-
-        # Insert into cache
-        self.marker_contour_cache[corner_marker] = approxed_contour
-
-        return contour
-
-    def calculate_histogram_from_image(self, image):
-        return cv2.calcHist([image], [0], None, [256], [0, 256])
-
-    def max_cosine_from_contour(self, contour):
-        max_cosine = 0.0
-
-        for i in range(2, len(contour) + 2):
-            cosine = abs(self.angle(contour[i % len(contour)][0],
-                                    contour[(i - 2) % len(contour)][0],
-                                    contour[(i - 1) % len(contour)][0]))
-            max_cosine = max(cosine, max_cosine)
-
-        return max_cosine
-
-    def angle(self, pt1, pt2, pt0):
-        dx1 = float(pt1[0] - pt0[0])
-        dy1 = float(pt1[1] - pt0[1])
-        dx2 = float(pt2[0] - pt0[0])
-        dy2 = float(pt2[1] - pt0[1])
-
-        return (dx1*dx2 + dy1*dy2) / math.sqrt((dx1*dx1 + dy1*dy1) * (dx2*dx2 + dy2*dy2) + 1e-10)
