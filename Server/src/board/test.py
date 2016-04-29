@@ -190,8 +190,6 @@ def test():
             print("Board not found!")
 
         cv2.imshow('Board Image', image)
-
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
+        cv2.waitKey(0)
 
     cv2.destroyAllWindows()

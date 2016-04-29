@@ -48,25 +48,51 @@ class BoardRecognizer(object):
 
         self.prepare_constants_from_image(source_image, board_descriptor)
 
-        # Search for board in different threshold levels
+        # Find markers in all four part of image
+        parts = [[0, 0], [1, 0], [0, 1], [1, 1]]
+        marker_contours = [None, None, None, None]
+
+        # First try previous found rect, if any
         for (threshold_mode, _) in self.ThresholdModes.tuples():
+            for i in range(0, len(parts)):
 
-            # Find markers in all four part of image
-            marker_contours = [None, None, None, None]
-            self.state.marker_rects[2], marker_contours[2] = self.find_marker(source_image, 0, 1, self.state.marker_rects[2], threshold_mode, board_descriptor.corner_marker)
-            self.state.marker_rects[0], marker_contours[0] = self.find_marker(source_image, 0, 0, self.state.marker_rects[0], threshold_mode, board_descriptor.corner_marker)
-            self.state.marker_rects[1], marker_contours[1] = self.find_marker(source_image, 1, 0, self.state.marker_rects[1], threshold_mode, board_descriptor.corner_marker)
-            self.state.marker_rects[3], marker_contours[3] = self.find_marker(source_image, 1, 1, self.state.marker_rects[3], threshold_mode, board_descriptor.corner_marker)
+                # Already found this marker
+                if marker_contours[i] is not None:
+                    continue
 
-            # Check if all markers are found
-            if marker_contours[0] is None or marker_contours[1] is None or marker_contours[2] is None or marker_contours[3] is None:
-                continue
+                # Marker hasn't yet been foound
+                if self.state.marker_rects[i] is None:
+                    continue
 
-            # Find corners
-            corners = self.find_corners(marker_contours, image)
-            if corners is not None:
-                transformed_image = transform.transform_image(image, corners)
-                return BoardDescriptor.Snapshot(transformed_image, corners)
+                # Find marker
+                marker_rect, marker_contours[i] = self.find_marker(source_image, parts[i][0], parts[i][1], self.state.marker_rects[i], threshold_mode, board_descriptor.corner_marker)
+
+                if marker_rect is not None:
+                    self.state.marker_rects[i] = marker_rect
+
+        # Next try whole image
+        for (threshold_mode, _) in self.ThresholdModes.tuples():
+            for i in range(0, len(parts)):
+
+                # Already found this marker
+                if marker_contours[i] is not None:
+                    continue
+
+                # Find marker
+                marker_rect, marker_contours[i] = self.find_marker(source_image, parts[i][0], parts[i][1], None, threshold_mode, board_descriptor.corner_marker)
+
+                if marker_rect is not None:
+                    self.state.marker_rects[i] = marker_rect
+
+        # Check if all markers are found
+        if marker_contours[0] is None or marker_contours[1] is None or marker_contours[2] is None or marker_contours[3] is None:
+            return None
+
+        # Find corners
+        corners = self.find_corners(marker_contours, image)
+        if corners is not None:
+            transformed_image = transform.transform_image(image, corners)
+            return BoardDescriptor.Snapshot(transformed_image, corners)
 
         return None
 
@@ -96,15 +122,6 @@ class BoardRecognizer(object):
         part_offset_y = part_y * part_height
 
         # Find marker in previous marker rect
-        #if part_x == 0 and part_y == 0:
-            #current_marker_rect = [72 - self.marker_search_width / 2, 132 - self.marker_search_height, 72 + self.marker_search_width, 132 + self.marker_search_height]
-        #if part_x == 1 and part_y == 0:
-            #current_marker_rect = [567 - self.marker_search_width / 2, 153 - self.marker_search_height, 567 + self.marker_search_width, 153 + self.marker_search_height]
-        #if part_x == 0 and part_y == 1:
-            #current_marker_rect = [54 - self.marker_search_width / 2, 450 - self.marker_search_height, 54 + self.marker_search_width, 450 + self.marker_search_height]
-        #if part_x == 1 and part_y == 1:
-            #current_marker_rect = [567 - self.marker_search_width / 2, 450 - self.marker_search_height, 567 + self.marker_search_width, 450 + self.marker_search_height]
-
         if current_marker_rect is not None:
             #print("Searching in current rect")
             contour = self.find_marker_in_rect(image, current_marker_rect, threshold_mode, corner_marker)
@@ -126,7 +143,12 @@ class BoardRecognizer(object):
                 # Search for contour
                 contour = self.find_marker_in_rect(image, search_rect, threshold_mode, corner_marker)
                 if contour is not None:
-                    return self.centered_search_rect(contour), contour
+
+                    # Center search rect and find contour again in order to prevent it being "half found" at the edge
+                    centered_rect = self.centered_search_rect(contour)
+                    contour = self.find_marker_in_rect(image, centered_rect, threshold_mode, corner_marker)
+                    if contour is not None:
+                        return self.centered_search_rect(contour), contour
 
         # No marker found
         #print("NO MARKER FOUND")

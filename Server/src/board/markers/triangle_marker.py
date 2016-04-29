@@ -1,5 +1,6 @@
 import cv2
 import math
+import numpy as np
 from util import misc_math
 
 
@@ -20,11 +21,6 @@ class TriangleMarker(object):
             cv2.findContours(image, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
         if len(contours) == 0:
-            return None
-
-        # Too many contours
-        if len(contours) > 5:
-            #print("Too many contours: %i" % len(contours))
             return None
 
         # Simplify contours
@@ -65,6 +61,11 @@ class TriangleMarker(object):
             #print("Len lines: %i" % len(approxed_contour))
             return False
 
+        # Check no children
+        if hierachy[0][index][2] != -1:
+            #print("Contour has children")
+            return False
+
         # Check area
         area = cv2.contourArea(contour, False)
         if area < min_marker_size:
@@ -85,6 +86,19 @@ class TriangleMarker(object):
             #print("Convex hull area too small: %f vs %f" % (area, convex_hull_area))
             return False
 
+        # Check line lengths
+        min_length_index = np.argmin(np.array([self.line_length(approxed_contour, i) for i in range(0, len(approxed_contour))]))
+
+        if not self.are_lines_approx_same_length(approxed_contour, min_length_index, min_length_index + 3):
+            #print("Small edges not same length")
+            return False
+        if not self.are_lines_approx_same_length(approxed_contour, min_length_index + 1, min_length_index + 2):
+            #print("Long edges 1 not same length")
+            return False
+        if not self.are_lines_approx_same_length(approxed_contour, min_length_index - 1, min_length_index - 2):
+            #print("Long edges 2 not same length")
+            return False
+
         # Check angles
         for i in range(2, len(approxed_contour) + 2):
             cosine = abs(misc_math.angle(approxed_contour[i % len(approxed_contour)][0],
@@ -97,6 +111,17 @@ class TriangleMarker(object):
         #print("OK!")
         return True
 
+    def are_lines_approx_same_length(self, contour, index1, index2):
+        len1 = self.line_length(contour, index1)
+        len2 = self.line_length(contour, index2)
+        return min(len1, len2) >= max(len1, len2) * 0.8
+
+    def line_length(self, contour, index):
+        index1 = (index + len(contour)) % len(contour)
+        index2 = (index + 1 + len(contour)) % len(contour)
+        return misc_math.line_length(contour[index1][0], contour[index2][0])
+
+    """
     def are_marker_conditions_satisfied_for_contour_old(self, contour, approxed_contours, hierachy, index, min_marker_size, max_marker_size):
         approxed_contour = approxed_contours[index]
 
@@ -133,3 +158,4 @@ class TriangleMarker(object):
 
         #print("OK!")
         return True
+    """
