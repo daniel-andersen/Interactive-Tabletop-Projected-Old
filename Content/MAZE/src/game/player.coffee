@@ -5,7 +5,7 @@ PlayerState =
     TURN: 3
 
 
-playerPlacementReachDistance = 3
+playerPlacementReachDistance = 1
 playerDefaultReachDistance = 4
 
 

@@ -375,7 +375,7 @@ MazeGame = (function() {
   };
 
   MazeGame.prototype.drawMaze = function() {
-    var drawOrder, entry, i, j, k, l, len, player, playerIndex, position, ref, ref1, results, tileIndex, x, y;
+    var drawOrder, entry, i, j, k, l, len, len1, m, player, playerIndex, position, ref, ref1, ref2, results, tileIndex, x, y;
     for (y = j = 0, ref = this.mazeModel.height - 1; 0 <= ref ? j <= ref : j >= ref; y = 0 <= ref ? ++j : --j) {
       for (x = k = 0, ref1 = this.mazeModel.width - 1; 0 <= ref1 ? k <= ref1 : k >= ref1; x = 0 <= ref1 ? ++k : --k) {
         tileIndex = this.mazeModel.isBorderAtCoordinate(x, y) ? transparentTileIndex : blackTileIndex;
@@ -402,12 +402,18 @@ MazeGame = (function() {
       if (player.state === PlayerState.DISABLED) {
         continue;
       }
+      ref2 = this.mazeModel.positionsReachableFromPosition(player.position, player.reachDistance + 2);
+      for (m = 0, len1 = ref2.length; m < len1; m++) {
+        position = ref2[m];
+        entry = this.mazeModel.entryAtPosition(position);
+        this.tileLayers[this.visibleLayer].setTile(position.x, position.y, entry.tileIndex + darkenTileOffset);
+      }
       results.push((function() {
-        var len1, m, ref2, results1;
-        ref2 = this.mazeModel.positionsReachableByPlayer(player);
+        var len2, n, ref3, results1;
+        ref3 = this.mazeModel.positionsReachableFromPosition(player.position, player.reachDistance);
         results1 = [];
-        for (m = 0, len1 = ref2.length; m < len1; m++) {
-          position = ref2[m];
+        for (n = 0, len2 = ref3.length; n < len2; n++) {
+          position = ref3[n];
           entry = this.mazeModel.entryAtPosition(position);
           results1.push(this.tileLayers[this.visibleLayer].setTile(position.x, position.y, entry.tileIndex + this.tileOffset(player, position)));
         }

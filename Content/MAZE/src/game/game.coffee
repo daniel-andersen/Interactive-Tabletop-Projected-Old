@@ -356,7 +356,11 @@ class MazeGame
             if player.state == PlayerState.DISABLED
                 continue
 
-            for position in @mazeModel.positionsReachableByPlayer(player)
+            for position in @mazeModel.positionsReachableFromPosition(player.position, player.reachDistance + 2)
+                entry = @mazeModel.entryAtPosition(position)
+                @tileLayers[@visibleLayer].setTile(position.x, position.y, entry.tileIndex + darkenTileOffset)
+
+            for position in @mazeModel.positionsReachableFromPosition(player.position, player.reachDistance)
                 entry = @mazeModel.entryAtPosition(position)
                 @tileLayers[@visibleLayer].setTile(position.x, position.y, entry.tileIndex + @tileOffset(player, position))
 
@@ -365,7 +369,6 @@ class MazeGame
             when GameState.INITIAL_PLACEMENT
                 if player.state == PlayerState.INITIAL_PLACEMENT
                     if player.position.equals(position) then 0 else darkenTileOffset
-                    #return 0
                 else 0
             when GameState.PLAYING_GAME
                 if @currentPlayer.index == player.index then 0 else darkenTileOffset
