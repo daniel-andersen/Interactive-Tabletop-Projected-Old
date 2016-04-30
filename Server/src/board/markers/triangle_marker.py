@@ -66,11 +66,6 @@ class TriangleMarker(object):
             #print("Len lines: %i" % len(approxed_contour))
             return False
 
-        # Check no children
-        if hierachy[0][index][2] != -1:
-            #print("Contour has children")
-            return False
-
         # Check area
         area = cv2.contourArea(contour, False)
         if area < min_marker_size:
@@ -114,8 +109,8 @@ class TriangleMarker(object):
             cosine = abs(misc_math.angle(approxed_contour[i % len(approxed_contour)][0],
                                          approxed_contour[(i - 2) % len(approxed_contour)][0],
                                          approxed_contour[(i - 1) % len(approxed_contour)][0]))
-            if abs(math.cos(90 * math.pi / 180.0) - cosine) > math.cos(60 * math.pi / 180.0):
-                #print("Angle: %i = %f vs %f" % (i, cosine, math.cos(60 * math.pi / 180.0)))
+            if abs(math.cos(90 * math.pi / 180.0) - cosine) > math.cos(50 * math.pi / 180.0):
+                #print("Angle: %i = %f vs %f" % (i, cosine, math.cos(50 * math.pi / 180.0)))
                 return False
 
         #print("OK!")

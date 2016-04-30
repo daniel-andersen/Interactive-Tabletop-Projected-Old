@@ -248,7 +248,8 @@ class BoardRecognizer(object):
         else:
             threshold_min, threshold_max = 60, 120
 
-        return cv2.Canny(image, threshold_min, threshold_max)
+        canny_image = cv2.Canny(image, threshold_min, threshold_max)
+        return cv2.dilate(canny_image, (1, 1))
 
     def automatic_thresholding_for_image(self, image):
 
