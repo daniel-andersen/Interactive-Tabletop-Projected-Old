@@ -239,7 +239,7 @@ class MazeGame
         , 7000)
 
     requestPlayerInitialPosition: (player) ->
-        positions = ([position.x, position.y] for position in @mazeModel.positionsReachableByPlayer(player))
+        positions = ([position.x, position.y] for position in @mazeModel.positionsReachableFromPosition(player.position, player.reachDistance + 2))
         @client.reportBackWhenBrickMovedToPosition([player.position.x, player.position.y], positions, id=player.index)
 
     requestPlayerPosition: (player) ->
