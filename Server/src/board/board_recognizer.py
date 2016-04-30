@@ -17,7 +17,7 @@ class BoardRecognizer(object):
     """
     Class capable of recognizing a game board.
     """
-    ThresholdModes = enum.Enum('OTSU', 'AUTO', 'ADAPTIVE')
+    ThresholdModes = enum.Enum('OTSU', 'AUTO', 'ADAPTIVE', 'BRIGHT_ROOM', 'DARK_ROOM')
 
     # Constants
     marker_search_width = 0

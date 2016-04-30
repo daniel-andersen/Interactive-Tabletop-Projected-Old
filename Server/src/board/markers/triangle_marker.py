@@ -28,10 +28,15 @@ class TriangleMarker(object):
         for contour in contours:
 
             # Approx contour
-            approxed_contour = cv2.approxPolyDP(contour, cv2.arcLength(contour, True) * 0.04, True)
+            approxed_contour = cv2.approxPolyDP(contour, cv2.arcLength(contour, True) * 0.03, True)
 
             # Add to list
             approxed_contours.append(approxed_contour)
+
+        #image2 = cv2.cvtColor(image.copy(), cv2.COLOR_GRAY2BGR)
+        #cv2.drawContours(image2, approxed_contours, 0, (255, 0, 255), 1)
+        #cv2.imshow('Contours', image2)
+        #cv2.waitKey(0)
 
         # Find marker
         for i in range(0, len(approxed_contours)):
@@ -86,15 +91,20 @@ class TriangleMarker(object):
             #print("Convex hull area too small: %f vs %f" % (area, convex_hull_area))
             return False
 
-        # Check line lengths
+        # Get min and max line lengths
         min_length_index = np.argmin(np.array([self.line_length(approxed_contour, i) for i in range(0, len(approxed_contour))]))
+        max_length_index = np.argmax(np.array([self.line_length(approxed_contour, i) for i in range(0, len(approxed_contour))]))
 
-        if not self.are_lines_approx_same_length(approxed_contour, min_length_index, min_length_index + 3):
-            #print("Small edges not same length")
+        # Small edges are at max half the length of the longest edges
+        if self.line_length(approxed_contour, min_length_index) > self.line_length(approxed_contour, max_length_index) * 0.6:
+            #print("Small edges too long")
             return False
+
+        # Check that the long edges are approx same length
         if not self.are_lines_approx_same_length(approxed_contour, min_length_index + 1, min_length_index + 2):
             #print("Long edges 1 not same length")
             return False
+
         if not self.are_lines_approx_same_length(approxed_contour, min_length_index - 1, min_length_index - 2):
             #print("Long edges 2 not same length")
             return False
@@ -104,8 +114,8 @@ class TriangleMarker(object):
             cosine = abs(misc_math.angle(approxed_contour[i % len(approxed_contour)][0],
                                          approxed_contour[(i - 2) % len(approxed_contour)][0],
                                          approxed_contour[(i - 1) % len(approxed_contour)][0]))
-            if abs(math.cos(90 * math.pi / 180.0) - cosine) > 0.3:
-                #print("Angle: %i = %f" % (i, cosine))
+            if abs(math.cos(90 * math.pi / 180.0) - cosine) > math.cos(60 * math.pi / 180.0):
+                #print("Angle: %i = %f vs %f" % (i, cosine, math.cos(60 * math.pi / 180.0)))
                 return False
 
         #print("OK!")
