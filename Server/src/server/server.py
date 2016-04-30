@@ -279,6 +279,8 @@ class Server(WebSocket):
                 return reporter_id
 
     def reporter_run(self):
+        counter = 0
+
         while True:
 
             # Sleep a while
@@ -295,6 +297,9 @@ class Server(WebSocket):
             # Recognize board
             if globals.board_descriptor is not None:
                 globals.board_descriptor.snapshot = globals.board_recognizer.find_board(image, globals.board_descriptor)
+            else:
+                counter += 1
+                cv2.imwrite("debug/board_not_recognized_{0}.png".format(counter), image)
 
             # Run all reporters
             reporter_ids_to_remove = []
