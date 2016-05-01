@@ -49,7 +49,7 @@ class MazeGame
         @client.disconnect()
 
     reset: ->
-        @client.reset()
+        @client.reset(resolution=[1280, 960])
         @client.enableDebug()
 
     onMessage: (json) ->

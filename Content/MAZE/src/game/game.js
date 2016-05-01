@@ -62,7 +62,8 @@ MazeGame = (function() {
   };
 
   MazeGame.prototype.reset = function() {
-    this.client.reset();
+    var resolution;
+    this.client.reset(resolution = [1280, 960]);
     return this.client.enableDebug();
   };
 
@@ -265,7 +266,7 @@ MazeGame = (function() {
     var id, position, positions;
     positions = (function() {
       var j, len, ref, results;
-      ref = this.mazeModel.positionsReachableByPlayer(player);
+      ref = this.mazeModel.positionsReachableFromPosition(player.position, player.reachDistance + 2);
       results = [];
       for (j = 0, len = ref.length; j < len; j++) {
         position = ref[j];

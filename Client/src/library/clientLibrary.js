@@ -48,8 +48,17 @@ Client = (function() {
     return this.sendMessage("enableDebug", {});
   };
 
-  Client.prototype.reset = function() {
-    return this.sendMessage("reset", {});
+  Client.prototype.reset = function(resolution) {
+    if (resolution == null) {
+      resolution = null;
+    }
+    if (resolution != null) {
+      return this.sendMessage("reset", {
+        "resolution": resolution
+      });
+    } else {
+      return this.sendMessage("reset", {});
+    }
   };
 
   Client.prototype.resetReporters = function() {

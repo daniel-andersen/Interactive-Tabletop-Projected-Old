@@ -35,8 +35,11 @@ class Client
     enableDebug: () ->
         this.sendMessage("enableDebug", {})
 
-    reset: () ->
-        this.sendMessage("reset", {})
+    reset: (resolution = null) ->
+        if resolution?
+            this.sendMessage("reset", {"resolution": resolution})
+        else
+            this.sendMessage("reset", {})
 
     resetReporters: ->
         this.sendMessage("resetReporters", {})

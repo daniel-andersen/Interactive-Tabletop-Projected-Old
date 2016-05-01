@@ -8,7 +8,7 @@ class Camera(object):
     image = None
     camera = None
 
-    def start(self, resolution=(320, 240), framerate=32):
+    def start(self, resolution=(640, 480), framerate=16):
         """
         Starts camera input in a new thread.
 

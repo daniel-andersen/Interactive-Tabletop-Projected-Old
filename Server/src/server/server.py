@@ -26,13 +26,13 @@ class Server(WebSocket):
     reporters = {}
     reporter_thread = None
 
-    def initialize_video(self):
+    def initialize_video(self, resolution):
         if globals.camera is not None:
             globals.camera.stop()
             globals.camera = None
 
         globals.camera = Camera()
-        globals.camera.start()
+        globals.camera.start(resolution)
 
     def initialize_reporter_thread(self):
         if self.reporter_thread is None:
@@ -57,7 +57,7 @@ class Server(WebSocket):
         if action == "enableDebug":
             return self.enable_debug()
         if action == "reset":
-            return self.reset()
+            return self.reset(payload)
         if action == "resetReporters":
             return self.reset_reporters()
         if action == "resetReporter":
@@ -75,10 +75,14 @@ class Server(WebSocket):
         if action == "requestBrickPosition":
             return self.request_brick_position(payload)
 
-    def reset(self):
+    def reset(self, payload):
         """
         Resets the board.
+
+        cameraResolution: (Optional) Camera resolution in [width, height]. Default: [640, 480].
         """
+        resolution = payload["resolution"] if "resolution" in payload else [640, 480]
+
         globals.board_descriptor = BoardDescriptor()
         globals.board_descriptor.board_size = [1280, 800]
         globals.board_descriptor.tile_count = [32, 20]
@@ -87,7 +91,7 @@ class Server(WebSocket):
         self.initialize_reporter_thread()
         self.reset_reporters()
 
-        self.initialize_video()
+        self.initialize_video(resolution)
 
         return "OK", {}
 
