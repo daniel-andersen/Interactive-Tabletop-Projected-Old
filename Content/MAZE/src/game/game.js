@@ -62,8 +62,7 @@ MazeGame = (function() {
   };
 
   MazeGame.prototype.reset = function() {
-    var resolution;
-    this.client.reset(resolution = [1280, 960]);
+    this.client.reset();
     return this.client.enableDebug();
   };
 
@@ -278,17 +277,34 @@ MazeGame = (function() {
   };
 
   MazeGame.prototype.requestPlayerPosition = function(player) {
-    var id, position, positions;
+    var id, j, len, otherPlayer, playerPositions, position, positions, ref;
+    playerPositions = this.mazeModel.positionsReachableByPlayer(player);
+    ref = this.mazeModel.players;
+    for (j = 0, len = ref.length; j < len; j++) {
+      otherPlayer = ref[j];
+      if (otherPlayer.state !== PlayerState.DISABLED) {
+        playerPositions = (function() {
+          var k, len1, results;
+          results = [];
+          for (k = 0, len1 = playerPositions.length; k < len1; k++) {
+            position = playerPositions[k];
+            if (!position.equals(otherPlayer.position)) {
+              results.push(position);
+            }
+          }
+          return results;
+        })();
+      }
+    }
     positions = (function() {
-      var j, len, ref, results;
-      ref = this.mazeModel.positionsReachableByPlayer(player);
+      var k, len1, results;
       results = [];
-      for (j = 0, len = ref.length; j < len; j++) {
-        position = ref[j];
+      for (k = 0, len1 = playerPositions.length; k < len1; k++) {
+        position = playerPositions[k];
         results.push([position.x, position.y]);
       }
       return results;
-    }).call(this);
+    })();
     return this.client.reportBackWhenBrickMovedToAnyOfPositions([player.position.x, player.position.y], positions, id = player.index);
   };
 

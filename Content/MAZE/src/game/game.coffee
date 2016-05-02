@@ -243,7 +243,17 @@ class MazeGame
         @client.reportBackWhenBrickMovedToPosition([player.position.x, player.position.y], positions, id=player.index)
 
     requestPlayerPosition: (player) ->
-        positions = ([position.x, position.y] for position in @mazeModel.positionsReachableByPlayer(player))
+
+        # Get reachable positions
+        playerPositions = @mazeModel.positionsReachableByPlayer(player)
+
+        # Remove other players position
+        for otherPlayer in @mazeModel.players
+            if otherPlayer.state != PlayerState.DISABLED
+                playerPositions = (position for position in playerPositions when not position.equals(otherPlayer.position))
+
+        # Request position
+        positions = ([position.x, position.y] for position in playerPositions)
         @client.reportBackWhenBrickMovedToAnyOfPositions([player.position.x, player.position.y], positions, id=player.index)
 
     ready: ->
