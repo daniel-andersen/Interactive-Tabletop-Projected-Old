@@ -1,4 +1,4 @@
-Magic Lamp
-==========
+Interactive Tabletop Project:ed
+===============================
 
-![Magic Lamp](Server/photos/magic_lamp_prototype_1.jpg)
+![Magic Lamp](Photos/lamp_1.jpg)
