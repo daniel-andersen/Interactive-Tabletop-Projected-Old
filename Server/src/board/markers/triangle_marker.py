@@ -7,6 +7,12 @@ from util import misc_math
 class TriangleMarker(object):
 
     def find_marker_in_thresholded_image(self, image):
+        """
+        Find marker in image which has already been thresholded.
+
+        :param image: Thresholded image
+        :return: Marker contour
+        """
 
         # Prepare constants
         image_height, image_width = image.shape[:2]

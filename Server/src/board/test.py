@@ -3,7 +3,7 @@ import numpy as np
 from board.board_descriptor import BoardDescriptor
 from board.board_recognizer import BoardRecognizer
 from board.tile_brick_detector import TileBrickDetector
-
+from board.markers.custom_marker import CustomMarker
 
 def run_tests():
     board_descriptor = BoardDescriptor()
@@ -152,7 +152,26 @@ def run_tests():
     print("%i tests passed, %i failed" % (passed, failed))
 
 
-def test():
+def triangle_marker_test():
+    image = cv2.imread("board/training/marker_test_2.png")
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    _, image = cv2.threshold(image, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
+
+    triangle_contour = np.int32([[0, 0], [100, 0], [0, 100]]).reshape(-1, 1, 2)
+    CustomMarker(triangle_contour, approx_multiplier=0.015).find_marker_in_thresholded_image(image)
+
+    #square_contour = np.int32([[0, 0], [100, 0], [100, 100], [0, 100]]).reshape(-1, 1, 2)
+    #CustomMarker(square_contour).find_marker_in_thresholded_image(image)
+
+    #castle_contour = np.int32([[0, 0], [10, 0], [10, 20], [20, 20], [20, 10], [30, 10], [30, 20], [40, 20], [40, 0], [50, 0], [50, 50], [30, 50], [30, 40], [20, 40], [20, 50], [0, 50]]).reshape(-1, 1, 2)
+    #CustomMarker(castle_contour, approx_multiplier=0.01).find_marker_in_thresholded_image(image)
+
+
+def board_detector_test():
+    pass
+
+
+def brick_detector_test():
     board_descriptor = BoardDescriptor()
     board_descriptor.board_size = [1280, 800]
     board_descriptor.border_percentage_size = [0.0, 0.0]
@@ -165,7 +184,7 @@ def test():
     #cap = cv2.VideoCapture(0)
 
     while True:
-        image = cv2.imread("board/training/board3.png")
+        image = cv2.imread("board/training/board1.png")
         #_, image = cap.read()
 
         board_descriptor.snapshot = board_recognizer.find_board(image, board_descriptor)
