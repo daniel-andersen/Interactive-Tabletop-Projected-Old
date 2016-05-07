@@ -1,11 +1,11 @@
 import math
 
 
-def angle(pt1, pt2, pt0):
-    dx1 = float(pt1[0] - pt0[0])
-    dy1 = float(pt1[1] - pt0[1])
-    dx2 = float(pt2[0] - pt0[0])
-    dy2 = float(pt2[1] - pt0[1])
+def angle(pt0, pt1, pt2):
+    dx1 = float(pt0[0] - pt1[0])
+    dy1 = float(pt0[1] - pt1[1])
+    dx2 = float(pt2[0] - pt1[0])
+    dy2 = float(pt2[1] - pt1[1])
 
     return (dx1 * dx2 + dy1 * dy2) / math.sqrt((dx1 * dx1 + dy1 * dy1) * (dx2 * dx2 + dy2 * dy2) + 1e-10)
 
