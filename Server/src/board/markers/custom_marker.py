@@ -88,7 +88,11 @@ class CustomMarker(object):
             return False
 
         # Check contour area
-        area = cv2.contourArea(contour, False)
+        area = cv2.contourArea(contour, True)
+
+        orientation = -1 if area < 0 else 1
+
+        area = abs(area)
 
         min_contour_area = image_width * image_height * self.min_area
         max_contour_area = image_width * image_height * self.max_area
@@ -124,73 +128,63 @@ class CustomMarker(object):
 
         # Go through all combinations of points in contour
         marker_length = len(self.marker_contour)
+        contour_length = len(approxed_contour)
 
-        for indices in itertools.combinations(range(0, len(approxed_contour)), marker_length):
+        for indices in itertools.combinations(range(0, contour_length), marker_length):
+            #print("Index map: %s" % list(indices))
+            indices_list = list(indices)
+
+            # Try all "rotations" of this index map
+            angle_map = None
+            distance_map = None
+
             for start_index in range(0, marker_length):
-                index_map = [(start_index + i) % marker_length for i in list(indices)]
+                index_map = [indices[(start_index + i) % marker_length] for i in indices_list]
+                #print("Index map: %s" % index_map)
 
-                # Match counter-clockwise
-                if self.verify_index_map(approxed_contour, index_map, arclength, 1):
-                    return True
+                # Compute angle map
+                if angle_map is None:
+                    angle_map = self.angle_map_for_contour(approxed_contour, indices_list, orientation)
 
-                # Match clockwise
-                if self.verify_index_map(approxed_contour, index_map[::-1], arclength, -1):
-                    return True
+                # Verify angle map
+                if not self.verify_angle_map(angle_map, start_index):
+                    continue
+
+                # Compute distance map
+                if distance_map is None:
+                    distance_map = self.distance_map_for_contour(approxed_contour, arclength, indices_list)
+
+                # Verify distance map
+                if not self.verify_distance_map(distance_map, start_index):
+                    continue
+
+                # Success
+                return True
 
         return False
 
-    def verify_index_map(self, contour, index_map, arclength, orientation=1):
-        """
-        Verifies the contour against the given index map.
-
-        :param contour: Contour
-        :param index_map: Index map
-        :param arclength: Contour arc length (for optimization reasons)
-        :param orientation: Orientation (1 = counter-clockwise, -1 = clockwise)
-        :return: True, if contour is verified, or else false
-        """
-
-        # Compute angle map
-        angle_map = self.angle_map_for_contour(contour, index_map, orientation)
-
-        # Verify angle map
-        if not self.verify_angle_map(angle_map):
-            return False
-
-        # Compute distance map
-        distance_map = self.distance_map_for_contour(contour, arclength, index_map)
-
-        # Verify distance map
-        if not self.verify_distance_map(distance_map):
-            return False
-
-        # If not fine-grained, just succeed here
-        if not self.fine_grained:
-            return True
-
-        # TODO! Implement fine-grained checks
-
-        # Success
-        return True
-
-    def verify_distance_map(self, distance_map):
+    def verify_distance_map(self, distance_map, start_index=0):
         """
         Verifies the distance map.
 
         :param distance_map: Distance map
+        :param start_index: Index at which to start
         :return: Whether the distance map matches the markers distance map
         """
 
         min_threshold = 0.1
 
+        distance_map_length = len(distance_map)
+
         # Check all lines
         for i in range(0, len(distance_map)):
 
             # Calculate distance ratio
-            contour_unit_distance = max(distance_map[i][1], min_threshold)
             marker_unit_distance = max(self.marker_distance_map[i][1], min_threshold)
+            contour_unit_distance = max(distance_map[(i + start_index) % distance_map_length][1], min_threshold)
 
             ratio = max(contour_unit_distance, marker_unit_distance) / min(contour_unit_distance, marker_unit_distance)
+            #print("%i: Distance: %f vs %s = ratio: %f" % (i, contour_unit_distance, marker_unit_distance, ratio))
 
             # Check validity
             if ratio - 1.0 > self.distance_tolerance:
@@ -198,23 +192,26 @@ class CustomMarker(object):
 
         return True
 
-    def verify_angle_map(self, angle_map):
+    def verify_angle_map(self, angle_map, start_index=0):
         """
         Verifies the angle map.
 
         :param angle_map: Angle map
+        :param start_index: Index at which to start
         :return: Whether the angle map matches the markers angle map
         """
 
         #print("Marker angles: %s" % self.marker_angle_map)
         #print("Contour angles: %s" % angle_map)
 
+        angle_map_length = len(angle_map)
+
         # Verify angle map
         for i in range(0, len(self.marker_angle_map)):
 
             # Calculate angle difference
             marker_angle = self.marker_angle_map[i]
-            contour_angle = angle_map[i]
+            contour_angle = angle_map[(i + start_index) % angle_map_length]
 
             delta_angle = math.atan2(math.sin(marker_angle - contour_angle), math.cos(marker_angle - contour_angle))
 
@@ -256,15 +253,20 @@ class CustomMarker(object):
 
         return distance_map
 
-    def angle_map_for_contour(self, contour, index_map=None, orientation=1):
+    def angle_map_for_contour(self, contour, index_map=None, orientation=None):
         """
         Calculates the angle map of each point of the contour.
 
         :param contour: Contour
         :param index_map: If provided, only use the given indices
-        :param orientation: Orientation (1 = counter-clockwise, -1 = clockwise)
+        :param orientation: Orientation (1 = counter-clockwise, -1 = clockwise). Is calculated if none is given
         :return: Angle map
         """
+
+        # Calculate orientation if none given
+        if orientation is None:
+            area = cv2.contourArea(contour, oriented=True)
+            orientation = -1 if area < 0 else 1
 
         # Use standard index map if none given
         if index_map is None:
@@ -293,8 +295,8 @@ class CustomMarker(object):
             #print("%s - %s - %s" % (pt1, pt2, pt3))
 
             angle = math.atan2(v2[1], v2[0]) - math.atan2(v1[1], v1[0])
-            #if orientation == 1:
-            #    angle = (math.pi * 2.0) - angle
+            if orientation == 1:
+                angle = (math.pi * 2.0) - angle
 
             angle = angle % (math.pi*2.0)
             angle_map.append(angle)
