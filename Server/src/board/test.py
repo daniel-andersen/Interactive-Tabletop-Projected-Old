@@ -153,7 +153,7 @@ def run_tests():
 
 
 def triangle_marker_test():
-    image = cv2.imread("board/training/marker_test_6.png")
+    image = cv2.imread("board/training/marker_test_8.png")
     image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     _, image = cv2.threshold(image, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
 

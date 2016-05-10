@@ -6,7 +6,7 @@ from util import misc_math
 
 class CustomMarker(object):
 
-    def __init__(self, contour, distance_tolerance=0.15, angle_tolerance=0.15, fine_grained=True,
+    def __init__(self, contour, distance_tolerance=0.15, angle_tolerance=0.15, fine_grained=True, spike_tolerance=0.025,
                  approx_multiplier=0.02, closed=True, min_arclength=0.1, max_arclength=100.0,
                  min_area=0.02, max_area=1.0):
         """
@@ -14,6 +14,7 @@ class CustomMarker(object):
         :param distance_tolerance: Distance tolerance in multitudes of length
         :param angle_tolerance: Angle tolerance in radians in range [0..pi]
         :param fine_grained: If true, verify that all points lies on contour edge
+        :param spike_tolerance: Spike distance tolerance for fine-grained lines
         :param approx_multiplier: Multiplier to use when approximating contour
         :param closed: Indicated wheter the contour is closed or not
         :param min_arclength: Minimum arc length scaled in multitudes of max(image width, image height)
@@ -25,6 +26,7 @@ class CustomMarker(object):
         self.distance_tolerance = distance_tolerance
         self.angle_tolerance = angle_tolerance
         self.fine_grained = fine_grained
+        self.spike_tolerance = spike_tolerance
         self.approx_multiplier = approx_multiplier
         self.closed = closed
         self.min_arclength = min_arclength
@@ -156,10 +158,71 @@ class CustomMarker(object):
                 if not self.verify_distance_map(distance_map, start_index):
                     continue
 
+                # Fine grained checks
+                if self.fine_grained:
+
+                    # Check all lines not covered by index map
+                    if not self.verify_fine_grained_lines(approxed_contour, indices_list, distance_map, start_index):
+                        continue
+
                 # Success
                 return True
 
         return False
+
+    def verify_fine_grained_lines(self, contour, index_map, distance_map, start_index):
+        """
+        Verifies that all lines not covered by index map points lies within range of lines spanned by points in
+        distance map.
+
+        :param contour: Contour
+        :param index_map: Index map
+        :param distance_map: Distance map
+        :param start_index: Index at which to start
+        :return: Whether all lines not covered by index map points lies on lines spanned by points in distance map
+        """
+
+        # Check all points not covered by index map
+        contour_length = len(contour)
+        index_map_length = len(index_map)
+
+        for i in range(0, index_map_length):
+
+            # Calculate delta index
+            idx1 = index_map[i]
+            idx2 = index_map[(i + 1) % index_map_length]
+
+            delta_index = abs(idx1 - idx2)
+
+            # Check if there are any points between
+            if delta_index == 1 or delta_index == contour_length - 1:
+                continue
+
+            # Calculate total length of lines
+            lines_distance = 0.0
+
+            idx = idx1
+            prev_idx = idx
+
+            while idx != idx2:
+                idx = (idx + 1) % contour_length
+
+                # Calculate line length
+                lines_distance += misc_math.line_length(contour[idx][0], contour[prev_idx][0])
+                #print("Line distance: %f" % misc_math.line_length(contour[idx][0], contour[prev_idx][0]))
+
+                prev_idx = idx
+
+            # Check distances
+            distance = distance_map[i][0]
+            distance_ratio = max(distance, lines_distance) / min(distance, lines_distance)
+
+            #print("Distance: %f vs %f = ratio: %f" % (lines_distance, distance_map[i][0], distance_ratio))
+            if distance_ratio - 1.0 > self.spike_tolerance:
+                return False
+
+        # Success
+        return True
 
     def verify_distance_map(self, distance_map, start_index=0):
         """
@@ -174,8 +237,8 @@ class CustomMarker(object):
 
         distance_map_length = len(distance_map)
 
-        print("Marker distance map: %s" % self.marker_distance_map)
-        print("Contour distance map: %s" % distance_map)
+        #print("Marker distance map: %s" % self.marker_distance_map)
+        #print("Contour distance map: %s" % distance_map)
 
         # Check all lines
         for i in range(0, len(distance_map)):
@@ -184,11 +247,11 @@ class CustomMarker(object):
             marker_unit_distance = max(self.marker_distance_map[i][1], min_threshold)
             contour_unit_distance = max(distance_map[(i + start_index) % distance_map_length][1], min_threshold)
 
-            ratio = max(contour_unit_distance, marker_unit_distance) / min(contour_unit_distance, marker_unit_distance)
-            print("%i: Distance: %f vs %s = ratio: %f" % (i, contour_unit_distance, marker_unit_distance, ratio))
+            distance_ratio = max(contour_unit_distance, marker_unit_distance) / min(contour_unit_distance, marker_unit_distance)
+            #print("%i: Distance: %f vs %s = ratio: %f" % (i, contour_unit_distance, marker_unit_distance, distance_ratio))
 
             # Check validity
-            if ratio - 1.0 > self.distance_tolerance:
+            if distance_ratio - 1.0 > self.distance_tolerance:
                 return False
 
         return True
