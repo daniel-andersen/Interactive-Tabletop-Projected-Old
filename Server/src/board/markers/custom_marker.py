@@ -33,7 +33,7 @@ class CustomMarker(object):
         self.max_area = max_area
 
         self.marker_arclength = cv2.arcLength(self.marker_contour, self.closed)
-        self.marker_distance_map = self.distance_map_for_contour(self.marker_contour, arclength=self.marker_arclength)
+        self.marker_distance_map = self.distance_map_for_contour(self.marker_contour)
         self.marker_angle_map = self.angle_map_for_contour(self.marker_contour)
 
     def find_marker_in_thresholded_image(self, image):
@@ -139,8 +139,6 @@ class CustomMarker(object):
             distance_map = None
 
             for start_index in range(0, marker_length):
-                index_map = [indices[(start_index + i) % marker_length] for i in indices_list]
-                #print("Index map: %s" % index_map)
 
                 # Compute angle map
                 if angle_map is None:
@@ -152,7 +150,7 @@ class CustomMarker(object):
 
                 # Compute distance map
                 if distance_map is None:
-                    distance_map = self.distance_map_for_contour(approxed_contour, arclength, indices_list)
+                    distance_map = self.distance_map_for_contour(approxed_contour, indices_list)
 
                 # Verify distance map
                 if not self.verify_distance_map(distance_map, start_index):
@@ -176,6 +174,9 @@ class CustomMarker(object):
 
         distance_map_length = len(distance_map)
 
+        print("Marker distance map: %s" % self.marker_distance_map)
+        print("Contour distance map: %s" % distance_map)
+
         # Check all lines
         for i in range(0, len(distance_map)):
 
@@ -184,7 +185,7 @@ class CustomMarker(object):
             contour_unit_distance = max(distance_map[(i + start_index) % distance_map_length][1], min_threshold)
 
             ratio = max(contour_unit_distance, marker_unit_distance) / min(contour_unit_distance, marker_unit_distance)
-            #print("%i: Distance: %f vs %s = ratio: %f" % (i, contour_unit_distance, marker_unit_distance, ratio))
+            print("%i: Distance: %f vs %s = ratio: %f" % (i, contour_unit_distance, marker_unit_distance, ratio))
 
             # Check validity
             if ratio - 1.0 > self.distance_tolerance:
@@ -224,12 +225,11 @@ class CustomMarker(object):
 
         return True
 
-    def distance_map_for_contour(self, contour, arclength, index_map=None):
+    def distance_map_for_contour(self, contour, index_map=None):
         """
         Calculates the distance map of each point of the contour in range [0, arc length] and [0, 1].
 
         :param contour: Contour
-        :param arclength: Arc length of contour (for optimizations)
         :param index_map: Index map to use
         :return: Distance map in form [(distance, normalized distance), ...]
         """
@@ -242,6 +242,7 @@ class CustomMarker(object):
 
         # Calculate distance offset
         distance_map = []
+        arclength = 0.0
 
         for i in range(0, index_map_length):
             idx1 = index_map[i]
@@ -249,9 +250,12 @@ class CustomMarker(object):
 
             line_length = misc_math.line_length(contour[idx1][0], contour[idx2][0])
 
-            distance_map.append((line_length, line_length / arclength))
+            arclength += line_length
 
-        return distance_map
+            distance_map.append(line_length)
+
+        # Return distances including unit distances
+        return [(distance, distance / arclength) for distance in distance_map]
 
     def angle_map_for_contour(self, contour, index_map=None, orientation=None):
         """

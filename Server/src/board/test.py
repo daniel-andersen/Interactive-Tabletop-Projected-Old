@@ -153,18 +153,18 @@ def run_tests():
 
 
 def triangle_marker_test():
-    image = cv2.imread("board/training/marker_test_7.png")
+    image = cv2.imread("board/training/marker_test_6.png")
     image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     _, image = cv2.threshold(image, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
 
-    #triangle_contour = np.int32([[0, 0], [100, 0], [0, 100]]).reshape(-1, 1, 2)[::-1]
-    #CustomMarker(triangle_contour, approx_multiplier=0.015, min_area=0.03, max_area=0.5).find_marker_in_thresholded_image(image)
+    triangle_contour = np.int32([[0, 0], [100, 0], [0, 100]]).reshape(-1, 1, 2)[::-1]
+    CustomMarker(triangle_contour, approx_multiplier=0.015, min_area=0.03, max_area=0.5).find_marker_in_thresholded_image(image)
 
     #square_contour = np.int32([[0, 0], [100, 0], [100, 100], [0, 100]]).reshape(-1, 1, 2)[::-1]
     #CustomMarker(square_contour, approx_multiplier=0.015).find_marker_in_thresholded_image(image)
 
-    castle_contour = np.int32([[0, 0], [10, 0], [10, 20], [20, 20], [20, 10], [30, 10], [30, 20], [40, 20], [40, 0], [50, 0], [50, 50], [30, 50], [30, 40], [20, 40], [20, 50], [0, 50]]).reshape(-1, 1, 2)[::-1]
-    CustomMarker(castle_contour, approx_multiplier=0.0125, distance_tolerance=0.15, angle_tolerance=0.65).find_marker_in_thresholded_image(image)
+    #castle_contour = np.int32([[0, 0], [10, 0], [10, 20], [20, 20], [20, 10], [30, 10], [30, 20], [40, 20], [40, 0], [50, 0], [50, 50], [30, 50], [30, 40], [20, 40], [20, 50], [0, 50]]).reshape(-1, 1, 2)[::-1]
+    #CustomMarker(castle_contour, approx_multiplier=0.0125, distance_tolerance=0.2, angle_tolerance=0.65).find_marker_in_thresholded_image(image)
 
 
 def board_detector_test():
