@@ -4,16 +4,9 @@ from board.board_descriptor import BoardDescriptor
 from board.board_recognizer import BoardRecognizer
 from board.tile_brick_detector import TileBrickDetector
 from board.markers.custom_marker import CustomMarker
+from board.markers.triangle_marker import TriangleMarker
 
 def run_tests():
-    board_descriptor = BoardDescriptor()
-    board_descriptor.board_size = [1280, 800]
-    board_descriptor.border_percentage_size = [0.0, 0.0]
-    board_descriptor.tile_count = [32, 20]
-
-    board_recognizer = BoardRecognizer()
-    brick_detector = TileBrickDetector()
-
     test_set = {
         "practice1": [
             ((0, 8), [(0, 8), (1, 8), (1, 7), (2, 8), (1, 9)]),
@@ -120,6 +113,15 @@ def run_tests():
         ],
     }
 
+    board_descriptor = BoardDescriptor()
+    board_descriptor.corner_marker = TriangleMarker()
+    board_descriptor.board_size = [1280, 800]
+    board_descriptor.border_percentage_size = [0.0, 0.0]
+    board_descriptor.tile_count = [32, 20]
+
+    board_recognizer = BoardRecognizer()
+    brick_detector = TileBrickDetector()
+
     failed = 0
     passed = 0
 
@@ -153,22 +155,63 @@ def run_tests():
 
 
 def triangle_marker_test():
-    image = cv2.imread("board/training/marker_test_8.png")
+    image = cv2.imread("board/training/marker_test_7.png")
+    #image = cv2.blur(image, (3, 3))
     image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     _, image = cv2.threshold(image, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
 
-    triangle_contour = np.int32([[0, 0], [100, 0], [0, 100]]).reshape(-1, 1, 2)[::-1]
-    CustomMarker(triangle_contour, approx_multiplier=0.015, min_area=0.03, max_area=0.5).find_marker_in_thresholded_image(image)
+    #triangle_contour = np.int32([[0, 0], [100, 0], [0, 100]]).reshape(-1, 1, 2)[::-1]
+    #CustomMarker(triangle_contour, min_area=0.03, max_area=0.5).find_marker_in_thresholded_image(image)
 
     #square_contour = np.int32([[0, 0], [100, 0], [100, 100], [0, 100]]).reshape(-1, 1, 2)[::-1]
-    #CustomMarker(square_contour, approx_multiplier=0.015).find_marker_in_thresholded_image(image)
+    #CustomMarker(square_contour).find_marker_in_thresholded_image(image)
 
-    #castle_contour = np.int32([[0, 0], [10, 0], [10, 20], [20, 20], [20, 10], [30, 10], [30, 20], [40, 20], [40, 0], [50, 0], [50, 50], [30, 50], [30, 40], [20, 40], [20, 50], [0, 50]]).reshape(-1, 1, 2)[::-1]
-    #CustomMarker(castle_contour, approx_multiplier=0.0125, distance_tolerance=0.2, angle_tolerance=0.65).find_marker_in_thresholded_image(image)
+    castle_contour = np.int32([[0, 0], [10, 0], [10, 20], [20, 20], [20, 10], [30, 10], [30, 20], [40, 20], [40, 0], [50, 0], [50, 50], [30, 50], [30, 40], [20, 40], [20, 50], [0, 50]]).reshape(-1, 1, 2)[::-1]
+    CustomMarker(castle_contour, distance_tolerance=0.2, angle_tolerance=0.65).find_marker_in_thresholded_image(image)
 
 
 def board_detector_test():
-    pass
+    test_set = {
+        "board1": True,
+        "board2": True,
+        "board3": True,
+        "board4": True,
+        "board5": True,
+        "board6": True,
+        "board7": True,
+        "board8": True,
+        "board9": True,
+        "board10": True,
+        "board11": True,
+    }
+
+    board_descriptor = BoardDescriptor()
+    board_descriptor.board_size = [1280, 800]
+    board_descriptor.border_percentage_size = [0.0, 0.0]
+    board_descriptor.tile_count = [32, 20]
+
+    board_recognizer = BoardRecognizer()
+
+    failed = 0
+    passed = 0
+
+    for image_name in test_set.keys():
+        image_filename = "board/training/" + image_name + ".png"
+
+        image = cv2.imread(image_filename)
+        if image is None:
+            continue
+
+        board_descriptor.snapshot = board_recognizer.find_board(image, board_descriptor)
+        is_recognized = board_descriptor.is_recognized()
+
+        if is_recognized != test_set[image_name]:
+            print("Board not recognized for filename %s" % image_filename)
+            failed += 1
+        else:
+            passed += 1
+
+    print("%i tests passed, %i failed" % (passed, failed))
 
 
 def brick_detector_test():

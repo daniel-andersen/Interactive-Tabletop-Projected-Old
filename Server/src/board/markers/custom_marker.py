@@ -2,20 +2,19 @@ import cv2
 import math
 import itertools
 from util import misc_math
+from util import contour_util
 
 
 class CustomMarker(object):
 
     def __init__(self, contour, distance_tolerance=0.15, angle_tolerance=0.15, fine_grained=True, spike_tolerance=0.025,
-                 approx_multiplier=0.02, closed=True, min_arclength=0.1, max_arclength=100.0,
-                 min_area=0.02, max_area=1.0):
+                 closed=True, min_arclength=0.1, max_arclength=100.0, min_area=0.02, max_area=1.0):
         """
         :param contour: Simplified marker contour (containing fx. only corners)
         :param distance_tolerance: Distance tolerance in multitudes of length
         :param angle_tolerance: Angle tolerance in radians in range [0..pi]
         :param fine_grained: If true, verify that all points lies on contour edge
         :param spike_tolerance: Spike distance tolerance for fine-grained lines
-        :param approx_multiplier: Multiplier to use when approximating contour
         :param closed: Indicated wheter the contour is closed or not
         :param min_arclength: Minimum arc length scaled in multitudes of max(image width, image height)
         :param max_arclength: Maximum arc length scaled in multitudes of max(image width, image height)
@@ -27,7 +26,6 @@ class CustomMarker(object):
         self.angle_tolerance = angle_tolerance
         self.fine_grained = fine_grained
         self.spike_tolerance = spike_tolerance
-        self.approx_multiplier = approx_multiplier
         self.closed = closed
         self.min_arclength = min_arclength
         self.max_arclength = max_arclength
@@ -46,11 +44,10 @@ class CustomMarker(object):
         :return: Marker contour
         """
 
-        #cv2.imshow("Contours", image)
-        #cv2.waitKey(0)
+        cv2.imshow("Thresholded", image)
 
         # Find contours
-        contours, _ = cv2.findContours(image, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
+        contours, _ = cv2.findContours(image.copy(), cv2.RETR_LIST, cv2.CHAIN_APPROX_NONE)
 
         if len(contours) == 0:
             return None
@@ -106,21 +103,20 @@ class CustomMarker(object):
             return False
 
         # Simplify contour
-        approxed_contour = cv2.approxPolyDP(contour, cv2.arcLength(contour, True) * self.approx_multiplier, True)
+        approxed_contour = contour_util.simplify_contour(contour, image=image)
+        #approxed_contour = cv2.approxPolyDP(contour, cv2.arcLength(contour, True) * self.approx_multiplier, True)
 
-        #image2 = cv2.cvtColor(image.copy(), cv2.COLOR_GRAY2BGR)
-        #cv2.drawContours(image2, [approxed_contour], 0, (255, 0, 255), 1)
-        #cv2.imshow('Contours', image2)
-        #cv2.waitKey(0)
+        contour_util.draw_contour(image.copy(), contour=approxed_contour, points_color=(0, 255, 0))
+        cv2.waitKey(0)
 
         # Check number of lines compared to marker
-        #print("Num lines marker: %i" % len(self.marker_contour))
-        #print("Num lines contour: %i" % len(approxed_contour))
+        print("Num lines marker: %i" % len(self.marker_contour))
+        print("Num lines contour: %i" % len(approxed_contour))
 
         if len(approxed_contour) < len(self.marker_contour):
             return False
 
-        if len(approxed_contour) > len(self.marker_contour) * 2:
+        if len(approxed_contour) > len(self.marker_contour) + 5:
             return False
 
         #for p in approxed_contour:
@@ -136,23 +132,18 @@ class CustomMarker(object):
             #print("Index map: %s" % list(indices))
             indices_list = list(indices)
 
-            # Try all "rotations" of this index map
-            angle_map = None
-            distance_map = None
+            # Calculate angle map
+            angle_map = self.angle_map_for_contour(approxed_contour, indices_list, orientation)
 
+            # Calculate distance map
+            distance_map = self.distance_map_for_contour(approxed_contour, indices_list)
+
+            # Try all "rotations" of this index map
             for start_index in range(0, marker_length):
 
-                # Compute angle map
-                if angle_map is None:
-                    angle_map = self.angle_map_for_contour(approxed_contour, indices_list, orientation)
-
                 # Verify angle map
-                if not self.verify_angle_map(angle_map, start_index):
+                if not self.verify_angle_map(angle_map, distance_map, start_index):
                     continue
-
-                # Compute distance map
-                if distance_map is None:
-                    distance_map = self.distance_map_for_contour(approxed_contour, indices_list)
 
                 # Verify distance map
                 if not self.verify_distance_map(distance_map, start_index):
@@ -256,11 +247,12 @@ class CustomMarker(object):
 
         return True
 
-    def verify_angle_map(self, angle_map, start_index=0):
+    def verify_angle_map(self, angle_map, distance_map, start_index=0):
         """
         Verifies the angle map.
 
         :param angle_map: Angle map
+        :param distance_map: Distance map
         :param start_index: Index at which to start
         :return: Whether the angle map matches the markers angle map
         """
@@ -273,19 +265,32 @@ class CustomMarker(object):
         # Verify angle map
         for i in range(0, len(self.marker_angle_map)):
 
+            # Calculate contour index
+            idx = (i + start_index) % angle_map_length
+
             # Calculate angle difference
             marker_angle = self.marker_angle_map[i]
-            contour_angle = angle_map[(i + start_index) % angle_map_length]
+            contour_angle = angle_map[idx]
 
             delta_angle = math.atan2(math.sin(marker_angle - contour_angle), math.cos(marker_angle - contour_angle))
 
             #print("Angles: %f vs %f = %f deg" % (marker_angle, contour_angle, delta_angle * 180.0 / math.pi))
 
+            # Calculate tolerance based on distance - small distances have higher tolerance
+            distance = distance_map[idx][0]
+            distance_weight = min(1.0, (distance / 10.0))
+
+            max_tolerance = 0.25
+
+            tolerance = max_tolerance + ((self.angle_tolerance - max_tolerance) * distance_weight)
+
             # Check if valid
-            if abs(delta_angle) > self.angle_tolerance:
+            if abs(delta_angle) > tolerance:
+                #print("%f vs %f" % (abs(delta_angle), tolerance))
                 #print("--------")
                 return False
 
+        print("OK!")
         return True
 
     def distance_map_for_contour(self, contour, index_map=None):

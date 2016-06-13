@@ -15,8 +15,8 @@ def max_cosine_from_contour(contour):
 
     for i in range(2, len(contour) + 2):
         cosine = abs(angle(contour[i % len(contour)][0],
-                           contour[(i - 2) % len(contour)][0],
-                           contour[(i - 1) % len(contour)][0]))
+                           contour[(i - 1) % len(contour)][0],
+                           contour[(i - 2) % len(contour)][0]))
         max_cosine = max(cosine, max_cosine)
 
     return max_cosine

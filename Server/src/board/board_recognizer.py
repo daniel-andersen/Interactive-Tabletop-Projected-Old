@@ -146,9 +146,12 @@ class BoardRecognizer(object):
 
                     # Center search rect and find contour again in order to prevent it being "half found" at the edge
                     centered_rect = self.centered_search_rect(contour)
-                    contour = self.find_marker_in_rect(image, centered_rect, threshold_mode, corner_marker)
-                    if contour is not None:
-                        return self.centered_search_rect(contour), contour
+                    centered_contour = self.find_marker_in_rect(image, centered_rect, threshold_mode, corner_marker)
+                    if centered_contour is not None:
+                        return self.centered_search_rect(centered_contour), centered_contour
+
+                    # Return contour no matter if contour is found in center or not
+                    return self.centered_search_rect(contour), contour
 
         # No marker found
         #print("NO MARKER FOUND")
@@ -164,6 +167,12 @@ class BoardRecognizer(object):
         return [offset_x, offset_y, offset_x + self.marker_search_width, offset_y + self.marker_search_height]
 
     def find_marker_in_rect(self, image, search_rect, threshold_mode, corner_marker):
+
+        #image2 = cv2.cvtColor(image.copy(), cv2.COLOR_GRAY2BGR)
+        #search_contour = np.int32([(search_rect[0], search_rect[1]), (search_rect[2], search_rect[1]), (search_rect[2], search_rect[3]), (search_rect[0], search_rect[3])]).reshape(-1, 1, 2)
+        #cv2.drawContours(image2, [search_contour], 0, (255, 0, 255), 1)
+        #cv2.imshow("Search rect", image2)
+        #cv2.waitKey(0)
 
         # Extract rect
         image = image[search_rect[1]:search_rect[3], search_rect[0]:search_rect[2]]
@@ -194,6 +203,11 @@ class BoardRecognizer(object):
         corners = transform.order_corners(all_points)
         contour = np.int32(corners).reshape(-1, 1, 2)
 
+        #image2 = image.copy()
+        #cv2.drawContours(image2, [contour], 0, (255, 0, 255), 1)
+        #cv2.imshow('Contour', image2)
+        #cv2.waitKey(0)
+
         # Check if valid
         if not self.is_corner_combination_valid(contour):
             return None
@@ -201,13 +215,16 @@ class BoardRecognizer(object):
         return [c[0] for c in contour]
 
     def is_corner_combination_valid(self, contour):
-        if abs(cv2.contourArea(contour)) < self.board_area_min:
+        if abs(cv2.contourArea(contour, False)) < self.board_area_min:
+            #print("Contour area to small: %f < %f" % (abs(cv2.contourArea(contour, False)), self.board_area_min))
             return False
 
         if not self.has_correct_aspect_ratio(contour):
+            #print("Contour has wrong aspect ratio: %f - %f < %f" % (self.contour_aspect_ratio(contour), self.board_aspect_ratio, self.board_aspect_ratio_deviation_max))
             return False
 
         if misc_math.max_cosine_from_contour(contour) > self.board_cosinus_max_deviation:
+            #print("Contour has wrong angles: %f > %f" % (misc_math.max_cosine_from_contour(contour), self.board_cosinus_max_deviation))
             return False
 
         return True
@@ -226,30 +243,23 @@ class BoardRecognizer(object):
         return (1.0 / abs(l1 - l2)) * cv2.contourArea(contour, False)
 
     def threshold_image(self, image, mode):
+
+        # Threshold image
         if mode == self.ThresholdModes.OTSU:
-            return self.otsu_image(image)
-        else:
-            return self.adaptive_threshold_image(image, mode)
-
-    def otsu_image(self, image):
-        image = cv2.blur(image, (2, 2))
-        ret, image = cv2.threshold(image, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
-        return image
-
-    def adaptive_threshold_image(self, image, mode):
-        if mode == self.ThresholdModes.ADAPTIVE:
+            image = cv2.blur(image, (2, 2))
+            ret, image = cv2.threshold(image, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
+            return image
+        elif mode == self.ThresholdModes.ADAPTIVE:
             return cv2.adaptiveThreshold(image, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 11, 2)
         elif mode == self.ThresholdModes.AUTO:
             threshold_min, threshold_max = self.automatic_thresholding_for_image(image)
+            return cv2.Canny(image, threshold_min, threshold_max)
         elif mode == self.ThresholdModes.BRIGHT_ROOM:
-            threshold_min, threshold_max = 40, 70
+            return cv2.Canny(image, 40, 70)
         elif mode == self.ThresholdModes.DARK_ROOM:
-            threshold_min, threshold_max = 100, 300
+            return cv2.Canny(image, 100, 300)
         else:
-            threshold_min, threshold_max = 60, 120
-
-        canny_image = cv2.Canny(image, threshold_min, threshold_max)
-        return cv2.dilate(canny_image, (1, 1))
+            return cv2.Canny(image, 60, 120)
 
     def automatic_thresholding_for_image(self, image):
 

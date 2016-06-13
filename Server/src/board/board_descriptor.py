@@ -1,6 +1,6 @@
 import numpy as np
 import cv2
-from markers.triangle_marker import TriangleMarker
+from markers.default_marker import DefaultMarker
 
 class BoardDescriptor(object):
     """
@@ -32,7 +32,7 @@ class BoardDescriptor(object):
         self.board_size = None
         self.border_percentage_size = None
         self.tile_count = None
-        self.corner_marker = TriangleMarker()
+        self.corner_marker = DefaultMarker()
 
     def is_recognized(self):
         """
