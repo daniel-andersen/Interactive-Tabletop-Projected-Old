@@ -94,7 +94,8 @@ Install git:
 
 Setup ssh-keys and clone Magic Lamp:
 
-    $ git clone git@github.com:daniel-andersen/magic_lamp.git
+    $ git clone git@github.com:daniel-andersen/Interactive-Tabletop-Projected.git
+    $ mv Interactive-Tabletop-Projected magic_lamp
 
 Install dependencies:
 
