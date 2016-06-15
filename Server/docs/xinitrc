@@ -25,10 +25,16 @@ feh -F ~/magic_lamp/Server/assets/splash.png & feh_pid=$!
 cd ~/magic_lamp/Server/src
 python main.py &
 
+# Start client
+cd ~/magic_lamp/Client
+grunt run &
+sleep 10
+
 # Start the browser
 ~/kiosk-browser/browser http://localhost:9000 & browser_pid=$!
+sleep 2
 
-sleep 5
+# Remove splash
 kill -9 $feh_pid
 
 wait $browser_pid

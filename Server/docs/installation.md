@@ -60,7 +60,7 @@ Choose:
 Install X11
 -----------
 
-    $ sudo apt-get install xserver-xorg xinit x11-xserver-utils matchbox feh --fix-missing
+    $ sudo apt-get install xserver-xorg xinit x11-xserver-utils matchbox xwit feh --fix-missing
 
 Grant all access to start X11:
 
