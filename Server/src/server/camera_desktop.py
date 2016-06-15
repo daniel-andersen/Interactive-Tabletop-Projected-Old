@@ -19,6 +19,8 @@ class Camera(object):
 
         # Initialize camera
         self.camera = cv2.VideoCapture(0)
+        self.camera.set(cv2.cv.CV_CAP_PROP_FRAME_WIDTH, resolution[0])
+        self.camera.set(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT, resolution[1])
         self.grab_image()
 
         # Start thread

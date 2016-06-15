@@ -1,4 +1,3 @@
-import os
 import json
 import time
 import cv2
@@ -6,14 +5,15 @@ import globals
 from random import randint
 from threading import Thread
 from SimpleWebSocketServer import SimpleWebSocketServer, WebSocket
+from util import misc_util
 from board.board_descriptor import BoardDescriptor
 from reporters.tiled_brick_position_reporter import TiledBrickPositionReporter
 from reporters.tiled_brick_moved_reporters import TiledBrickMovedToAnyOfPositionsReporter
 from reporters.tiled_brick_moved_reporters import TiledBrickMovedToPositionReporter
 
-if os.uname()[4][:3] == 'arm':
+if misc_util.module_exists("picamera"):
     print("Using Raspberry Pi camera")
-    from camera import Camera
+    from camera_pi import Camera
 else:
     print("Using desktop camera")
     from camera_desktop import Camera
