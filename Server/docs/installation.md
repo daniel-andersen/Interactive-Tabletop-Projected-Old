@@ -54,7 +54,8 @@ Choose:
 * Expand Filesystem
 * Enable Camera
 * Internationalisation Options -> Change Locale / keyboard layout
-* Advanced Options -> GL Driver
+* Experimental:
+  * Advanced Options -> GL Driver
 
 Install X11
 -----------
@@ -70,7 +71,8 @@ Move .xinitrc and rc.local into place:
     ~/.xinitrc
     /etc/rc.local
 
-Install nginx:
+Install nginx webserver
+-----------------------
 
     $ sudo apt-get install nginx
 
@@ -100,7 +102,7 @@ Install dependencies:
     $ sudo apt-get install libjpeg8-dev libjasper-dev libpng12-dev  # Image handling
     $ sudo apt-get install libatlas-base-dev gfortran   # For optimizations within OpenCV
     $ sudo apt-get install python-pip python-dev python-picamera
-    $ ./install_dependencies.sh
+    $ ./install_packages.sh
 
 Install OpenCV:
 
