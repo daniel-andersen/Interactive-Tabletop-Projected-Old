@@ -94,7 +94,7 @@ Install git:
 
 Setup ssh-keys and clone Magic Lamp:
 
-    $ git clone git@github.com:black-knight/magic_lamp.git
+    $ git clone git@github.com:daniel-andersen/magic_lamp.git
 
 Install dependencies:
 
@@ -127,7 +127,7 @@ Install dependencies:
 Install browser
 ---------------
 
-    $ git clone git@github.com:black-knight/kiosk-browser.git
+    $ git clone git@github.com:daniel-andersen/kiosk-browser.git
     $ sudo apt-get install libwebkit-dev
     $ cd kiosk-browser
     $ make
