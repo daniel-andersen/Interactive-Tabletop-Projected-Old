@@ -123,7 +123,7 @@ Client
 Install dependencies:
 
     $ cd magic_lamp/Client
-    $ ./install_dependencies.sh
+    $ sudo ./install_dependencies.sh
 
 Install browser
 ---------------
