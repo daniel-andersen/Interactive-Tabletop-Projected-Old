@@ -4,8 +4,10 @@ import math
 from util import enum
 from util import misc_math
 from board.board_descriptor import BoardDescriptor
+from board.board_descriptor import BoardStatus
 from board import transform
 from board import histogram_util
+
 
 class BoardRecognizedState(object):
     def __init__(self):
@@ -86,13 +88,13 @@ class BoardRecognizer(object):
 
         # Check if all markers are found
         if marker_contours[0] is None or marker_contours[1] is None or marker_contours[2] is None or marker_contours[3] is None:
-            return None
+            return self.board_snapshot_with_missing_corners(marker_contours[0], marker_contours[1], marker_contours[2], marker_contours[3])
 
         # Find corners
         corners = self.find_corners(marker_contours, image)
         if corners is not None:
             transformed_image = transform.transform_image(image, corners)
-            return BoardDescriptor.Snapshot(transformed_image, corners)
+            return BoardDescriptor.Snapshot(board_image=transformed_image, board_corners=corners)
 
         return None
 
@@ -100,7 +102,7 @@ class BoardRecognizer(object):
         self.image_height, self.image_width = image.shape[:2]
         board_width, board_height = board_descriptor.board_size
 
-        self.board_area_min = (self.image_width * 0.65) * (self.image_height * 0.65)
+        self.board_area_min = (self.image_width * 0.50) * (self.image_height * 0.50)
 
         self.board_aspect_ratio = float(max(board_width, board_height)) / float(min(board_width, board_height))
 
@@ -123,10 +125,8 @@ class BoardRecognizer(object):
 
         # Find marker in previous marker rect
         if current_marker_rect is not None:
-            #print("Searching in current rect")
             contour = self.find_marker_in_rect(image, current_marker_rect, threshold_mode, corner_marker)
             if contour is not None:
-                #print("Marker same as previous")
                 return self.centered_search_rect(contour), contour
 
         # Go through whole image
@@ -154,7 +154,6 @@ class BoardRecognizer(object):
                     return self.centered_search_rect(contour), contour
 
         # No marker found
-        #print("NO MARKER FOUND")
         return None, None
 
     def centered_search_rect(self, contour):
@@ -216,15 +215,15 @@ class BoardRecognizer(object):
 
     def is_corner_combination_valid(self, contour):
         if abs(cv2.contourArea(contour, False)) < self.board_area_min:
-            #print("Contour area to small: %f < %f" % (abs(cv2.contourArea(contour, False)), self.board_area_min))
+            print("Contour area to small: %f < %f" % (abs(cv2.contourArea(contour, False)), self.board_area_min))
             return False
 
         if not self.has_correct_aspect_ratio(contour):
-            #print("Contour has wrong aspect ratio: %f - %f < %f" % (self.contour_aspect_ratio(contour), self.board_aspect_ratio, self.board_aspect_ratio_deviation_max))
+            print("Contour has wrong aspect ratio: %f - %f < %f" % (self.contour_aspect_ratio(contour), self.board_aspect_ratio, self.board_aspect_ratio_deviation_max))
             return False
 
         if misc_math.max_cosine_from_contour(contour) > self.board_cosinus_max_deviation:
-            #print("Contour has wrong angles: %f > %f" % (misc_math.max_cosine_from_contour(contour), self.board_cosinus_max_deviation))
+            print("Contour has wrong angles: %f > %f" % (misc_math.max_cosine_from_contour(contour), self.board_cosinus_max_deviation))
             return False
 
         return True
@@ -280,3 +279,15 @@ class BoardRecognizer(object):
 
         # Threshold values
         return mean * 2.0 / 3.0, mean * 4.0 / 3.0
+
+    def board_snapshot_with_missing_corners(self, top_left, top_right, bottom_left, bottom_right):
+        corners = {}
+        if top_left is None:
+            corners["topLeft"] = top_left
+        if top_right is None:
+            corners["topRight"] = top_right
+        if bottom_left is None:
+            corners["bottomLeft"] = bottom_left
+        if bottom_right is None:
+            corners["bottomRight"] = bottom_right
+        return BoardDescriptor.Snapshot(status=BoardStatus.NOT_RECOGNIZED, missing_corners=corners)

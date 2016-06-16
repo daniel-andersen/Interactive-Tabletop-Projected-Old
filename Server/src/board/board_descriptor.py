@@ -1,6 +1,11 @@
 import numpy as np
 import cv2
 from markers.default_marker import DefaultMarker
+from util import enum
+
+
+BoardStatus = enum.Enum('NOT_RECOGNIZED', 'RECOGNIZED')
+
 
 class BoardDescriptor(object):
     """
@@ -17,13 +22,17 @@ class BoardDescriptor(object):
         """Represents a snapshot (current camera feed image) of a board.
 
         Field variables:
+        status -- Board recognition status
         board_image -- The recognized and transformed image
         grayscaled_board_image -- A grayscale version of the board image
         board_corners -- The four points in the source image representing the corners of the recognized board
+        missing_corners -- Dictionary of missing corners, if board was not recognized. {topLeft, topRight, bottomLeft, bottomRight}
         """
-        def __init__(self, board_image=None, board_corners=None):
+        def __init__(self, status=BoardStatus.RECOGNIZED, board_image=None, board_corners=None, missing_corners=None):
+            self.status = status
             self.board_image = board_image
             self.board_corners = board_corners
+            self.missing_corners = missing_corners
             self.grayscaled_board_image = cv2.cvtColor(board_image, cv2.COLOR_BGR2GRAY) if board_image is not None else None
             self.board_canvas_image = None
 
@@ -39,7 +48,7 @@ class BoardDescriptor(object):
         Indicates whether the board has been recognized in the source image or not.
         :return: True, if the board has been recognized in the source image, else false
         """
-        return True if self.snapshot is not None and self.snapshot.board_image is not None else False
+        return True if self.snapshot is not None and self.snapshot.status == BoardStatus.RECOGNIZED else False
 
     def border_size(self):
         """

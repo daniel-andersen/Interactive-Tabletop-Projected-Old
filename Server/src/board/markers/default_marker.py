@@ -18,12 +18,12 @@ class DefaultMarker(object):
         min_marker_size = (image_width * 0.1) * (image_height * 0.1)
         max_marker_size = (image_width * 0.5) * (image_height * 0.5)
 
+        # Filter away small noise
+        image = cv2.blur(image, (1, 1))
+        ret, image = cv2.threshold(image, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
+
         #cv2.imshow("Marker image", image)
         #cv2.waitKey(0)
-
-        # Filter away small noise
-        image = cv2.dilate(image, (3, 3))
-        image = cv2.erode(image, (1, 1))
 
         # Find contours
         contours, hierarchy = \
@@ -33,7 +33,7 @@ class DefaultMarker(object):
             return None
 
         # Filter away noise images
-        if len(contours) > 4:
+        if len(contours) > 8:
             return None
 
         # Simplify contours

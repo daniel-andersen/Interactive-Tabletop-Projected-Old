@@ -283,7 +283,8 @@ class Server(WebSocket):
                 return reporter_id
 
     def reporter_run(self):
-        counter = 0
+        debug_counter = 0
+        board_not_recognized_counter = 0
 
         while True:
 
@@ -301,9 +302,25 @@ class Server(WebSocket):
             # Recognize board
             if globals.board_descriptor is not None:
                 globals.board_descriptor.snapshot = globals.board_recognizer.find_board(image, globals.board_descriptor)
+
+                # Board not recognized
                 if not globals.board_descriptor.is_recognized():
-                    counter += 1
-                    #cv2.imwrite("debug/board_not_recognized_{0}.png".format(counter), image)
+                    board_not_recognized_counter += 1
+
+                    # Notify client that board is not recognized
+                    """
+                    if globals.board_descriptor.snapshot.missing_corners is not None:
+                        self.send_message("BOARD_NOT_RECOGNIZED", "recognizeBoard", {"unrecognizedCorners": globals.board_descriptor.snapshot.missing_corners})
+                    else:
+                        self.send_message("BOARD_NOT_RECOGNIZED", "recognizeBoard", {})
+                    """
+
+                    # Output debug image
+                    if globals.debug:
+                        debug_counter += 1
+                        cv2.imwrite("debug/board_not_recognized_{0}.png".format(debug_counter), image)
+                else:
+                    board_not_recognized_counter = 0
 
             # Run all reporters
             reporter_ids_to_remove = []
