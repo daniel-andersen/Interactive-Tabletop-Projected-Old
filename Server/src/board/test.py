@@ -184,6 +184,10 @@ def board_detector_test():
         "board10": True,
         "board11": True,
         "board12": True,
+        "board13": True,
+        "board14": True,
+        "board15": True,
+        "board16": True,
     }
 
     board_descriptor = BoardDescriptor()

@@ -13,14 +13,17 @@ class DefaultMarker(object):
         :return: Marker contour
         """
 
+        image_height, image_width = image.shape[:2]
+        image = cv2.resize(image, (image_width * 2, image_height * 2))
+
         # Prepare constants
         image_height, image_width = image.shape[:2]
         min_marker_size = (image_width * 0.1) * (image_height * 0.1)
         max_marker_size = (image_width * 0.5) * (image_height * 0.5)
 
         # Filter away small noise
-        image = cv2.blur(image, (1, 1))
-        ret, image = cv2.threshold(image, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
+        #image = cv2.blur(image, (1, 1))
+        #ret, image = cv2.threshold(image, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
 
         #cv2.imshow("Marker image", image)
         #cv2.waitKey(0)
@@ -47,8 +50,12 @@ class DefaultMarker(object):
             approxed_contours.append(approxed_contour)
 
         #image2 = cv2.cvtColor(image.copy(), cv2.COLOR_GRAY2BGR)
-        #cv2.drawContours(image2, approxed_contours, -1, (255, 0, 255), 1)
+        #cv2.drawContours(image2, contours, -1, (255, 0, 255), 1)
         #cv2.imshow('Contours', image2)
+
+        #image2 = cv2.cvtColor(image.copy(), cv2.COLOR_GRAY2BGR)
+        #cv2.drawContours(image2, approxed_contours, -1, (255, 0, 255), 1)
+        #cv2.imshow('Approxed Contours', image2)
         #cv2.waitKey(0)
 
         # Find marker
@@ -58,19 +65,23 @@ class DefaultMarker(object):
             #cv2.imshow('Contours', image2)
             #cv2.waitKey(0)
 
-            if self.are_marker_conditions_satisfied_for_contour(contours, approxed_contours, hierarchy, i, min_marker_size, max_marker_size):
+            if self.are_marker_conditions_satisfied_for_contour(contours, approxed_contours, hierarchy, i, min_marker_size, max_marker_size, (image_width, image_height)):
 
                 #image2 = cv2.cvtColor(image.copy(), cv2.COLOR_GRAY2BGR)
                 #cv2.drawContours(image2, [approxed_contours[hierarchy[0][i][2]]], -1, (255, 0, 255), 1)
                 #cv2.imshow('Contours', image2)
                 #cv2.waitKey(0)
 
-                return approxed_contours[i]
+                ac = approxed_contours[i]
+                for i in range(0, len(ac)):
+                    ac[i][0][0] /= 2
+                    ac[i][0][1] /= 2
+                return ac
 
         # No marker found
         return None
 
-    def are_marker_conditions_satisfied_for_contour(self, contours, approxed_contours, hierachy, index, min_marker_size, max_marker_size):
+    def are_marker_conditions_satisfied_for_contour(self, contours, approxed_contours, hierachy, index, min_marker_size, max_marker_size, image_size):
 
         approxed_contour = approxed_contours[index]
         contour = contours[index]
@@ -110,21 +121,30 @@ class DefaultMarker(object):
             return False
 
         # Check that the long edges are approx same length
-        if not self.are_lines_approx_same_length(approxed_contour, min_length_index + 1, min_length_index + 2):
+        if not self.are_lines_approx_same_length(approxed_contour, min_length_index + 1, min_length_index + 2, 0.8):
             #print("Long edges 1 not same length")
             return False
 
-        if not self.are_lines_approx_same_length(approxed_contour, min_length_index - 1, min_length_index - 2):
+        if not self.are_lines_approx_same_length(approxed_contour, min_length_index - 1, min_length_index - 2, 0.7):
             #print("Long edges 2 not same length")
+            return False
+
+        # Not allowed to touch border
+        x, y, width, height = cv2.boundingRect(contour)
+        if x <= 0 or x + width >= image_size[0] - 1:
+            #print("Touching horizontal border")
+            return False
+        if y <= 0 or y + height >= image_size[1] - 1:
+            #print("Touching vertical border")
             return False
 
         #print("OK!")
         return True
 
-    def are_lines_approx_same_length(self, contour, index1, index2):
+    def are_lines_approx_same_length(self, contour, index1, index2, deviation=0.8):
         len1 = self.line_length(contour, index1)
         len2 = self.line_length(contour, index2)
-        return min(len1, len2) >= max(len1, len2) * 0.8
+        return min(len1, len2) >= max(len1, len2) * deviation
 
     def line_length(self, contour, index):
         index1 = (index + len(contour)) % len(contour)
