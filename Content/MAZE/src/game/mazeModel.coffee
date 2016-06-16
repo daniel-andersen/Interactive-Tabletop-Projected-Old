@@ -99,15 +99,13 @@ class MazeModel
                 # Calculate score
                 maxDistance = null
                 minDistance = null
-                score = 0
                 for i in [0..@players.length - 1]
                     distance = distanceMaps[i][y][x]
-                    score += distance
                     maxDistance = if maxDistance == null then distance else Math.max(maxDistance, distance)
                     minDistance = if minDistance == null then distance else Math.min(minDistance, distance)
 
-                score = minDistance
-                if bestScore == null or score > bestScore
+                score = maxDistance * maxDistance
+                if bestScore == null or score < bestScore
                     bestScore = score
                     @treasurePosition = new Position(x, y)
 
