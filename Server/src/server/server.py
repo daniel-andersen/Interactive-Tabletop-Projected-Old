@@ -6,7 +6,9 @@ from random import randint
 from threading import Thread
 from SimpleWebSocketServer import SimpleWebSocketServer, WebSocket
 from util import misc_util
+from board.markers.marker_util import *
 from board.board_descriptor import BoardDescriptor
+from board.tiled_board_descriptor import TiledBoardDescriptor
 from reporters.tiled_brick_position_reporter import TiledBrickPositionReporter
 from reporters.tiled_brick_moved_reporters import TiledBrickMovedToAnyOfPositionsReporter
 from reporters.tiled_brick_moved_reporters import TiledBrickMovedToPositionReporter
@@ -66,6 +68,8 @@ class Server(WebSocket):
             return self.take_screenshot(payload)
         if action == "initializeTiledBoard":
             return self.initialize_tiled_board(payload)
+        if action == "initializeGenericBoard":
+            return self.initialize_generic_board(payload)
         if action == "reportBackWhenBrickFoundAtAnyOfPositions":
             return self.report_back_when_brick_found_at_any_of_positions(payload)
         if action == "reportBackWhenBrickMovedToAnyOfPositions":
@@ -84,9 +88,7 @@ class Server(WebSocket):
         resolution = payload["resolution"] if "resolution" in payload else [640, 480]
 
         globals.board_descriptor = BoardDescriptor()
-        globals.board_descriptor.board_size = [1280, 800]
-        globals.board_descriptor.tile_count = [32, 20]
-        globals.board_descriptor.border_percentage_size = [0.0, 0.0]
+        self.reset_board_descriptor()
 
         self.initialize_reporter_thread()
         self.reset_reporters()
@@ -94,6 +96,13 @@ class Server(WebSocket):
         self.initialize_video(resolution)
 
         return "OK", {}
+
+    def reset_board_descriptor(self):
+        """
+        Resets the board descriptor with standard values.
+        """
+        globals.board_descriptor.board_size = [1280, 800]
+        globals.board_descriptor.border_percentage_size = [0.0, 0.0]
 
     def enable_debug(self):
         """
@@ -128,11 +137,34 @@ class Server(WebSocket):
         borderPctY: (Optional) Border height in percentage of board size.
         cornerMarker: (Optional) Corner marker
         """
+        globals.board_descriptor = TiledBoardDescriptor()
+        self.reset_board_descriptor()
+
         globals.board_descriptor.tile_count = [payload["tileCountX"], payload["tileCountY"]]
         globals.board_descriptor.border_percentage_size = [
             payload["borderPctX"] if "borderPctX" in payload else 0.0,
             payload["borderPctY"] if "borderPctY" in payload else 0.0
         ]
+        globals.board_descriptor.corner_marker = create_marker_from_name(payload["cornerMarker"])
+
+        return "OK", {}
+
+    def initialize_generic_board(self, payload):
+        """
+        Initializes generic board with given parameters.
+
+        borderPctX: (Optional) Border width in percentage of board size.
+        borderPctY: (Optional) Border height in percentage of board size.
+        cornerMarker: (Optional) Corner marker
+        """
+        globals.board_descriptor = BoardDescriptor()
+        self.reset_board_descriptor()
+
+        globals.board_descriptor.border_percentage_size = [
+            payload["borderPctX"] if "borderPctX" in payload else 0.0,
+            payload["borderPctY"] if "borderPctY" in payload else 0.0
+        ]
+        globals.board_descriptor.corner_marker = create_marker_from_name(payload["cornerMarker"]) if "cornerMarker" in payload else DefaultMarker()
         return "OK", {}
 
     def report_back_when_brick_found_at_any_of_positions(self, payload):

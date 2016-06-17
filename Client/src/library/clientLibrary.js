@@ -103,6 +103,23 @@ Client = (function() {
     });
   };
 
+  Client.prototype.initializeGenericBoard = function(borderPctX, borderPctY, cornerMarker) {
+    if (borderPctX == null) {
+      borderPctX = 0.0;
+    }
+    if (borderPctY == null) {
+      borderPctY = 0.0;
+    }
+    if (cornerMarker == null) {
+      cornerMarker = "DEFAULT";
+    }
+    return this.sendMessage("initializeGenericBoard", {
+      "borderPctX": borderPctX,
+      "borderPctY": borderPctY,
+      "cornerMarker": cornerMarker
+    });
+  };
+
   Client.prototype.requestTiledObjectPosition = function(validPositions) {
     return this.sendMessage("requestBrickPosition", {
       "validPositions": validPositions

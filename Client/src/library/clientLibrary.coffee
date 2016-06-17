@@ -66,6 +66,13 @@ class Client
             "cornerMarker": cornerMarker
         })
 
+    initializeGenericBoard: (borderPctX = 0.0, borderPctY = 0.0, cornerMarker = "DEFAULT") ->
+        this.sendMessage("initializeGenericBoard", {
+            "borderPctX": borderPctX,
+            "borderPctY": borderPctY,
+            "cornerMarker": cornerMarker
+        })
+
     requestTiledObjectPosition: (validPositions) ->
         this.sendMessage("requestBrickPosition", {
             "validPositions": validPositions

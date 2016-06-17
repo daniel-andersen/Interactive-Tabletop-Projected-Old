@@ -41,6 +41,7 @@ class BoardRecognizer(object):
     def find_board(self, image, board_descriptor):
         """
         Finds a board, if any, in the source image and populates the board descriptor.
+
         :param image: Source image from which to recognize board
         :param board_descriptor: Board descriptor
         :return Board descriptor
@@ -110,9 +111,8 @@ class BoardRecognizer(object):
         self.marker_search_height = int(self.image_height * 0.1)
 
     def prepare_image(self, image):
-        grayscaled_image = cv2.cvtColor(image.copy(), cv2.COLOR_BGR2GRAY)
-        blurred_image = grayscaled_image #cv2.medianBlur(grayscaled_image, 1)
-        return blurred_image
+        grayscaled_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        return grayscaled_image
 
     def find_marker(self, image, part_x, part_y, current_marker_rect, threshold_mode, corner_marker):
 

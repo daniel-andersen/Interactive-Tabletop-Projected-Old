@@ -1,94 +1,19 @@
 import numpy as np
 import cv2
-from markers.default_marker import DefaultMarker
-from util import enum
+from board_descriptor import BoardDescriptor
 
 
-BoardStatus = enum.Enum('NOT_RECOGNIZED', 'RECOGNIZED')
-
-
-class BoardDescriptor(object):
+class TiledBoardDescriptor(BoardDescriptor):
     """
-    Represents a description of a board.
+    Represents a description of a board with tiled bricks.
 
     Field variables:
-    snapshot -- Board snapshot
-    board_size -- [width, height]
-    border_percentage_size -- [width (percent / 100), height (percent / 100)]
     tile_count -- [width, height]
-    corner_marker -- Corner marker to use as detection
     """
-    class Snapshot:
-        """Represents a snapshot (current camera feed image) of a board.
-
-        Field variables:
-        status -- Board recognition status
-        camera_image -- Original camera image
-        board_image -- The recognized and transformed image
-        grayscaled_board_image -- A grayscale version of the board image
-        board_corners -- The four points in the source image representing the corners of the recognized board
-        missing_corners -- Dictionary of missing corners, if board was not recognized. {topLeft, topRight, bottomLeft, bottomRight}
-        """
-        def __init__(self, status=BoardStatus.RECOGNIZED, camera_image=None, board_image=None, board_corners=None, missing_corners=None):
-            self.status = status
-            self.camera_image = camera_image
-            self.board_image = board_image
-            self.board_corners = board_corners
-            self.missing_corners = missing_corners
-            self.grayscaled_board_image = cv2.cvtColor(board_image, cv2.COLOR_BGR2GRAY) if board_image is not None else None
-            self.board_canvas_image = None
 
     def __init__(self):
-        self.snapshot = None
-        self.board_size = None
-        self.border_percentage_size = None
+        super(TiledBoardDescriptor, self).__init__()
         self.tile_count = None
-        self.corner_marker = DefaultMarker()
-
-    def is_recognized(self):
-        """
-        Indicates whether the board has been recognized in the source image or not.
-
-        :return: True, if the board has been recognized in the source image, else false
-        """
-        return True if self.snapshot is not None and self.snapshot.status == BoardStatus.RECOGNIZED else False
-
-    def border_size(self):
-        """
-        Calculates the border pixel size.
-
-        :return: (width, height) in image
-        """
-        height, width = self.snapshot.board_image.shape[:2]
-        return float(width) * float(self.border_percentage_size[0]), float(height) * float(self.border_percentage_size[1])
-
-    def board_region(self):
-        """
-        Calculates the board region, that is, the non-border image region.
-
-        :return: (x1, y1, x2, y2, width, height) in image
-        """
-        image_height, image_width = self.snapshot.board_image.shape[:2]
-        border_width, border_height = self.border_size()
-
-        return (float(border_width),
-                float(border_height),
-                float(image_width) - float(border_width),
-                float(image_height) - float(border_height),
-                float(image_width) - float((border_width * 2)),
-                float(image_height) - float((border_height * 2)))
-
-    def board_canvas(self):
-        """
-        Extracts the board canvas, that is, the non-border area of the image.
-
-        :return: The board canvas image
-        """
-        if self.snapshot.board_canvas_image is None:
-            region = self.board_region()
-            self.snapshot.board_canvas_image = self.snapshot.board_image[region[1]:region[3], region[0]:region[2]]
-
-        return self.snapshot.board_canvas_image
 
     def tile_size(self):
         """
