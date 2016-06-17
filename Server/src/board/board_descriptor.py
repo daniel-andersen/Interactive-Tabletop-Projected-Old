@@ -29,19 +29,20 @@ class BoardDescriptor(object):
         board_corners -- The four points in the source image representing the corners of the recognized board
         missing_corners -- Dictionary of missing corners, if board was not recognized. {topLeft, topRight, bottomLeft, bottomRight}
         """
+        board_canvas_image = None
+
         def __init__(self, status=BoardStatus.RECOGNIZED, camera_image=None, board_image=None, board_corners=None, missing_corners=None):
             self.status = status
             self.camera_image = camera_image
             self.board_image = board_image
+            self.grayscaled_board_image = cv2.cvtColor(board_image, cv2.COLOR_BGR2GRAY) if board_image is not None else None
             self.board_corners = board_corners
             self.missing_corners = missing_corners
-            self.grayscaled_board_image = cv2.cvtColor(board_image, cv2.COLOR_BGR2GRAY) if board_image is not None else None
-            self.board_canvas_image = None
 
     def __init__(self):
         self.snapshot = None
         self.board_size = None
-        self.border_percentage_size = None
+        self.border_percentage_size = [0.0, 0.0]
         self.tile_count = None
         self.corner_marker = DefaultMarker()
 
@@ -84,9 +85,11 @@ class BoardDescriptor(object):
 
         :return: The board canvas image
         """
+        if self.border_percentage_size == [0.0, 0.0]:
+            return self.snapshot.board_image
         if self.snapshot.board_canvas_image is None:
             region = self.board_region()
-            self.snapshot.board_canvas_image = self.snapshot.board_image[region[1]:region[3], region[0]:region[2]]
+            self.snapshot.board_canvas_image = self.snapshot.board_image[int(region[1]):int(region[3]), int(region[0]):int(region[2])]
 
         return self.snapshot.board_canvas_image
 

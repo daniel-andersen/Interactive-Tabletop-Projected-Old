@@ -49,51 +49,75 @@ class Client
             "id": reporterId
         })
 
-    takeScreenshot: (filename = null) ->
-        if filename != null
+    takeScreenshot: (filename = undefined) ->
+        if filename != undefined
             this.sendMessage("takeScreenshot", {
                 "filename": filename
             })
         else
             this.sendMessage("takeScreenshot", {})
 
-    initializeTiledBoard: (tileCountX, tileCountY, borderPctX = 0.0, borderPctY = 0.0, cornerMarker = "DEFAULT") ->
-        this.sendMessage("initializeTiledBoard", {
-            "tileCountX": tileCountX,
-            "tileCountY": tileCountY,
+    initializeBoard: (borderPctX = 0.0, borderPctY = 0.0, cornerMarker = "DEFAULT") ->
+        this.sendMessage("initializeBoard", {
             "borderPctX": borderPctX,
             "borderPctY": borderPctY,
             "cornerMarker": cornerMarker
         })
 
-    initializeGenericBoard: (borderPctX = 0.0, borderPctY = 0.0, cornerMarker = "DEFAULT") ->
-        this.sendMessage("initializeGenericBoard", {
-            "borderPctX": borderPctX,
-            "borderPctY": borderPctY,
-            "cornerMarker": cornerMarker
+    initializeTiledBoardArea: (tileCountX, tileCountY, x1 = 0.0, y1 = 0.0, x2 = 1.0, y2 = 1.0, areaId = undefined) ->
+        if areaId != undefined
+            this.sendMessage("initializeTiledBoardArea", {
+                "id": areaId,
+                "tileCountX": tileCountX,
+                "tileCountY": tileCountY,
+                "x1": x1,
+                "y1": y1,
+                "x2": x2,
+                "y2": y2
+            })
+        else
+            this.sendMessage("initializeTiledBoardArea", {
+                "tileCountX": tileCountX,
+                "tileCountY": tileCountY,
+                "x1": x1,
+                "y1": y1,
+                "x2": x2,
+                "y2": y2
+            })
+
+    removeBoardAreas: ->
+        this.sendMessage("removeBoardAreas", {})
+
+    removeBoardArea: (areaId) ->
+        this.sendMessage("removeBoardArea", {
+            "id": areaId
         })
 
-    requestTiledObjectPosition: (validPositions) ->
+    requestTiledObjectPosition: (areaId, validPositions) ->
         this.sendMessage("requestBrickPosition", {
+            "areaId": areaId,
             "validPositions": validPositions
         })
 
-    reportBackWhenBrickFoundAtAnyOfPositions: (validPositions, id = null, stableTime = 1.5) ->
-        if id != null
+    reportBackWhenBrickFoundAtAnyOfPositions: (areaId, validPositions, id = undefined, stableTime = 1.5) ->
+        if id != undefined
             this.sendMessage("reportBackWhenBrickFoundAtAnyOfPositions", {
+                "areaId": areaId,
                 "validPositions": validPositions,
                 "stableTime": stableTime,
                 "id": id
             })
         else
             this.sendMessage("reportBackWhenBrickFoundAtAnyOfPositions", {
+                "areaId": areaId,
                 "validPositions": validPositions,
                 "stableTime": stableTime
             })
 
-    reportBackWhenBrickMovedToAnyOfPositions: (initialPosition, validPositions, id = null, stableTime = 1.5) ->
-        if id != null
+    reportBackWhenBrickMovedToAnyOfPositions: (areaId, initialPosition, validPositions, id = undefined, stableTime = 1.5) ->
+        if id != undefined
             this.sendMessage("reportBackWhenBrickMovedToAnyOfPositions", {
+                "areaId": areaId,
                 "initialPosition": initialPosition,
                 "validPositions": validPositions,
                 "stableTime": stableTime,
@@ -101,14 +125,16 @@ class Client
             })
         else
             this.sendMessage("reportBackWhenBrickMovedToAnyOfPositions", {
+                "areaId": areaId,
                 "initialPosition": initialPosition,
                 "validPositions": validPositions,
                 "stableTime": stableTime
             })
 
-    reportBackWhenBrickMovedToPosition: (position, validPositions, id = null, stableTime = 1.5) ->
-        if id != null
+    reportBackWhenBrickMovedToPosition: (areaId, position, validPositions, id = undefined, stableTime = 1.5) ->
+        if id != undefined
             this.sendMessage("reportBackWhenBrickMovedToPosition", {
+                "areaId": areaId,
                 "position": position,
                 "validPositions": validPositions,
                 "stableTime": stableTime,
@@ -116,6 +142,7 @@ class Client
             })
         else
             this.sendMessage("reportBackWhenBrickMovedToPosition", {
+                "areaId": areaId,
                 "position": position,
                 "validPositions": validPositions,
                 "stableTime": stableTime

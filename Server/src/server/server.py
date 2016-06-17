@@ -8,7 +8,7 @@ from SimpleWebSocketServer import SimpleWebSocketServer, WebSocket
 from util import misc_util
 from board.markers.marker_util import *
 from board.board_descriptor import BoardDescriptor
-from board.tiled_board_descriptor import TiledBoardDescriptor
+from board.board_areas.tiled_board_area import TiledBoardArea
 from reporters.tiled_brick_position_reporter import TiledBrickPositionReporter
 from reporters.tiled_brick_moved_reporters import TiledBrickMovedToAnyOfPositionsReporter
 from reporters.tiled_brick_moved_reporters import TiledBrickMovedToPositionReporter
@@ -27,6 +27,8 @@ class Server(WebSocket):
     """
     reporters = {}
     reporter_thread = None
+
+    board_areas = {}
 
     def initialize_video(self, resolution):
         if globals.camera is not None:
@@ -66,10 +68,14 @@ class Server(WebSocket):
             return self.reset_reporter(payload)
         if action == "takeScreenshot":
             return self.take_screenshot(payload)
-        if action == "initializeTiledBoard":
-            return self.initialize_tiled_board(payload)
-        if action == "initializeGenericBoard":
-            return self.initialize_generic_board(payload)
+        if action == "initializeBoard":
+            return self.initialize_board(payload)
+        if action == "initializeTiledBoardArea":
+            return self.initialize_tiled_board_area(payload)
+        if action == "removeBoardArea":
+            return self.remove_board_area(payload)
+        if action == "removeBoardAreas":
+            return self.remove_board_areas()
         if action == "reportBackWhenBrickFoundAtAnyOfPositions":
             return self.report_back_when_brick_found_at_any_of_positions(payload)
         if action == "reportBackWhenBrickMovedToAnyOfPositions":
@@ -92,6 +98,7 @@ class Server(WebSocket):
 
         self.initialize_reporter_thread()
         self.reset_reporters()
+        self.remove_board_areas()
 
         self.initialize_video(resolution)
 
@@ -127,31 +134,9 @@ class Server(WebSocket):
         else:
             return "CAMERA_NOT_READY", {}
 
-    def initialize_tiled_board(self, payload):
+    def initialize_board(self, payload):
         """
-        Initializes tiled board with given parameters.
-
-        tileCountX: Number of horizontal tiles.
-        tileCountY: Number of vertical tiles.
-        borderPctX: (Optional) Border width in percentage of board size.
-        borderPctY: (Optional) Border height in percentage of board size.
-        cornerMarker: (Optional) Corner marker
-        """
-        globals.board_descriptor = TiledBoardDescriptor()
-        self.reset_board_descriptor()
-
-        globals.board_descriptor.tile_count = [payload["tileCountX"], payload["tileCountY"]]
-        globals.board_descriptor.border_percentage_size = [
-            payload["borderPctX"] if "borderPctX" in payload else 0.0,
-            payload["borderPctY"] if "borderPctY" in payload else 0.0
-        ]
-        globals.board_descriptor.corner_marker = create_marker_from_name(payload["cornerMarker"])
-
-        return "OK", {}
-
-    def initialize_generic_board(self, payload):
-        """
-        Initializes generic board with given parameters.
+        Initializes board with given parameters.
 
         borderPctX: (Optional) Border width in percentage of board size.
         borderPctY: (Optional) Border height in percentage of board size.
@@ -165,21 +150,66 @@ class Server(WebSocket):
             payload["borderPctY"] if "borderPctY" in payload else 0.0
         ]
         globals.board_descriptor.corner_marker = create_marker_from_name(payload["cornerMarker"]) if "cornerMarker" in payload else DefaultMarker()
+
+        return "OK", {}
+
+    def initialize_tiled_board_area(self, payload):
+        """
+        Initializes tiled board area with given parameters.
+
+        id: (Optional) Area id
+        tileCountX: Number of horizontal tiles.
+        tileCountY: Number of vertical tiles.
+        x1: X1 in percentage of board size.
+        y1: Y1 in percentage of board size.
+        x2: X2 in percentage of board size.
+        y2: Y2 in percentage of board size.
+        """
+        board_area = TiledBoardArea(
+            payload["id"] if "id" in payload else None,
+            [payload["tileCountX"], payload["tileCountY"]],
+            [payload["x1"], payload["y1"], payload["x2"], payload["y2"]],
+            globals.board_descriptor
+        )
+        self.board_areas[board_area.area_id] = board_area
+
+        return "OK", {"id": board_area.area_id}
+
+    def remove_board_areas(self):
+        """
+        Removes all board areas.
+        """
+        self.board_areas = {}
+
+        return "OK", {}
+
+    def remove_board_area(self, payload):
+        """
+        Removes the given board area.
+
+        id: Area ID.
+        """
+        area_id = payload["id"]
+        del self.board_areas[area_id]
+
         return "OK", {}
 
     def report_back_when_brick_found_at_any_of_positions(self, payload):
         """
         Reports back when object is found in any of the given positions.
 
+        areaId: Board area id
         validPositions: Positions to search for object in.
         stableTime: (Optional) Amount of time to wait for image to stabilize
         id: (Optional) Reporter id.
         """
+        board_area = self.board_areas[payload["areaId"]]
         reporter_id = payload["id"] if "id" in payload else self.draw_reporter_id()
         valid_positions = payload["validPositions"]
         stable_time = payload["stableTime"] if "stableTime" in payload else 1.5
 
         reporter = TiledBrickPositionReporter(
+            board_area,
             valid_positions,
             stable_time,
             reporter_id,
@@ -193,17 +223,20 @@ class Server(WebSocket):
         """
         Reports back when object is found in any of the given positions other than the initial position.
 
+        areaId: Board area id
         initialPosition: Initial position.
         validPositions: Positions to search for object in.
         stable_time: (Optional) Amount of time to wait for image to stabilize
         id: (Optional) Reporter id.
         """
+        board_area = self.board_areas[payload["areaId"]]
         reporter_id = payload["id"] if "id" in payload else self.draw_reporter_id()
         initial_position = payload["initialPosition"]
         valid_positions = payload["validPositions"]
         stable_time = payload["stableTime"] if "stableTime" in payload else 1.5
 
         reporter = TiledBrickMovedToAnyOfPositionsReporter(
+            board_area,
             initial_position,
             valid_positions,
             stable_time,
@@ -217,17 +250,20 @@ class Server(WebSocket):
         """
         Reports back when object is found at the given position.
 
-        position: Position for brick to be found.
-        validPositions: Positions to search for object in.
+        areaId: Board area id
+        position: Position for brick to be found
+        validPositions: Positions to search for object in
         stable_time: (Optional) Amount of time to wait for image to stabilize
-        id: (Optional) Reporter id.
+        id: (Optional) Reporter id
         """
+        board_area = self.board_areas[payload["areaId"]]
         reporter_id = payload["id"] if "id" in payload else self.draw_reporter_id()
         position = payload["position"]
         valid_positions = payload["validPositions"]
         stable_time = payload["stableTime"] if "stableTime" in payload else 1.5
 
         reporter = TiledBrickMovedToPositionReporter(
+            board_area,
             position,
             valid_positions,
             stable_time,
@@ -242,7 +278,8 @@ class Server(WebSocket):
         """
         Returns object position from given positions.
 
-        validPositions: Positions to search for object in.
+        areaId: Board area id
+        validPositions: Positions to search for object in
         """
         image = self.take_photo()
 
@@ -251,8 +288,9 @@ class Server(WebSocket):
 
         globals.board_descriptor.snapshot = globals.board_recognizer.find_board(image, globals.board_descriptor)
         if globals.board_descriptor.is_recognized():
+            board_area = self.board_areas[payload["areaId"]]
             valid_positions = payload["validPositions"]
-            position = globals.brick_detector.find_brick_among_tiles(globals.board_descriptor, valid_positions)[0]
+            position = globals.brick_detector.find_brick_among_tiles(board_area, valid_positions)[0]
             if position is not None:
                 return "OK", {"position": position}
             else:
@@ -373,6 +411,10 @@ class Server(WebSocket):
 
                     board_recognized_time = time.time()
 
+            # Reset all board area images in order to force extraction of new upon next request
+            for (_, board_area) in self.board_areas.copy().iteritems():
+                board_area.reset_area_image()
+
             # Run all reporters
             reporter_ids_to_remove = []
 
@@ -384,9 +426,6 @@ class Server(WebSocket):
                 # Check if stopped
                 if reporter.stopped:
                     reporter_ids_to_remove.append(reporter_id)
-
-                # Sleep a while
-                time.sleep(0.05)
 
             # Remove stopped reporters
             for reporter_id in reporter_ids_to_remove:

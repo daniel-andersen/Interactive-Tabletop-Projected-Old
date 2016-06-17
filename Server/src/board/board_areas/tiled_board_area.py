@@ -1,19 +1,23 @@
 import numpy as np
-import cv2
-from board_descriptor import BoardDescriptor
+from board_area import BoardArea
 
 
-class TiledBoardDescriptor(BoardDescriptor):
+class TiledBoardArea(BoardArea):
     """
-    Represents a description of a board with tiled bricks.
+    Represents a description of a tiled board area.
 
     Field variables:
     tile_count -- [width, height]
     """
+    def __init__(self, area_id=None, tile_count=None, board_area_pct=[0.0, 0.0, 1.0, 1.0], board_descriptor=None):
+        """
+        Initializes a tiled board area.
 
-    def __init__(self):
-        super(TiledBoardDescriptor, self).__init__()
-        self.tile_count = None
+        :param tile_count: Tile count [width, height]
+        """
+        super(TiledBoardArea, self).__init__(area_id, board_area_pct, board_descriptor)
+
+        self.tile_count = tile_count
 
     def tile_size(self):
         """
@@ -21,9 +25,11 @@ class TiledBoardDescriptor(BoardDescriptor):
 
         :return: Tile (width, height)
         """
-        board_width, board_height = self.board_region()[4:6]
-        return (float(board_width) / float(self.tile_count[0]),
-                float(board_height) / float(self.tile_count[1]))
+        image = self.area_image()
+        image_height, image_width = image.shape[:2]
+
+        return (float(image_width) / float(self.tile_count[0]),
+                float(image_height) / float(self.tile_count[1]))
 
     def tile_region(self, x, y):
         """
@@ -33,43 +39,37 @@ class TiledBoardDescriptor(BoardDescriptor):
         :param y: Y coordinate
         :return: The (x1, y1, x2, y2, width, height) tile region
         """
-        board_x1, board_y1, board_x2, board_y2, board_width, board_height = self.board_region()
-
         tile_width, tile_height = self.tile_size()
 
-        return (int(board_x1 + (float(x) * tile_width)),
-                int(board_y1 + (float(y) * tile_height)),
-                int(board_x1 + (float(x) * tile_width)) + int(tile_width),
-                int(board_y1 + (float(y) * tile_height)) + int(tile_height),
+        return (int(float(x) * tile_width),
+                int(float(y) * tile_height),
+                int((float(x) * tile_width)) + int(tile_width),
+                int((float(y) * tile_height)) + int(tile_height),
                 int(tile_width),
                 int(tile_height))
 
-    def tile(self, x, y, source_image=None, grayscaled=False):
+    def tile(self, x, y, grayscaled=False):
         """
         Returns the tile at x, y.
 
         :param x: X coordinate
         :param y: Y coordinate
-        :param source_image: Source image, or None if using board image
-        :param grayscaled: If true and source_image is None, use grayscaled image as source
+        :param grayscaled: If true, use grayscaled image as source
         :return: The tile at x, y
         """
-        if source_image is None:
-            source_image = self.snapshot.board_image if not grayscaled else self.snapshot.grayscaled_board_image
+        source_image = self.area_image() if not grayscaled else self.grayscaled_area_image()
         x1, y1, x2, y2 = self.tile_region(x, y)[:4]
         return source_image[y1:y2, x1:x2]
 
-    def tile_strip(self, coordinates, source_image=None, grayscaled=False):
+    def tile_strip(self, coordinates, grayscaled=False):
         """
         Returns the tiles at the specified coordinates.
 
         :param coordinates: List of coordinates [(x, y), ...]
-        :param source_image: Source image, or None if using board image
         :param grayscaled: If true and source_image is None, use grayscaled image as source
         :return: The tiles in a single horizontal image strip
         """
-        if source_image is None:
-            source_image = self.snapshot.board_image if not grayscaled else self.snapshot.grayscaled_board_image
+        source_image = self.area_image() if not grayscaled else self.grayscaled_area_image()
 
         tile_width, tile_height = self.tile_size()
 

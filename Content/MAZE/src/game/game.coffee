@@ -55,7 +55,8 @@ class MazeGame
     onMessage: (json) ->
         switch json["action"]
             when "reset" then @initializeBoard()
-            when "initializeTiledBoard" then @ready()
+            when "initializeBoard" then @initializeTiledBoardArea()
+            when "initializeTiledBoardArea" then @ready()
             when "brickFoundAtPosition" then @brickFoundAtPosition(payload=json["payload"])
             when "brickMovedToPosition" then @brickMovedToPosition(payload=json["payload"])
 
@@ -126,7 +127,10 @@ class MazeGame
 
 
     initializeBoard: ->
-        @client.initializeTiledBoard(@mazeModel.width, @mazeModel.height)
+        @client.initializeBoard()
+
+    initializeTiledBoardArea: ->
+        @client.initializeTiledBoardArea(@mazeModel.width, @mazeModel.height, 0.0, 0.0, 1.0, 1.0, 0)
 
     waitForStartPositions: ->
         for player in @mazeModel.players
@@ -240,7 +244,7 @@ class MazeGame
 
     requestPlayerInitialPosition: (player) ->
         positions = ([position.x, position.y] for position in @mazeModel.positionsReachableFromPosition(player.position, player.reachDistance + 2))
-        @client.reportBackWhenBrickMovedToPosition([player.position.x, player.position.y], positions, id=player.index)
+        @client.reportBackWhenBrickMovedToPosition(0, [player.position.x, player.position.y], positions, id=player.index)
 
     requestPlayerPosition: (player) ->
 
@@ -254,7 +258,7 @@ class MazeGame
 
         # Request position
         positions = ([position.x, position.y] for position in playerPositions)
-        @client.reportBackWhenBrickMovedToAnyOfPositions([player.position.x, player.position.y], positions, id=player.index)
+        @client.reportBackWhenBrickMovedToAnyOfPositions(0, [player.position.x, player.position.y], positions, id=player.index)
 
     ready: ->
         # Fade maze

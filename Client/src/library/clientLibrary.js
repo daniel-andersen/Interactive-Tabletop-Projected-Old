@@ -73,9 +73,9 @@ Client = (function() {
 
   Client.prototype.takeScreenshot = function(filename) {
     if (filename == null) {
-      filename = null;
+      filename = void 0;
     }
-    if (filename !== null) {
+    if (filename !== void 0) {
       return this.sendMessage("takeScreenshot", {
         "filename": filename
       });
@@ -84,7 +84,7 @@ Client = (function() {
     }
   };
 
-  Client.prototype.initializeTiledBoard = function(tileCountX, tileCountY, borderPctX, borderPctY, cornerMarker) {
+  Client.prototype.initializeBoard = function(borderPctX, borderPctY, cornerMarker) {
     if (borderPctX == null) {
       borderPctX = 0.0;
     }
@@ -94,68 +94,101 @@ Client = (function() {
     if (cornerMarker == null) {
       cornerMarker = "DEFAULT";
     }
-    return this.sendMessage("initializeTiledBoard", {
-      "tileCountX": tileCountX,
-      "tileCountY": tileCountY,
+    return this.sendMessage("initializeBoard", {
       "borderPctX": borderPctX,
       "borderPctY": borderPctY,
       "cornerMarker": cornerMarker
     });
   };
 
-  Client.prototype.initializeGenericBoard = function(borderPctX, borderPctY, cornerMarker) {
-    if (borderPctX == null) {
-      borderPctX = 0.0;
+  Client.prototype.initializeTiledBoardArea = function(tileCountX, tileCountY, x1, y1, x2, y2, areaId) {
+    if (x1 == null) {
+      x1 = 0.0;
     }
-    if (borderPctY == null) {
-      borderPctY = 0.0;
+    if (y1 == null) {
+      y1 = 0.0;
     }
-    if (cornerMarker == null) {
-      cornerMarker = "DEFAULT";
+    if (x2 == null) {
+      x2 = 1.0;
     }
-    return this.sendMessage("initializeGenericBoard", {
-      "borderPctX": borderPctX,
-      "borderPctY": borderPctY,
-      "cornerMarker": cornerMarker
+    if (y2 == null) {
+      y2 = 1.0;
+    }
+    if (areaId == null) {
+      areaId = void 0;
+    }
+    if (areaId !== void 0) {
+      return this.sendMessage("initializeTiledBoardArea", {
+        "id": areaId,
+        "tileCountX": tileCountX,
+        "tileCountY": tileCountY,
+        "x1": x1,
+        "y1": y1,
+        "x2": x2,
+        "y2": y2
+      });
+    } else {
+      return this.sendMessage("initializeTiledBoardArea", {
+        "tileCountX": tileCountX,
+        "tileCountY": tileCountY,
+        "x1": x1,
+        "y1": y1,
+        "x2": x2,
+        "y2": y2
+      });
+    }
+  };
+
+  Client.prototype.removeBoardAreas = function() {
+    return this.sendMessage("removeBoardAreas", {});
+  };
+
+  Client.prototype.removeBoardArea = function(areaId) {
+    return this.sendMessage("removeBoardArea", {
+      "id": areaId
     });
   };
 
-  Client.prototype.requestTiledObjectPosition = function(validPositions) {
+  Client.prototype.requestTiledObjectPosition = function(areaId, validPositions) {
     return this.sendMessage("requestBrickPosition", {
+      "areaId": areaId,
       "validPositions": validPositions
     });
   };
 
-  Client.prototype.reportBackWhenBrickFoundAtAnyOfPositions = function(validPositions, id, stableTime) {
+  Client.prototype.reportBackWhenBrickFoundAtAnyOfPositions = function(areaId, validPositions, id, stableTime) {
     if (id == null) {
-      id = null;
+      id = void 0;
     }
     if (stableTime == null) {
       stableTime = 1.5;
     }
-    if (id !== null) {
+    if (id !== void 0) {
       return this.sendMessage("reportBackWhenBrickFoundAtAnyOfPositions", {
+        "areaId": areaId,
         "validPositions": validPositions,
         "stableTime": stableTime,
         "id": id
       });
     } else {
       return this.sendMessage("reportBackWhenBrickFoundAtAnyOfPositions", {
+        "areaId": areaId,
         "validPositions": validPositions,
         "stableTime": stableTime
       });
     }
   };
 
-  Client.prototype.reportBackWhenBrickMovedToAnyOfPositions = function(initialPosition, validPositions, id, stableTime) {
+  Client.prototype.reportBackWhenBrickMovedToAnyOfPositions = function(areaId, initialPosition, validPositions, id, stableTime) {
     if (id == null) {
-      id = null;
+      id = void 0;
     }
     if (stableTime == null) {
       stableTime = 1.5;
     }
-    if (id !== null) {
+    if (id !== void 0) {
       return this.sendMessage("reportBackWhenBrickMovedToAnyOfPositions", {
+        "areaId": areaId,
         "initialPosition": initialPosition,
         "validPositions": validPositions,
         "stableTime": stableTime,
@@ -163,6 +196,7 @@ Client = (function() {
       });
     } else {
       return this.sendMessage("reportBackWhenBrickMovedToAnyOfPositions", {
+        "areaId": areaId,
         "initialPosition": initialPosition,
         "validPositions": validPositions,
         "stableTime": stableTime
@@ -170,15 +204,16 @@ Client = (function() {
     }
   };
 
-  Client.prototype.reportBackWhenBrickMovedToPosition = function(position, validPositions, id, stableTime) {
+  Client.prototype.reportBackWhenBrickMovedToPosition = function(areaId, position, validPositions, id, stableTime) {
     if (id == null) {
-      id = null;
+      id = void 0;
     }
     if (stableTime == null) {
       stableTime = 1.5;
     }
-    if (id !== null) {
+    if (id !== void 0) {
       return this.sendMessage("reportBackWhenBrickMovedToPosition", {
+        "areaId": areaId,
         "position": position,
         "validPositions": validPositions,
         "stableTime": stableTime,
@@ -186,6 +221,7 @@ Client = (function() {
       });
     } else {
       return this.sendMessage("reportBackWhenBrickMovedToPosition", {
+        "areaId": areaId,
         "position": position,
         "validPositions": validPositions,
         "stableTime": stableTime

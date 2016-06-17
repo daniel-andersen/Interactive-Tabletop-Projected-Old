@@ -5,8 +5,9 @@ from board.board_recognizer import BoardRecognizer
 from board.tile_brick_detector import TileBrickDetector
 from board.markers.custom_marker import CustomMarker
 from board.markers.triangle_marker import TriangleMarker
+from board.board_areas.tiled_board_area import TiledBoardArea
 
-def run_tests():
+def tiled_brick_detector_test():
     test_set = {
         "practice1": [
             ((0, 8), [(0, 8), (1, 8), (1, 7), (2, 8), (1, 9)]),
@@ -117,7 +118,8 @@ def run_tests():
     board_descriptor.corner_marker = TriangleMarker()
     board_descriptor.board_size = [1280, 800]
     board_descriptor.border_percentage_size = [0.0, 0.0]
-    board_descriptor.tile_count = [32, 20]
+
+    tiled_board_area = TiledBoardArea(tile_count=[32, 20], board_descriptor=board_descriptor)
 
     board_recognizer = BoardRecognizer()
     brick_detector = TileBrickDetector()
@@ -144,7 +146,7 @@ def run_tests():
 
             for brick_position, tile_array in tests:
                 valid_position = brick_position if suffix == "b" else None
-                tile = brick_detector.find_brick_among_tiles(board_descriptor, tile_array)[0]
+                tile = brick_detector.find_brick_among_tiles(tiled_board_area, tile_array)[0]
                 if tile != valid_position:
                     print("Test failed. Brick supposed to be at: %s but was at: %s. Image: %s" % (valid_position, tile, image_filename))
                     failed += 1
@@ -193,7 +195,6 @@ def board_detector_test():
     board_descriptor = BoardDescriptor()
     board_descriptor.board_size = [1280, 800]
     board_descriptor.border_percentage_size = [0.0, 0.0]
-    board_descriptor.tile_count = [32, 20]
 
     board_recognizer = BoardRecognizer()
 
@@ -219,11 +220,13 @@ def board_detector_test():
     print("%i tests passed, %i failed" % (passed, failed))
 
 
-def brick_detector_test():
+def custom_test():
     board_descriptor = BoardDescriptor()
     board_descriptor.board_size = [1280, 800]
     board_descriptor.border_percentage_size = [0.0, 0.0]
     board_descriptor.tile_count = [32, 20]
+
+    tiled_board_area = TiledBoardArea(tile_count=[32, 20], board_descriptor=board_descriptor)
 
     board_recognizer = BoardRecognizer()
 
@@ -242,7 +245,7 @@ def brick_detector_test():
             cv2.drawContours(image, [contour], -1, (255,0,255), 2)
 
             tiles = [[31, 10], [30, 10], [29, 10], [30, 11]]
-            tile = brick_detector.find_brick_among_tiles(board_descriptor, tiles)[0]
+            tile = brick_detector.find_brick_among_tiles(tiled_board_area, tiles)[0]
             print(tile)
             #cv2.imshow('Snapshot', descriptor.snapshot.board_image)
             #cv2.imshow('Board Canvas', descriptor.board_canvas())

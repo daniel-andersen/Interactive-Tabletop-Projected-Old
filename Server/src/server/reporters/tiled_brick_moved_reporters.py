@@ -2,13 +2,13 @@ from tiled_brick_position_reporter import TiledBrickPositionReporter
 
 
 class TiledBrickMovedToAnyOfPositionsReporter(TiledBrickPositionReporter):
-    def __init__(self, initial_position, valid_positions, stable_time, reporter_id, callback_function):
+    def __init__(self, tiled_board_area, initial_position, valid_positions, stable_time, reporter_id, callback_function):
         """
         :param initial_position Initial brick position
         :param valid_positions Positions to search for brick in
         :param stable_time Amount of time to wait for image to stabilize
         """
-        super(TiledBrickMovedToAnyOfPositionsReporter, self).__init__(valid_positions, stable_time, reporter_id, callback_function)
+        super(TiledBrickMovedToAnyOfPositionsReporter, self).__init__(tiled_board_area, valid_positions, stable_time, reporter_id, callback_function)
         self.initial_position = initial_position
 
     def is_position_ok(self, position):
@@ -19,13 +19,13 @@ class TiledBrickMovedToAnyOfPositionsReporter(TiledBrickPositionReporter):
 
 
 class TiledBrickMovedToPositionReporter(TiledBrickPositionReporter):
-    def __init__(self, position, valid_positions, stable_time, reporter_id, callback_function):
+    def __init__(self, tiled_board_area, position, valid_positions, stable_time, reporter_id, callback_function):
         """
         :param position Target brick position
         :param valid_positions Positions to search for brick in
         :param stable_time Amount of time to wait for image to stabilize
         """
-        super(TiledBrickMovedToPositionReporter, self).__init__(valid_positions, stable_time, reporter_id, callback_function)
+        super(TiledBrickMovedToPositionReporter, self).__init__(tiled_board_area, valid_positions, stable_time, reporter_id, callback_function)
         self.target_position = position
 
     def is_position_ok(self, position):

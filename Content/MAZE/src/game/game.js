@@ -71,7 +71,9 @@ MazeGame = (function() {
     switch (json["action"]) {
       case "reset":
         return this.initializeBoard();
-      case "initializeTiledBoard":
+      case "initializeBoard":
+        return this.initializeTiledBoardArea();
+      case "initializeTiledBoardArea":
         return this.ready();
       case "brickFoundAtPosition":
         return this.brickFoundAtPosition(payload = json["payload"]);
@@ -130,7 +132,11 @@ MazeGame = (function() {
   };
 
   MazeGame.prototype.initializeBoard = function() {
-    return this.client.initializeTiledBoard(this.mazeModel.width, this.mazeModel.height);
+    return this.client.initializeBoard();
+  };
+
+  MazeGame.prototype.initializeTiledBoardArea = function() {
+    return this.client.initializeTiledBoardArea(this.mazeModel.width, this.mazeModel.height, 0.0, 0.0, 1.0, 1.0, 0);
   };
 
   MazeGame.prototype.waitForStartPositions = function() {
@@ -273,7 +279,7 @@ MazeGame = (function() {
       }
       return results;
     }).call(this);
-    return this.client.reportBackWhenBrickMovedToPosition([player.position.x, player.position.y], positions, id = player.index);
+    return this.client.reportBackWhenBrickMovedToPosition(0, [player.position.x, player.position.y], positions, id = player.index);
   };
 
   MazeGame.prototype.requestPlayerPosition = function(player) {
@@ -305,7 +311,7 @@ MazeGame = (function() {
       }
       return results;
     })();
-    return this.client.reportBackWhenBrickMovedToAnyOfPositions([player.position.x, player.position.y], positions, id = player.index);
+    return this.client.reportBackWhenBrickMovedToAnyOfPositions(0, [player.position.x, player.position.y], positions, id = player.index);
   };
 
   MazeGame.prototype.ready = function() {

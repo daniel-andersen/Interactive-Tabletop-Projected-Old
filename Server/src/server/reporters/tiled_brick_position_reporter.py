@@ -6,13 +6,15 @@ from reporter import Reporter
 
 class TiledBrickPositionReporter(Reporter):
 
-    def __init__(self, valid_positions, stable_time, reporter_id, callback_function):
+    def __init__(self, tiled_board_area, valid_positions, stable_time, reporter_id, callback_function):
         """
+        :param tiled_board_area: Tiled board area
         :param valid_positions Positions to search for brick in
         :param stable_time Amount of time to wait for image to stabilize
         """
         super(TiledBrickPositionReporter, self).__init__(reporter_id, callback_function)
 
+        self.tiled_board_area = tiled_board_area
         self.image_stable_history = []
         self.valid_positions = valid_positions
         self.stable_time = stable_time
@@ -20,16 +22,16 @@ class TiledBrickPositionReporter(Reporter):
 
     def run_iteration(self):
 
-        # Check if we have recognized the board
-        if not globals.board_descriptor.is_recognized():
+        # Check if we have a board area image
+        if self.tiled_board_area.area_image() is None:
             return
 
         #if globals.debug:
             #cv2.imwrite("debug/output_board_recognized_{0}.png".format(self.reporter_id), globals.board_descriptor.snapshot.board_image)
 
         # Calculate medians
-        tile_strip_image = globals.board_descriptor.tile_strip(self.valid_positions, grayscaled=True)
-        medians = globals.brick_detector.medians_of_tiles(tile_strip_image, self.valid_positions, globals.board_descriptor)
+        tile_strip_image = self.tiled_board_area.tile_strip(self.valid_positions, grayscaled=True)
+        medians = globals.brick_detector.medians_of_tiles(tile_strip_image, self.valid_positions, self.tiled_board_area)
 
         # Update stability history
         self.image_stable_history.append({"time": time.time(), "medians": medians})
@@ -52,7 +54,7 @@ class TiledBrickPositionReporter(Reporter):
             return
 
         # Find brick
-        position, probabilities = globals.brick_detector.find_brick_among_tiles(globals.board_descriptor, self.valid_positions)
+        position, probabilities = globals.brick_detector.find_brick_among_tiles(self.tiled_board_area, self.valid_positions)
 
         if self.is_position_ok(position):
             if globals.debug:

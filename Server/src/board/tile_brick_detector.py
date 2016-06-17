@@ -14,20 +14,20 @@ class TileBrickDetector(object):
         self.brick_detection_minimum_probability = 0.15
         self.brick_detection_minimum_probability_delta = 0.35
 
-    def find_brick_among_tiles(self, board_descriptor, coordinates):
+    def find_brick_among_tiles(self, tiled_board_area, coordinates):
         """
         Returns the coordinate of a brick from one the given tile coordinates.
 
-        :param board_descriptor: Board descriptor
+        :param tiled_board_area: Tiled board area
         :param coordinates: Coordinates [(x, y), ...] on which to search for a brick
         :return: (x, y), [probabilities...] - where (x, y) is position of brick, or None if no brick is found, followed by list of probabilities.
         """
 
         # Extract tile strip
-        tile_strip_image = board_descriptor.tile_strip(coordinates, grayscaled=True)
+        tile_strip_image = tiled_board_area.tile_strip(coordinates, grayscaled=True)
 
         # Calculate medians
-        medians = self.medians_of_tiles(tile_strip_image, coordinates, board_descriptor)
+        medians = self.medians_of_tiles(tile_strip_image, coordinates, tiled_board_area)
         min_median, second_min_median = heapq.nsmallest(2, medians)[:2]
 
         # Check medians
@@ -39,7 +39,7 @@ class TileBrickDetector(object):
         _, tile_strip_image = cv2.threshold(tile_strip_image, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
 
         # Calculate probabilities
-        probabilities = self.probabilities_of_bricks(tile_strip_image, coordinates, board_descriptor)
+        probabilities = self.probabilities_of_bricks(tile_strip_image, coordinates, tiled_board_area)
         max_probability, second_max_probability = heapq.nlargest(2, probabilities)[:2]
 
         # Check probabilities
@@ -53,16 +53,16 @@ class TileBrickDetector(object):
 
         return coordinates[np.argmin(medians)], probabilities
 
-    def medians_of_tiles(self, tile_strip_image, coordinates, board_descriptor):
-        return [self.median_of_tile(i, tile_strip_image, board_descriptor) for i in range(0, len(coordinates))]
+    def medians_of_tiles(self, tile_strip_image, coordinates, tiled_board_area):
+        return [self.median_of_tile(i, tile_strip_image, tiled_board_area) for i in range(0, len(coordinates))]
 
-    def median_of_tile(self, index, tile_strip_image, board_descriptor):
+    def median_of_tile(self, index, tile_strip_image, tiled_board_area):
 
         # Extract brick image
-        brick_image = board_descriptor.tile_from_strip_image(index, tile_strip_image)
+        brick_image = tiled_board_area.tile_from_strip_image(index, tile_strip_image)
 
         # Remove border
-        tile_width, tile_height = board_descriptor.tile_size()
+        tile_width, tile_height = tiled_board_area.tile_size()
         border_width = int(float(tile_width) * 0.1)
         border_height = int(float(tile_height) * 0.1)
         brick_image = brick_image[border_height:int(tile_height) - border_height, border_width:int(tile_width) - border_width]
@@ -73,16 +73,16 @@ class TileBrickDetector(object):
         # Return median and black percentage
         return histogram_util.histogram_median(histogram, ((tile_width - (border_width * 2)) * (tile_height - (border_height * 2))))
 
-    def probabilities_of_bricks(self, tile_strip_image, coordinates, board_descriptor):
-        return [self.probability_of_brick(i, tile_strip_image, board_descriptor) for i in range(0, len(coordinates))]
+    def probabilities_of_bricks(self, tile_strip_image, coordinates, tiled_board_area):
+        return [self.probability_of_brick(i, tile_strip_image, tiled_board_area) for i in range(0, len(coordinates))]
 
-    def probability_of_brick(self, index, tile_strip_image, board_descriptor):
+    def probability_of_brick(self, index, tile_strip_image, tiled_board_area):
 
         # Extract brick image
-        brick_image = board_descriptor.tile_from_strip_image(index, tile_strip_image)
+        brick_image = tiled_board_area.tile_from_strip_image(index, tile_strip_image)
 
         # Remove border
-        tile_width, tile_height = board_descriptor.tile_size()
+        tile_width, tile_height = tiled_board_area.tile_size()
         border_width = int(float(tile_width) * 0.1)
         border_height = int(float(tile_height) * 0.1)
         brick_image = brick_image[border_height:int(tile_height) - border_height, border_width:int(tile_width) - border_width]
