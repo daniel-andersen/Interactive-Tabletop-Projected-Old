@@ -23,13 +23,15 @@ class BoardDescriptor(object):
 
         Field variables:
         status -- Board recognition status
+        camera_image -- Original camera image
         board_image -- The recognized and transformed image
         grayscaled_board_image -- A grayscale version of the board image
         board_corners -- The four points in the source image representing the corners of the recognized board
         missing_corners -- Dictionary of missing corners, if board was not recognized. {topLeft, topRight, bottomLeft, bottomRight}
         """
-        def __init__(self, status=BoardStatus.RECOGNIZED, board_image=None, board_corners=None, missing_corners=None):
+        def __init__(self, status=BoardStatus.RECOGNIZED, camera_image=None, board_image=None, board_corners=None, missing_corners=None):
             self.status = status
+            self.camera_image = camera_image
             self.board_image = board_image
             self.board_corners = board_corners
             self.missing_corners = missing_corners

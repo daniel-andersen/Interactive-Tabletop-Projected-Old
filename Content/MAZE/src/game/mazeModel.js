@@ -148,15 +148,13 @@ MazeModel = (function() {
           }
           maxDistance = null;
           minDistance = null;
-          score = 0;
           for (i = n = 0, ref4 = this.players.length - 1; 0 <= ref4 ? n <= ref4 : n >= ref4; i = 0 <= ref4 ? ++n : --n) {
             distance = distanceMaps[i][y][x];
-            score += distance;
             maxDistance = maxDistance === null ? distance : Math.max(maxDistance, distance);
             minDistance = minDistance === null ? distance : Math.min(minDistance, distance);
           }
-          score = minDistance;
-          if (bestScore === null || score > bestScore) {
+          score = maxDistance * maxDistance;
+          if (bestScore === null || score < bestScore) {
             bestScore = score;
             results1.push(this.treasurePosition = new Position(x, y));
           } else {

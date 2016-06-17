@@ -254,6 +254,29 @@ class Server(WebSocket):
         """
         return globals.camera.read()
 
+    def notify_board_not_recognized(self, board_snapshot):
+        """
+        Notifies client that board has not been recognized for an amount of time. If corner information is given
+        from board recognizer it returns a list of unrecognized corners [topLeft, topRight, bottomLeft, bottomRight].
+
+        :param board_snapshot Board snapshot
+        """
+        if board_snapshot.missing_corners is not None:
+            self.send_message("BOARD_NOT_RECOGNIZED", "recognizeBoard",
+                              {"unrecognizedCorners": board_snapshot.missing_corners})
+        else:
+            self.send_message("BOARD_NOT_RECOGNIZED", "recognizeBoard", {})
+
+        # Output debug image
+        if globals.debug:
+            cv2.imwrite("debug/board_not_recognized_{0}.png".format(time.time()), board_snapshot.camera_image)
+
+    def notify_board_recognized(self):
+        """
+        Notifies client that board has again been recognized.
+        """
+        self.send_message("BOARD_RECOGNIZED", "recognizeBoard", {})
+
     def send_message(self, result, action, payload={}):
         """
         Sends a new message to the client.
@@ -283,8 +306,7 @@ class Server(WebSocket):
                 return reporter_id
 
     def reporter_run(self):
-        debug_counter = 0
-        board_not_recognized_counter = 0
+        board_recognized_time = time.time()
 
         while True:
 
@@ -305,22 +327,19 @@ class Server(WebSocket):
 
                 # Board not recognized
                 if not globals.board_descriptor.is_recognized():
-                    board_not_recognized_counter += 1
 
                     # Notify client that board is not recognized
-                    """
-                    if globals.board_descriptor.snapshot.missing_corners is not None:
-                        self.send_message("BOARD_NOT_RECOGNIZED", "recognizeBoard", {"unrecognizedCorners": globals.board_descriptor.snapshot.missing_corners})
-                    else:
-                        self.send_message("BOARD_NOT_RECOGNIZED", "recognizeBoard", {})
-                    """
+                    if board_recognized_time is not None and time.time() > board_recognized_time + globals.board_not_recognized_notify_delay:
+                        self.notify_board_not_recognized(globals.board_descriptor.snapshot)
+                        board_recognized_time = None
 
-                    # Output debug image
-                    if globals.debug:
-                        debug_counter += 1
-                        cv2.imwrite("debug/board_not_recognized_{0}.png".format(debug_counter), image)
                 else:
-                    board_not_recognized_counter = 0
+
+                    # Notify client that board is recognized
+                    if board_recognized_time is None:
+                        self.notify_board_recognized()
+
+                    board_recognized_time = time.time()
 
             # Run all reporters
             reporter_ids_to_remove = []

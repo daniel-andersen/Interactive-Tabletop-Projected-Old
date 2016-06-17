@@ -88,13 +88,13 @@ class BoardRecognizer(object):
 
         # Check if all markers are found
         if marker_contours[0] is None or marker_contours[1] is None or marker_contours[2] is None or marker_contours[3] is None:
-            return self.board_snapshot_with_missing_corners(marker_contours[0], marker_contours[1], marker_contours[2], marker_contours[3])
+            return self.board_snapshot_with_missing_corners(image, marker_contours[0], marker_contours[1], marker_contours[2], marker_contours[3])
 
         # Find corners
         corners = self.find_corners(marker_contours, image)
         if corners is not None:
             transformed_image = transform.transform_image(image, corners)
-            return BoardDescriptor.Snapshot(board_image=transformed_image, board_corners=corners)
+            return BoardDescriptor.Snapshot(camera_image=image, board_image=transformed_image, board_corners=corners)
 
         return None
 
@@ -280,14 +280,14 @@ class BoardRecognizer(object):
         # Threshold values
         return mean * 2.0 / 3.0, mean * 4.0 / 3.0
 
-    def board_snapshot_with_missing_corners(self, top_left, top_right, bottom_left, bottom_right):
-        corners = {}
+    def board_snapshot_with_missing_corners(self, image, top_left, top_right, bottom_left, bottom_right):
+        corners = []
         if top_left is None:
-            corners["topLeft"] = top_left
+            corners.append("topLeft")
         if top_right is None:
-            corners["topRight"] = top_right
+            corners.append("topRight")
         if bottom_left is None:
-            corners["bottomLeft"] = bottom_left
+            corners.append("bottomLeft")
         if bottom_right is None:
-            corners["bottomRight"] = bottom_right
-        return BoardDescriptor.Snapshot(status=BoardStatus.NOT_RECOGNIZED, missing_corners=corners)
+            corners.append("bottomRight")
+        return BoardDescriptor.Snapshot(status=BoardStatus.NOT_RECOGNIZED, camera_image=image, missing_corners=corners)

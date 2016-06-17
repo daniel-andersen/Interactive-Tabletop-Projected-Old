@@ -9,3 +9,5 @@ board_recognizer = BoardRecognizer()
 brick_detector = TileBrickDetector()
 
 debug = False
+
+board_not_recognized_notify_delay = 10.0
