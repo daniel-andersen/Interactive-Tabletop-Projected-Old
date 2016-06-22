@@ -1,16 +1,19 @@
 import cv2
 import math
-import itertools
+import numpy as np
+from marker import Marker
 from util import misc_math
 from util import contour_util
 
 
-class CustomMarker(object):
+class CustomMarker(Marker):
 
-    def __init__(self, contour, distance_tolerance=0.15, angle_tolerance=0.15, fine_grained=True, spike_tolerance=0.025,
-                 closed=True, min_arclength=0.1, max_arclength=100.0, min_area=0.02, max_area=1.0):
+    def __init__(self, contour=None, marker_image=None, distance_tolerance=0.15, angle_tolerance=0.15,
+                 fine_grained=True, spike_tolerance=0.025, closed=True, min_arclength=0.1, max_arclength=100.0,
+                 min_area=0.02, max_area=1.0):
         """
         :param contour: Simplified marker contour (containing fx. only corners)
+        :param marker_image: Image from which to extract marker contour
         :param distance_tolerance: Distance tolerance in multitudes of length
         :param angle_tolerance: Angle tolerance in radians in range [0..pi]
         :param fine_grained: If true, verify that all points lies on contour edge
@@ -21,6 +24,8 @@ class CustomMarker(object):
         :param min_area: Minimum area scaled in percentage [0, 1] of image size
         :param max_area: Maximum area scaled in percentage [0, 1] of image size
         """
+        super(CustomMarker, self).__init__()
+
         self.marker_contour = contour
         self.distance_tolerance = distance_tolerance
         self.angle_tolerance = angle_tolerance
@@ -32,9 +37,55 @@ class CustomMarker(object):
         self.min_area = min_area
         self.max_area = max_area
 
+        if marker_image is not None:
+            self.marker_contour = self.extract_marker_contour_from_image(marker_image)
+
+        self.marker_length = len(self.marker_contour)
         self.marker_arclength = cv2.arcLength(self.marker_contour, self.closed)
-        self.marker_distance_map = self.distance_map_for_contour(self.marker_contour)
-        self.marker_angle_map = self.angle_map_for_contour(self.marker_contour)
+        self.marker_area = cv2.contourArea(self.marker_contour, True)
+        self.marker_distance_map = [self.distance_map_for_contour(self.marker_contour, -1),
+                                    self.distance_map_for_contour(self.marker_contour,  1)]
+        self.marker_angle_map = [self.angle_map_for_contour(self.marker_contour, -1),
+                                 self.angle_map_for_contour(self.marker_contour,  1)]
+
+        self.marker_orientation = -1 if self.marker_area < 0 else 1
+
+    def extract_marker_contour_from_image(self, image):
+
+        # OTSU image
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        ret, image = cv2.threshold(image, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
+
+        # Find contours
+        contours, _ = cv2.findContours(image, cv2.RETR_LIST, cv2.CHAIN_APPROX_NONE)
+
+        if len(contours) == 0:
+            print("No contours found in marker image! Bailing out!")
+            return None
+
+        if len(contours) > 1:
+            print("More than one contour found in marker image! Bailing out!")
+            return None
+
+        # Simplify contour
+        approxed_contour = contour_util.simplify_contour(contours[0])
+
+        return approxed_contour
+
+    def find_marker_in_image(self, image):
+        """
+        Find marker in image.
+
+        :param image: Image
+        :return: Marker contour
+        """
+
+        # OTSU image
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        ret, image = cv2.threshold(image, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
+
+        # Find marker in OTSU'ed image
+        return self.find_marker_in_thresholded_image(image)
 
     def find_marker_in_thresholded_image(self, image):
         """
@@ -43,8 +94,6 @@ class CustomMarker(object):
         :param image: Thresholded image
         :return: Marker contour
         """
-
-        cv2.imshow("Thresholded", image)
 
         # Find contours
         contours, _ = cv2.findContours(image.copy(), cv2.RETR_LIST, cv2.CHAIN_APPROX_NONE)
@@ -57,11 +106,10 @@ class CustomMarker(object):
 
             # Verify contour
             if self.verify_contour(contour, image):
-                print("SUCCESS!")
-                image2 = cv2.cvtColor(image.copy(), cv2.COLOR_GRAY2BGR)
-                cv2.drawContours(image2, [contour], 0, (255, 255, 0), 1)
-                cv2.imshow('Contours', image2)
-                cv2.waitKey(0)
+                #image2 = cv2.cvtColor(image.copy(), cv2.COLOR_GRAY2BGR)
+                #cv2.drawContours(image2, [contour], 0, (255, 255, 0), 1)
+                #cv2.imshow('Contours', image2)
+                #cv2.waitKey(0)
                 return contour
 
         # No marker found
@@ -103,63 +151,129 @@ class CustomMarker(object):
             return False
 
         # Simplify contour
-        approxed_contour = contour_util.simplify_contour(contour, image=image)
-        #approxed_contour = cv2.approxPolyDP(contour, cv2.arcLength(contour, True) * self.approx_multiplier, True)
+        approxed_contour = contour_util.simplify_contour(contour)
 
-        contour_util.draw_contour(image.copy(), contour=approxed_contour, points_color=(0, 255, 0))
-        cv2.waitKey(0)
+        #contour_util.draw_contour(image.copy(), contour=approxed_contour, points_color=(0, 255, 0))
+        #cv2.waitKey(0)
 
         # Check number of lines compared to marker
-        print("Num lines marker: %i" % len(self.marker_contour))
-        print("Num lines contour: %i" % len(approxed_contour))
-
         if len(approxed_contour) < len(self.marker_contour):
             return False
 
-        if len(approxed_contour) > len(self.marker_contour) + 5:
+        if len(approxed_contour) > len(self.marker_contour) * 2:
             return False
 
-        #for p in approxed_contour:
-        #    print("C: %f, %f" % (p[0][0], p[0][1]))
-        #for p in self.marker_contour:
-        #    print("M: %f, %f" % (p[0][0], p[0][1]))
+        # Go through source points
+        for start_index in range(0, self.marker_length):
 
-        # Go through all combinations of points in contour
-        marker_length = len(self.marker_contour)
-        contour_length = len(approxed_contour)
+            # Match points in contour with marker
+            matched_contour = self.match_contour(approxed_contour, start_index, 1 if orientation == self.marker_orientation else -1, contour_arc_length=arclength, image=None)
 
-        for indices in itertools.combinations(range(0, contour_length), marker_length):
-            #print("Index map: %s" % list(indices))
-            indices_list = list(indices)
-
-            # Calculate angle map
-            angle_map = self.angle_map_for_contour(approxed_contour, indices_list, orientation)
-
-            # Calculate distance map
-            distance_map = self.distance_map_for_contour(approxed_contour, indices_list)
-
-            # Try all "rotations" of this index map
-            for start_index in range(0, marker_length):
-
-                # Verify angle map
-                if not self.verify_angle_map(angle_map, distance_map, start_index):
-                    continue
-
-                # Verify distance map
-                if not self.verify_distance_map(distance_map, start_index):
-                    continue
-
-                # Fine grained checks
-                if self.fine_grained:
-
-                    # Check all lines not covered by index map
-                    if not self.verify_fine_grained_lines(approxed_contour, indices_list, distance_map, start_index):
-                        continue
-
-                # Success
+            # Check match
+            if matched_contour is not None:
+                #image2 = cv2.cvtColor(image.copy(), cv2.COLOR_GRAY2BGR)
+                #cv2.drawContours(image2, [matched_contour], 0, (255, 0, 255), 1)
+                #cv2.imshow('Contours 2', image2)
+                #cv2.waitKey(0)
                 return True
 
         return False
+
+    def match_contour(self, contour, marker_start_offset, direction, contour_arc_length=None, image=None):
+
+        # Prepare constants
+        min_threshold = 0.1
+        orientation = 0 if direction == -1 else 1
+
+        contour_length = len(contour)
+        marker_offset = marker_start_offset
+
+        # Calculate arc length
+        if contour_arc_length is None:
+            contour_arc_length = cv2.arcLength(contour, True)
+
+        # Reset indices
+        contour_idx1 = contour_length - 1
+        contour_idx2 = 0
+        contour_idx3 = 1
+
+        # Reset drifting
+        contour_idx_drifting = 0
+
+        # Try matching
+        matched_points = []
+
+        while True:
+
+            # Check if match is impossible by now
+            if contour_idx2 >= contour_length:
+                return None
+
+            if contour_idx_drifting > 4 or contour_idx3 == contour_idx1:
+                return None
+
+            # Debug
+            if image is not None:
+                draw_image = contour_util.draw_line(image=image, points=[contour[contour_idx1 % contour_length][0], contour[contour_idx2 % contour_length][0]], line_color=(0, 0, 255), name="Progress")
+                draw_image = contour_util.draw_line(scaled_image=draw_image, points=[contour[contour_idx2 % contour_length][0], contour[contour_idx3 % contour_length][0]], line_color=(128, 128, 255), name="Progress")
+
+                draw_image = contour_util.draw_contour(scaled_image=draw_image, contour=self.marker_contour, contour_color=(255, 0, 0), name="Progress")
+
+                draw_image = contour_util.draw_line(scaled_image=draw_image, points=[self.marker_contour[(marker_offset + (direction*-1) + self.marker_length) % self.marker_length][0], self.marker_contour[marker_offset][0]], line_color=(0, 0, 255), name="Progress")
+                draw_image = contour_util.draw_line(scaled_image=draw_image, points=[self.marker_contour[marker_offset][0], self.marker_contour[(marker_offset + direction + self.marker_length) % self.marker_length][0]], line_color=(128, 128, 255), name="Progress")
+
+                cv2.waitKey(0)
+
+            # Calculate contour line length
+            contour_line_length = misc_math.line_length(contour[contour_idx2 % contour_length][0], contour[contour_idx3 % contour_length][0])
+
+            # Get line unit lengths
+            marker_unit_distance = max(self.marker_distance_map[orientation][marker_offset][1], min_threshold)
+            contour_unit_distance = max(contour_line_length / contour_arc_length, min_threshold)
+
+            distance_ratio = max(contour_unit_distance, marker_unit_distance) / min(contour_unit_distance, marker_unit_distance)
+
+            # Check line length
+            #print("%i, %i: Distance: %f vs %s = %f" % (marker_offset, contour_idx3, contour_unit_distance, marker_unit_distance, distance_ratio))
+            if distance_ratio - 1.0 <= self.distance_tolerance:
+
+                # Calculate angles
+                marker_angle = self.marker_angle_map[orientation][marker_offset]
+                contour_angle = self.contour_angle(contour, contour_idx1 % contour_length, contour_idx2 % contour_length, contour_idx3 % contour_length)
+
+                delta_angle = math.atan2(math.sin(marker_angle - contour_angle), math.cos(marker_angle - contour_angle))
+
+                # Check angle
+                #print("%i, %i: Angle: %f vs %s = %f" % (marker_offset, contour_idx3, contour_angle, marker_angle, abs(delta_angle)))
+                if abs(delta_angle) <= self.angle_tolerance:
+
+                    # Build contour
+                    matched_points.append(contour[contour_idx2 % contour_length])
+
+                    # Next point in marker
+                    marker_offset = (marker_offset + direction + self.marker_length) % self.marker_length
+
+                    if marker_offset == marker_start_offset:
+                        return np.int32(matched_points).reshape(-1, 1, 2)
+
+                    # Next point in contour
+                    contour_idx1 = contour_idx2
+                    contour_idx2 = contour_idx3
+                    contour_idx3 += 1
+
+                    continue
+
+            # Try next contour offset
+            if contour_idx1 < contour_idx2 - 1:
+                contour_idx1 += 1
+            elif contour_idx2 < contour_idx3 - 1:
+                contour_idx2 += 1
+            else:
+                contour_idx3 += 1
+                contour_idx_drifting += 1
+
+
+
 
     def verify_fine_grained_lines(self, contour, index_map, distance_map, start_index):
         """
@@ -215,162 +329,67 @@ class CustomMarker(object):
         # Success
         return True
 
-    def verify_distance_map(self, distance_map, start_index=0):
-        """
-        Verifies the distance map.
-
-        :param distance_map: Distance map
-        :param start_index: Index at which to start
-        :return: Whether the distance map matches the markers distance map
-        """
-
-        min_threshold = 0.1
-
-        distance_map_length = len(distance_map)
-
-        #print("Marker distance map: %s" % self.marker_distance_map)
-        #print("Contour distance map: %s" % distance_map)
-
-        # Check all lines
-        for i in range(0, len(distance_map)):
-
-            # Calculate distance ratio
-            marker_unit_distance = max(self.marker_distance_map[i][1], min_threshold)
-            contour_unit_distance = max(distance_map[(i + start_index) % distance_map_length][1], min_threshold)
-
-            distance_ratio = max(contour_unit_distance, marker_unit_distance) / min(contour_unit_distance, marker_unit_distance)
-            #print("%i: Distance: %f vs %s = ratio: %f" % (i, contour_unit_distance, marker_unit_distance, distance_ratio))
-
-            # Check validity
-            if distance_ratio - 1.0 > self.distance_tolerance:
-                return False
-
-        return True
-
-    def verify_angle_map(self, angle_map, distance_map, start_index=0):
-        """
-        Verifies the angle map.
-
-        :param angle_map: Angle map
-        :param distance_map: Distance map
-        :param start_index: Index at which to start
-        :return: Whether the angle map matches the markers angle map
-        """
-
-        #print("Marker angles: %s" % self.marker_angle_map)
-        #print("Contour angles: %s" % angle_map)
-
-        angle_map_length = len(angle_map)
-
-        # Verify angle map
-        for i in range(0, len(self.marker_angle_map)):
-
-            # Calculate contour index
-            idx = (i + start_index) % angle_map_length
-
-            # Calculate angle difference
-            marker_angle = self.marker_angle_map[i]
-            contour_angle = angle_map[idx]
-
-            delta_angle = math.atan2(math.sin(marker_angle - contour_angle), math.cos(marker_angle - contour_angle))
-
-            #print("Angles: %f vs %f = %f deg" % (marker_angle, contour_angle, delta_angle * 180.0 / math.pi))
-
-            # Calculate tolerance based on distance - small distances have higher tolerance
-            distance = distance_map[idx][0]
-            distance_weight = min(1.0, (distance / 10.0))
-
-            max_tolerance = 0.25
-
-            tolerance = max_tolerance + ((self.angle_tolerance - max_tolerance) * distance_weight)
-
-            # Check if valid
-            if abs(delta_angle) > tolerance:
-                #print("%f vs %f" % (abs(delta_angle), tolerance))
-                #print("--------")
-                return False
-
-        print("OK!")
-        return True
-
-    def distance_map_for_contour(self, contour, index_map=None):
+    def distance_map_for_contour(self, contour, direction):
         """
         Calculates the distance map of each point of the contour in range [0, arc length] and [0, 1].
 
         :param contour: Contour
-        :param index_map: Index map to use
+        :param direction: Direction
         :return: Distance map in form [(distance, normalized distance), ...]
         """
 
-        # Use standard index map if none given
-        if index_map is None:
-            index_map = [i for i in range(0, len(contour))]
+        contour_length = len(contour)
+        contour_arclength = cv2.arcLength(contour, self.closed)
 
-        index_map_length = len(index_map)
+        offset = -1 if direction == -1 else 0
 
         # Calculate distance offset
         distance_map = []
-        arclength = 0.0
 
-        for i in range(0, index_map_length):
-            idx1 = index_map[i]
-            idx2 = index_map[(i + 1) % index_map_length]
+        for i in range(0, contour_length):
+            idx1 = ((i + offset    ) + contour_length) % contour_length
+            idx2 = ((i + offset + 1) + contour_length) % contour_length
 
             line_length = misc_math.line_length(contour[idx1][0], contour[idx2][0])
-
-            arclength += line_length
 
             distance_map.append(line_length)
 
         # Return distances including unit distances
-        return [(distance, distance / arclength) for distance in distance_map]
+        return [(distance, distance / contour_arclength) for distance in distance_map]
 
-    def angle_map_for_contour(self, contour, index_map=None, orientation=None):
+    def angle_map_for_contour(self, contour, direction):
         """
         Calculates the angle map of each point of the contour.
 
         :param contour: Contour
-        :param index_map: If provided, only use the given indices
-        :param orientation: Orientation (1 = counter-clockwise, -1 = clockwise). Is calculated if none is given
+        :param direction: Direction
         :return: Angle map
         """
 
-        # Calculate orientation if none given
-        if orientation is None:
-            area = cv2.contourArea(contour, oriented=True)
-            orientation = -1 if area < 0 else 1
+        contour_length = len(contour)
 
-        # Use standard index map if none given
-        if index_map is None:
-            index_map = [i for i in range(0, len(contour))]
-
-        index_map_length = len(index_map)
-
-        # Calculate index map orientation
-        #print("Orientation: %i" % orientation)
-        #print("Angle index map: %s" % index_map)
+        offset = 0  #-1 if direction == -1 else 0
 
         # Compute angle map
         angle_map = []
 
-        for i in range(0, index_map_length):
-            idx1 = (index_map_length + i - 1) % index_map_length
-            idx2 = (index_map_length + i    ) % index_map_length
-            idx3 = (index_map_length + i + 1) % index_map_length
+        for i in range(0, contour_length):
+            idx1 = ((i + offset - direction) + contour_length) % contour_length
+            idx2 = ((i + offset            ) + contour_length) % contour_length
+            idx3 = ((i + offset + direction) + contour_length) % contour_length
 
-            pt1 = contour[index_map[idx1]][0]
-            pt2 = contour[index_map[idx2]][0]
-            pt3 = contour[index_map[idx3]][0]
-
-            v1 = [pt1[0] - pt2[0], pt1[1] - pt2[1]]
-            v2 = [pt3[0] - pt2[0], pt3[1] - pt2[1]]
-            #print("%s - %s - %s" % (pt1, pt2, pt3))
-
-            angle = math.atan2(v2[1], v2[0]) - math.atan2(v1[1], v1[0])
-            if orientation == 1:
-                angle = (math.pi * 2.0) - angle
-
-            angle = angle % (math.pi*2.0)
+            angle = self.contour_angle(contour, idx1, idx2, idx3)
             angle_map.append(angle)
 
         return angle_map
+
+    def contour_angle(self, contour, idx1, idx2, idx3):
+        return self.points_angle(contour[idx1][0], contour[idx2][0], contour[idx3][0])
+
+    def points_angle(self, pt1, pt2, pt3):
+        v1 = [pt1[0] - pt2[0], pt1[1] - pt2[1]]
+        v2 = [pt3[0] - pt2[0], pt3[1] - pt2[1]]
+
+        angle = math.atan2(v2[1], v2[0]) - math.atan2(v1[1], v1[0])
+
+        return angle % (math.pi * 2.0)

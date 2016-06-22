@@ -104,3 +104,17 @@ def draw_points(image=None, scaled_image=None, points=None, scale=3, points_colo
     cv2.imshow(name, scaled_image)
 
     return scaled_image
+
+def draw_line(image=None, scaled_image=None, points=None, scale=3, line_color=(255, 0, 255), line_width=2, name="Contour"):
+    contour = [np.int32(points).reshape(-1, 1, 2) * scale]
+
+    if image is not None:
+        image_height, image_width = image.shape[:2]
+
+        scaled_image = cv2.resize(image.copy(), (int(image_width * scale), int(image_height * scale)))
+        scaled_image = cv2.cvtColor(scaled_image, cv2.COLOR_GRAY2BGR)
+
+    cv2.drawContours(scaled_image, contour, 0, line_color, line_width)
+    cv2.imshow(name, scaled_image)
+
+    return scaled_image
