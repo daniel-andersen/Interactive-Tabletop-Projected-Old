@@ -1,9 +1,26 @@
 import cv2
 import math
+from marker import Marker
 from util import misc_math
 
 
-class TriangleMarker(object):
+class TriangleMarker(Marker):
+
+    def find_marker_in_image(self, image):
+        """
+        Find marker in image.
+
+        :param image: Image
+        :return: Marker contour
+        """
+
+        # OTSU image
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        image = cv2.blur(image, (2, 2))
+        ret, image = cv2.threshold(image, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
+
+        # Find marker in OTSU'ed image
+        return self.find_marker_in_thresholded_image(image)
 
     def find_marker_in_thresholded_image(self, image):
         """

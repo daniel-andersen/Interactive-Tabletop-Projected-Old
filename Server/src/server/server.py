@@ -2,16 +2,21 @@ import json
 import time
 import cv2
 import globals
+import base64
+import numpy as np
 from random import randint
 from threading import Thread
 from SimpleWebSocketServer import SimpleWebSocketServer, WebSocket
 from util import misc_util
 from board.markers.marker_util import *
 from board.board_descriptor import BoardDescriptor
+from board.board_areas.board_area import BoardArea
 from board.board_areas.tiled_board_area import TiledBoardArea
+from board.markers.image_marker import ImageMarker
 from reporters.tiled_brick_position_reporter import TiledBrickPositionReporter
 from reporters.tiled_brick_moved_reporters import TiledBrickMovedToAnyOfPositionsReporter
 from reporters.tiled_brick_moved_reporters import TiledBrickMovedToPositionReporter
+from reporters.find_marker_reporter import FindMarkerReporter
 
 if misc_util.module_exists("picamera"):
     print("Using Raspberry Pi camera")
@@ -27,6 +32,8 @@ class Server(WebSocket):
     """
     reporters = {}
     reporter_thread = None
+
+    markers = {}
 
     board_areas = {}
 
@@ -70,6 +77,8 @@ class Server(WebSocket):
             return self.take_screenshot(payload)
         if action == "initializeBoard":
             return self.initialize_board(payload)
+        if action == "initializeBoardArea":
+            return self.initialize_board_area(payload)
         if action == "initializeTiledBoardArea":
             return self.initialize_tiled_board_area(payload)
         if action == "removeBoardArea":
@@ -84,6 +93,10 @@ class Server(WebSocket):
             return self.report_back_when_brick_moved_to_position(payload)
         if action == "requestBrickPosition":
             return self.request_brick_position(payload)
+        if action == "initializeImageMarker":
+            return self.initialize_image_marker(payload)
+        if action == "reportBackWhenMarkerFound":
+            return self.report_back_when_marker_found(payload)
 
     def reset(self, payload):
         """
@@ -152,6 +165,25 @@ class Server(WebSocket):
         globals.board_descriptor.corner_marker = create_marker_from_name(payload["cornerMarker"]) if "cornerMarker" in payload else DefaultMarker()
 
         return "OK", {}
+
+    def initialize_board_area(self, payload):
+        """
+        Initializes board area with given parameters.
+
+        id: (Optional) Area id
+        x1: X1 in percentage of board size.
+        y1: Y1 in percentage of board size.
+        x2: X2 in percentage of board size.
+        y2: Y2 in percentage of board size.
+        """
+        board_area = BoardArea(
+            payload["id"] if "id" in payload else None,
+            [payload["x1"], payload["y1"], payload["x2"], payload["y2"]],
+            globals.board_descriptor
+        )
+        self.board_areas[board_area.area_id] = board_area
+
+        return "OK", {"id": board_area.area_id}
 
     def initialize_tiled_board_area(self, payload):
         """
@@ -226,7 +258,7 @@ class Server(WebSocket):
         areaId: Board area id
         initialPosition: Initial position.
         validPositions: Positions to search for object in.
-        stable_time: (Optional) Amount of time to wait for image to stabilize
+        stableTime: (Optional) Amount of time to wait for image to stabilize
         id: (Optional) Reporter id.
         """
         board_area = self.board_areas[payload["areaId"]]
@@ -253,7 +285,7 @@ class Server(WebSocket):
         areaId: Board area id
         position: Position for brick to be found
         validPositions: Positions to search for object in
-        stable_time: (Optional) Amount of time to wait for image to stabilize
+        stableTime: (Optional) Amount of time to wait for image to stabilize
         id: (Optional) Reporter id
         """
         board_area = self.board_areas[payload["areaId"]]
@@ -297,6 +329,49 @@ class Server(WebSocket):
                 return "BRICK_NOT_FOUND", {}
         else:
             return "BOARD_NOT_RECOGNIZED", {}
+
+    def initialize_image_marker(self, payload):
+        """
+        Initializes image marker with given parameters.
+
+        id: Marker id.
+        imageBase64: Image as base 64 encoded PNG.
+        """
+        raw_image = base64.b64decode(payload["imageBase64"])
+        raw_bytes = np.asarray(bytearray(raw_image), dtype=np.uint8)
+        image = cv2.imdecode(raw_bytes, cv2.CV_LOAD_IMAGE_UNCHANGED)
+
+        image_marker = ImageMarker(image)
+        self.markers[payload["id"]] = image_marker
+
+        return "OK", {}
+
+    def report_back_when_marker_found(self, payload):
+        """
+        Reports back when marker is found.
+
+        areaId: Board area id
+        markerId: Marker id
+        stableTime: (Optional) Amount of time for marker to be stabily found
+        sleepTime: (Optional) Amount of time to sleep between marker searches
+        id: (Optional) Reporter id
+        """
+        board_area = self.board_areas[payload["areaId"]]
+        marker = self.markers[payload["markerId"]]
+        reporter_id = payload["id"] if "id" in payload else self.draw_reporter_id()
+        stable_time = payload["stableTime"] if "stableTime" in payload else 1.5
+        sleep_time = payload["sleepTime"] if "sleepTime" in payload else 1.0
+
+        reporter = FindMarkerReporter(
+            board_area,
+            marker,
+            stable_time,
+            sleep_time,
+            reporter_id,
+            callback_function=lambda position: self.send_message("OK", "markerFound", {"id": reporter_id, "position": position}))
+        self.reporters[reporter_id] = reporter
+
+        return "OK", {"id": reporter_id}
 
     def reset_reporters(self):
         """

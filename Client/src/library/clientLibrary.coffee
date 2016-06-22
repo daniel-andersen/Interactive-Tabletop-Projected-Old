@@ -64,6 +64,23 @@ class Client
             "cornerMarker": cornerMarker
         })
 
+    initializeBoardArea: (x1 = 0.0, y1 = 0.0, x2 = 1.0, y2 = 1.0, areaId = undefined) ->
+        if areaId != undefined
+            this.sendMessage("initializeBoardArea", {
+                "id": areaId,
+                "x1": x1,
+                "y1": y1,
+                "x2": x2,
+                "y2": y2
+            })
+        else
+            this.sendMessage("initializeBoardArea", {
+                "x1": x1,
+                "y1": y1,
+                "x2": x2,
+                "y2": y2
+            })
+
     initializeTiledBoardArea: (tileCountX, tileCountY, x1 = 0.0, y1 = 0.0, x2 = 1.0, y2 = 1.0, areaId = undefined) ->
         if areaId != undefined
             this.sendMessage("initializeTiledBoardArea", {
@@ -148,9 +165,50 @@ class Client
                 "stableTime": stableTime
             })
 
+    initializeImageMarker: (markerId, image) ->
+        @convertImageToDataURL(image, (base64Image) ->
+            this.sendMessage("initializeImageMarker", {
+                "markerId": markerId,
+                "imageBase64": base64Image
+            })
+        )
+
+    reportBackWhenMarkerFound: (areaId, markerId, id = undefined, stableTime = 1.5, sleepTime = 1.0) ->
+        if id != undefined
+            this.sendMessage("reportBackWhenMarkerFound", {
+                "areaId": areaId,
+                "markerId": markerId,
+                "stableTime": stableTime,
+                "sleepTime": sleepTime,
+                "id": id
+            })
+        else
+            this.sendMessage("reportBackWhenMarkerFound", {
+                "areaId": areaId,
+                "markerId": markerId,
+                "stableTime": stableTime,
+                "sleepTime": sleepTime
+            })
+
     sendMessage: (action, payload) ->
         message = {
             action: action,
             payload: payload
         }
         this.socket.send(JSON.stringify(message))
+
+
+
+    convertImageToDataURL: (image, callback) ->
+        canvas = document.createElement("CANVAS")
+        canvas.width = image.width
+        canvas.height = image.height
+
+        ctx = canvas.getContext("2d")
+        ctx.drawImage(image, 0, 0)
+
+        dataURL = canvas.toDataURL("image/png")
+
+        callback(dataURL)
+
+        canvas = null

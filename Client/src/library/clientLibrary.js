@@ -101,6 +101,40 @@ Client = (function() {
     });
   };
 
+  Client.prototype.initializeBoardArea = function(x1, y1, x2, y2, areaId) {
+    if (x1 == null) {
+      x1 = 0.0;
+    }
+    if (y1 == null) {
+      y1 = 0.0;
+    }
+    if (x2 == null) {
+      x2 = 1.0;
+    }
+    if (y2 == null) {
+      y2 = 1.0;
+    }
+    if (areaId == null) {
+      areaId = void 0;
+    }
+    if (areaId !== void 0) {
+      return this.sendMessage("initializeBoardArea", {
+        "id": areaId,
+        "x1": x1,
+        "y1": y1,
+        "x2": x2,
+        "y2": y2
+      });
+    } else {
+      return this.sendMessage("initializeBoardArea", {
+        "x1": x1,
+        "y1": y1,
+        "x2": x2,
+        "y2": y2
+      });
+    }
+  };
+
   Client.prototype.initializeTiledBoardArea = function(tileCountX, tileCountY, x1, y1, x2, y2, areaId) {
     if (x1 == null) {
       x1 = 0.0;
@@ -229,6 +263,43 @@ Client = (function() {
     }
   };
 
+  Client.prototype.initializeImageMarker = function(markerId, image) {
+    return this.convertImageToDataURL(image, function(base64Image) {
+      return this.sendMessage("initializeImageMarker", {
+        "markerId": markerId,
+        "imageBase64": base64Image
+      });
+    });
+  };
+
+  Client.prototype.reportBackWhenMarkerFound = function(areaId, markerId, id, stableTime, sleepTime) {
+    if (id == null) {
+      id = void 0;
+    }
+    if (stableTime == null) {
+      stableTime = 1.5;
+    }
+    if (sleepTime == null) {
+      sleepTime = 1.0;
+    }
+    if (id !== void 0) {
+      return this.sendMessage("reportBackWhenMarkerFound", {
+        "areaId": areaId,
+        "markerId": markerId,
+        "stableTime": stableTime,
+        "sleepTime": sleepTime,
+        "id": id
+      });
+    } else {
+      return this.sendMessage("reportBackWhenMarkerFound", {
+        "areaId": areaId,
+        "markerId": markerId,
+        "stableTime": stableTime,
+        "sleepTime": sleepTime
+      });
+    }
+  };
+
   Client.prototype.sendMessage = function(action, payload) {
     var message;
     message = {
@@ -236,6 +307,18 @@ Client = (function() {
       payload: payload
     };
     return this.socket.send(JSON.stringify(message));
+  };
+
+  Client.prototype.convertImageToDataURL = function(image, callback) {
+    var canvas, ctx, dataURL;
+    canvas = document.createElement("CANVAS");
+    canvas.width = image.width;
+    canvas.height = image.height;
+    ctx = canvas.getContext("2d");
+    ctx.drawImage(image, 0, 0);
+    dataURL = canvas.toDataURL("image/png");
+    callback(dataURL);
+    return canvas = null;
   };
 
   return Client;
