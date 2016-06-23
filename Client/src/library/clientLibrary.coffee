@@ -35,11 +35,10 @@ class Client
     enableDebug: () ->
         this.sendMessage("enableDebug", {})
 
-    reset: (resolution = null) ->
-        if resolution?
-            this.sendMessage("reset", {"resolution": resolution})
-        else
-            this.sendMessage("reset", {})
+    reset: (resolution = undefined) ->
+        this.sendMessage("reset",
+            if resolution? then "resolution": resolution else {}
+        )
 
     resetReporters: ->
         this.sendMessage("resetReporters", {})
@@ -50,12 +49,9 @@ class Client
         })
 
     takeScreenshot: (filename = undefined) ->
-        if filename != undefined
-            this.sendMessage("takeScreenshot", {
-                "filename": filename
-            })
-        else
-            this.sendMessage("takeScreenshot", {})
+        this.sendMessage("takeScreenshot",
+            if filename? then "filename": filename else {}
+        )
 
     initializeBoard: (borderPctX = 0.0, borderPctY = 0.0, cornerMarker = "DEFAULT") ->
         this.sendMessage("initializeBoard", {
@@ -65,42 +61,22 @@ class Client
         })
 
     initializeBoardArea: (x1 = 0.0, y1 = 0.0, x2 = 1.0, y2 = 1.0, areaId = undefined) ->
-        if areaId != undefined
-            this.sendMessage("initializeBoardArea", {
-                "id": areaId,
-                "x1": x1,
-                "y1": y1,
-                "x2": x2,
-                "y2": y2
-            })
-        else
-            this.sendMessage("initializeBoardArea", {
-                "x1": x1,
-                "y1": y1,
-                "x2": x2,
-                "y2": y2
-            })
+        this.sendMessage("initializeBoardArea", Object.assign({
+            "x1": x1,
+            "y1": y1,
+            "x2": x2,
+            "y2": y2
+        }, if areaId? then {"id": areaId} else {}))
 
     initializeTiledBoardArea: (tileCountX, tileCountY, x1 = 0.0, y1 = 0.0, x2 = 1.0, y2 = 1.0, areaId = undefined) ->
-        if areaId != undefined
-            this.sendMessage("initializeTiledBoardArea", {
-                "id": areaId,
-                "tileCountX": tileCountX,
-                "tileCountY": tileCountY,
-                "x1": x1,
-                "y1": y1,
-                "x2": x2,
-                "y2": y2
-            })
-        else
-            this.sendMessage("initializeTiledBoardArea", {
-                "tileCountX": tileCountX,
-                "tileCountY": tileCountY,
-                "x1": x1,
-                "y1": y1,
-                "x2": x2,
-                "y2": y2
-            })
+        this.sendMessage("initializeTiledBoardArea", Object.assign({
+            "tileCountX": tileCountX,
+            "tileCountY": tileCountY,
+            "x1": x1,
+            "y1": y1,
+            "x2": x2,
+            "y2": y2
+        }, if areaId? then {"id": areaId} else {}))
 
     removeBoardAreas: ->
         this.sendMessage("removeBoardAreas", {})
@@ -117,53 +93,27 @@ class Client
         })
 
     reportBackWhenBrickFoundAtAnyOfPositions: (areaId, validPositions, id = undefined, stableTime = 1.5) ->
-        if id != undefined
-            this.sendMessage("reportBackWhenBrickFoundAtAnyOfPositions", {
-                "areaId": areaId,
-                "validPositions": validPositions,
-                "stableTime": stableTime,
-                "id": id
-            })
-        else
-            this.sendMessage("reportBackWhenBrickFoundAtAnyOfPositions", {
-                "areaId": areaId,
-                "validPositions": validPositions,
-                "stableTime": stableTime
-            })
+        this.sendMessage("reportBackWhenBrickFoundAtAnyOfPositions", Object.assign({
+              "areaId": areaId,
+              "validPositions": validPositions,
+              "stableTime": stableTime
+        }, if id? then {"id": id} else {}))
 
     reportBackWhenBrickMovedToAnyOfPositions: (areaId, initialPosition, validPositions, id = undefined, stableTime = 1.5) ->
-        if id != undefined
-            this.sendMessage("reportBackWhenBrickMovedToAnyOfPositions", {
-                "areaId": areaId,
-                "initialPosition": initialPosition,
-                "validPositions": validPositions,
-                "stableTime": stableTime,
-                "id": id
-            })
-        else
-            this.sendMessage("reportBackWhenBrickMovedToAnyOfPositions", {
-                "areaId": areaId,
-                "initialPosition": initialPosition,
-                "validPositions": validPositions,
-                "stableTime": stableTime
-            })
+        this.sendMessage("reportBackWhenBrickMovedToAnyOfPositions", Object.assign({
+            "areaId": areaId,
+            "initialPosition": initialPosition,
+            "validPositions": validPositions,
+            "stableTime": stableTime
+        }, if id? then {"id": id} else {}))
 
     reportBackWhenBrickMovedToPosition: (areaId, position, validPositions, id = undefined, stableTime = 1.5) ->
-        if id != undefined
-            this.sendMessage("reportBackWhenBrickMovedToPosition", {
-                "areaId": areaId,
-                "position": position,
-                "validPositions": validPositions,
-                "stableTime": stableTime,
-                "id": id
-            })
-        else
-            this.sendMessage("reportBackWhenBrickMovedToPosition", {
-                "areaId": areaId,
-                "position": position,
-                "validPositions": validPositions,
-                "stableTime": stableTime
-            })
+        this.sendMessage("reportBackWhenBrickMovedToPosition", Object.assign({
+            "areaId": areaId,
+            "position": position,
+            "validPositions": validPositions,
+            "stableTime": stableTime
+        }, if id? then {"id": id} else {}))
 
     initializeImageMarker: (markerId, image) ->
         @convertImageToDataURL(image, (base64Image) ->
@@ -174,21 +124,12 @@ class Client
         )
 
     reportBackWhenMarkerFound: (areaId, markerId, id = undefined, stableTime = 1.5, sleepTime = 1.0) ->
-        if id != undefined
-            this.sendMessage("reportBackWhenMarkerFound", {
-                "areaId": areaId,
-                "markerId": markerId,
-                "stableTime": stableTime,
-                "sleepTime": sleepTime,
-                "id": id
-            })
-        else
-            this.sendMessage("reportBackWhenMarkerFound", {
-                "areaId": areaId,
-                "markerId": markerId,
-                "stableTime": stableTime,
-                "sleepTime": sleepTime
-            })
+        this.sendMessage("reportBackWhenMarkerFound", Object.assign({
+            "areaId": areaId,
+            "markerId": markerId,
+            "stableTime": stableTime,
+            "sleepTime": sleepTime
+        }, if id? then {"id": id} else {}))
 
     sendMessage: (action, payload) ->
         message = {

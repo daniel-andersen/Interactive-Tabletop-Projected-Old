@@ -50,15 +50,11 @@ Client = (function() {
 
   Client.prototype.reset = function(resolution) {
     if (resolution == null) {
-      resolution = null;
+      resolution = void 0;
     }
-    if (resolution != null) {
-      return this.sendMessage("reset", {
-        "resolution": resolution
-      });
-    } else {
-      return this.sendMessage("reset", {});
-    }
+    return this.sendMessage("reset", resolution != null ? {
+      "resolution": resolution
+    } : {});
   };
 
   Client.prototype.resetReporters = function() {
@@ -75,13 +71,9 @@ Client = (function() {
     if (filename == null) {
       filename = void 0;
     }
-    if (filename !== void 0) {
-      return this.sendMessage("takeScreenshot", {
-        "filename": filename
-      });
-    } else {
-      return this.sendMessage("takeScreenshot", {});
-    }
+    return this.sendMessage("takeScreenshot", filename != null ? {
+      "filename": filename
+    } : {});
   };
 
   Client.prototype.initializeBoard = function(borderPctX, borderPctY, cornerMarker) {
@@ -117,22 +109,14 @@ Client = (function() {
     if (areaId == null) {
       areaId = void 0;
     }
-    if (areaId !== void 0) {
-      return this.sendMessage("initializeBoardArea", {
-        "id": areaId,
-        "x1": x1,
-        "y1": y1,
-        "x2": x2,
-        "y2": y2
-      });
-    } else {
-      return this.sendMessage("initializeBoardArea", {
-        "x1": x1,
-        "y1": y1,
-        "x2": x2,
-        "y2": y2
-      });
-    }
+    return this.sendMessage("initializeBoardArea", Object.assign({
+      "x1": x1,
+      "y1": y1,
+      "x2": x2,
+      "y2": y2
+    }, areaId != null ? {
+      "id": areaId
+    } : {}));
   };
 
   Client.prototype.initializeTiledBoardArea = function(tileCountX, tileCountY, x1, y1, x2, y2, areaId) {
@@ -151,26 +135,16 @@ Client = (function() {
     if (areaId == null) {
       areaId = void 0;
     }
-    if (areaId !== void 0) {
-      return this.sendMessage("initializeTiledBoardArea", {
-        "id": areaId,
-        "tileCountX": tileCountX,
-        "tileCountY": tileCountY,
-        "x1": x1,
-        "y1": y1,
-        "x2": x2,
-        "y2": y2
-      });
-    } else {
-      return this.sendMessage("initializeTiledBoardArea", {
-        "tileCountX": tileCountX,
-        "tileCountY": tileCountY,
-        "x1": x1,
-        "y1": y1,
-        "x2": x2,
-        "y2": y2
-      });
-    }
+    return this.sendMessage("initializeTiledBoardArea", Object.assign({
+      "tileCountX": tileCountX,
+      "tileCountY": tileCountY,
+      "x1": x1,
+      "y1": y1,
+      "x2": x2,
+      "y2": y2
+    }, areaId != null ? {
+      "id": areaId
+    } : {}));
   };
 
   Client.prototype.removeBoardAreas = function() {
@@ -197,20 +171,13 @@ Client = (function() {
     if (stableTime == null) {
       stableTime = 1.5;
     }
-    if (id !== void 0) {
-      return this.sendMessage("reportBackWhenBrickFoundAtAnyOfPositions", {
-        "areaId": areaId,
-        "validPositions": validPositions,
-        "stableTime": stableTime,
-        "id": id
-      });
-    } else {
-      return this.sendMessage("reportBackWhenBrickFoundAtAnyOfPositions", {
-        "areaId": areaId,
-        "validPositions": validPositions,
-        "stableTime": stableTime
-      });
-    }
+    return this.sendMessage("reportBackWhenBrickFoundAtAnyOfPositions", Object.assign({
+      "areaId": areaId,
+      "validPositions": validPositions,
+      "stableTime": stableTime
+    }, id != null ? {
+      "id": id
+    } : {}));
   };
 
   Client.prototype.reportBackWhenBrickMovedToAnyOfPositions = function(areaId, initialPosition, validPositions, id, stableTime) {
@@ -220,22 +187,14 @@ Client = (function() {
     if (stableTime == null) {
       stableTime = 1.5;
     }
-    if (id !== void 0) {
-      return this.sendMessage("reportBackWhenBrickMovedToAnyOfPositions", {
-        "areaId": areaId,
-        "initialPosition": initialPosition,
-        "validPositions": validPositions,
-        "stableTime": stableTime,
-        "id": id
-      });
-    } else {
-      return this.sendMessage("reportBackWhenBrickMovedToAnyOfPositions", {
-        "areaId": areaId,
-        "initialPosition": initialPosition,
-        "validPositions": validPositions,
-        "stableTime": stableTime
-      });
-    }
+    return this.sendMessage("reportBackWhenBrickMovedToAnyOfPositions", Object.assign({
+      "areaId": areaId,
+      "initialPosition": initialPosition,
+      "validPositions": validPositions,
+      "stableTime": stableTime
+    }, id != null ? {
+      "id": id
+    } : {}));
   };
 
   Client.prototype.reportBackWhenBrickMovedToPosition = function(areaId, position, validPositions, id, stableTime) {
@@ -245,22 +204,14 @@ Client = (function() {
     if (stableTime == null) {
       stableTime = 1.5;
     }
-    if (id !== void 0) {
-      return this.sendMessage("reportBackWhenBrickMovedToPosition", {
-        "areaId": areaId,
-        "position": position,
-        "validPositions": validPositions,
-        "stableTime": stableTime,
-        "id": id
-      });
-    } else {
-      return this.sendMessage("reportBackWhenBrickMovedToPosition", {
-        "areaId": areaId,
-        "position": position,
-        "validPositions": validPositions,
-        "stableTime": stableTime
-      });
-    }
+    return this.sendMessage("reportBackWhenBrickMovedToPosition", Object.assign({
+      "areaId": areaId,
+      "position": position,
+      "validPositions": validPositions,
+      "stableTime": stableTime
+    }, id != null ? {
+      "id": id
+    } : {}));
   };
 
   Client.prototype.initializeImageMarker = function(markerId, image) {
@@ -282,22 +233,14 @@ Client = (function() {
     if (sleepTime == null) {
       sleepTime = 1.0;
     }
-    if (id !== void 0) {
-      return this.sendMessage("reportBackWhenMarkerFound", {
-        "areaId": areaId,
-        "markerId": markerId,
-        "stableTime": stableTime,
-        "sleepTime": sleepTime,
-        "id": id
-      });
-    } else {
-      return this.sendMessage("reportBackWhenMarkerFound", {
-        "areaId": areaId,
-        "markerId": markerId,
-        "stableTime": stableTime,
-        "sleepTime": sleepTime
-      });
-    }
+    return this.sendMessage("reportBackWhenMarkerFound", Object.assign({
+      "areaId": areaId,
+      "markerId": markerId,
+      "stableTime": stableTime,
+      "sleepTime": sleepTime
+    }, id != null ? {
+      "id": id
+    } : {}));
   };
 
   Client.prototype.sendMessage = function(action, payload) {
