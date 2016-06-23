@@ -84,7 +84,7 @@ def draw_contour(image=None, scaled_image=None, contour=None, scale=3, contour_c
 
     if points_color is not None:
         for p in scaled_contour:
-            cv2.circle(scaled_image, (int(p[0][0]), int(p[0][1])), int(scale), points_color)
+            cv2.circle(scaled_image, (int(p[0][0]), int(p[0][1])), 3, points_color)
 
     cv2.imshow(name, scaled_image)
 

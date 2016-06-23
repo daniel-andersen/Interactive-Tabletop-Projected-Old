@@ -1,11 +1,14 @@
 import cv2
 import numpy as np
+import time
 from board.board_descriptor import BoardDescriptor
 from board.board_recognizer import BoardRecognizer
 from board.tile_brick_detector import TileBrickDetector
 from board.markers.custom_marker import CustomMarker
 from board.markers.triangle_marker import TriangleMarker
 from board.board_areas.tiled_board_area import TiledBoardArea
+from util import contour_util
+
 
 def tiled_brick_detector_test():
     test_set = {
@@ -160,63 +163,74 @@ def custom_marker_test():
     test_set = {
         "triangle": {
             "marker": CustomMarker(np.int32([[0, 0], [100, 0], [0, 100]]).reshape(-1, 1, 2), min_area=0.03, max_area=0.5, distance_tolerance=0.15),
-            "tests": {
-                "marker_test_1": True,
-                "marker_test_2": True,
-                "marker_test_4": False,
-                "marker_test_6": False,
-                "marker_test_8": False,
-            }
+            "detect": [1, 2]
         },
         "square": {
             "marker": CustomMarker(np.int32([[0, 0], [100, 0], [100, 100], [0, 100]]).reshape(-1, 1, 2)),
-            "tests": {
-                "marker_test_1": False,
-                "marker_test_2": False,
-                "marker_test_4": False,
-                "marker_test_6": True,
-                "marker_test_8": False,
-                "marker_test_10": False,
-            }
+            "detect": [6]
         },
         "castle": {
             "marker": CustomMarker(np.int32([[0, 0], [10, 0], [10, 20], [20, 20], [20, 10], [30, 10], [30, 20], [40, 20], [40, 0], [50, 0], [50, 50], [30, 50], [30, 40], [20, 40], [20, 50], [0, 50]]).reshape(-1, 1, 2), distance_tolerance=0.2, angle_tolerance=0.65),
-            "tests": {
-                "marker_test_3": True,
-                "marker_test_4": False,
-                "marker_test_5": True,
-                "marker_test_7": True,
-                "marker_test_9": False,
-            }
+            "detect": [3, 5, 7]
         },
+        "star": {
+            "marker": CustomMarker(marker_image=cv2.imread("board/training/marker_star.png"), distance_tolerance=0.50, angle_tolerance=0.35),
+            "detect": [11, 12]
+        }
     }
 
     failed = 0
     passed = 0
 
+    marker_test_images_count = 12
+
     for marker_name in test_set.keys():
         marker = test_set[marker_name]["marker"]
 
-        for image_name, expected_result in test_set[marker_name]["tests"].iteritems():
+        for i in range(1, marker_test_images_count + 1):
             #if marker_name != "castle" or image_name != "marker_test_3":
             #    continue
 
-            image_filename = "board/training/" + image_name + ".png"
+            image_filename = "board/training/marker_test_{0}.png".format(i)
 
             image = cv2.imread(image_filename)
             if image is None:
                 continue
 
             result = marker.find_marker_in_image(image)
+
+            expected_found = i in test_set[marker_name]["detect"]
             found = result is not None
 
-            if found != expected_result:
-                print("Test failed: %s. Marker found: %s but was expected: %s. Image: %s" % (marker_name, "YES" if found else "NO", "YES" if expected_result else "NO", image_name))
+            if found != expected_found:
+                print("Test failed: %s marker, image %i. Marker found: %s but was expected: %s." % (marker_name, i, "YES" if found else "NO", "YES" if expected_found else "NO"))
                 failed += 1
                 continue
             passed += 1
 
     print("%i tests passed, %i failed" % (passed, failed))
+
+def custom_marker_camera_test():
+    marker_image = cv2.imread("board/training/marker_star.png")
+    marker = CustomMarker(marker_image=marker_image, distance_tolerance=0.50, angle_tolerance=0.35)
+
+    #image = cv2.imread("board/training/marker_star.png")
+    #print(marker.find_marker_in_image(image))
+    #return
+
+    cap = cv2.VideoCapture(0)
+    while True:
+        res, image = cap.read()
+        image = cv2.resize(image, (640, 480))
+
+        contour = marker.find_marker_in_image(image)
+        if contour is not None:
+            image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+            contour_util.draw_contour(image=image, contour=contour, scale=1, name="Marker")
+        else:
+            cv2.imshow("Marker", image)
+
+        cv2.waitKey(10)
 
 
 def board_detector_test():

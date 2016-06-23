@@ -10,7 +10,7 @@ class CustomMarker(Marker):
 
     def __init__(self, contour=None, marker_image=None, distance_tolerance=0.15, angle_tolerance=0.15,
                  fine_grained=True, spike_tolerance=0.025, closed=True, min_arclength=0.1, max_arclength=100.0,
-                 min_area=0.02, max_area=1.0):
+                 min_area=0.0025, max_area=1.0):
         """
         :param contour: Simplified marker contour (containing fx. only corners)
         :param marker_image: Image from which to extract marker contour
@@ -59,16 +59,17 @@ class CustomMarker(Marker):
         # Find contours
         contours, _ = cv2.findContours(image, cv2.RETR_LIST, cv2.CHAIN_APPROX_NONE)
 
+        # No contours found
         if len(contours) == 0:
             print("No contours found in marker image! Bailing out!")
             return None
 
-        if len(contours) > 1:
-            print("More than one contour found in marker image! Bailing out!")
-            return None
+        # Find largest contour
+        contour = contours[np.argmax([cv2.contourArea(contour) for contour in contours])]
 
         # Simplify contour
-        approxed_contour = contour_util.simplify_contour(contours[0])
+        #approxed_contour = contour_util.simplify_contour(contour)
+        approxed_contour = cv2.approxPolyDP(contour, cv2.arcLength(contour, True) * 0.02, True)
 
         return approxed_contour
 
@@ -104,18 +105,20 @@ class CustomMarker(Marker):
         # Find marker from contours
         for contour in contours:
 
-            # Verify contour
-            if self.verify_contour(contour, image):
+            # Match contour
+            matched_contour = self.match_contour(contour, image)
+
+            if matched_contour is not None:
                 #image2 = cv2.cvtColor(image.copy(), cv2.COLOR_GRAY2BGR)
                 #cv2.drawContours(image2, [contour], 0, (255, 255, 0), 1)
                 #cv2.imshow('Contours', image2)
                 #cv2.waitKey(0)
-                return contour
+                return matched_contour
 
         # No marker found
         return None
 
-    def verify_contour(self, contour, image):
+    def match_contour(self, contour, image):
         """
         Algorithm: XXX
         """
@@ -129,10 +132,10 @@ class CustomMarker(Marker):
         max_contour_length = max(image_width, image_height) * self.max_arclength
 
         if arclength < min_contour_length:
-            return False
+            return None
 
         if arclength > max_contour_length:
-            return False
+            return None
 
         # Check contour area
         area = cv2.contourArea(contour, True)
@@ -145,29 +148,29 @@ class CustomMarker(Marker):
         max_contour_area = image_width * image_height * self.max_area
 
         if area < min_contour_area:
-            return False
+            return None
 
         if area > max_contour_area:
-            return False
+            return None
 
         # Simplify contour
         approxed_contour = contour_util.simplify_contour(contour)
 
-        #contour_util.draw_contour(image.copy(), contour=approxed_contour, points_color=(0, 255, 0))
+        #contour_util.draw_contour(image.copy(), contour=approxed_contour, scale=1, points_color=(0, 255, 0))
         #cv2.waitKey(0)
 
         # Check number of lines compared to marker
         if len(approxed_contour) < len(self.marker_contour):
-            return False
+            return None
 
         if len(approxed_contour) > len(self.marker_contour) * 2:
-            return False
+            return None
 
         # Go through source points
         for start_index in range(0, self.marker_length):
 
             # Match points in contour with marker
-            matched_contour = self.match_contour(approxed_contour, start_index, 1 if orientation == self.marker_orientation else -1, contour_arc_length=arclength, image=None)
+            matched_contour = self.match_points(approxed_contour, start_index, 1 if orientation == self.marker_orientation else -1, contour_arc_length=arclength, image=None)
 
             # Check match
             if matched_contour is not None:
@@ -175,11 +178,11 @@ class CustomMarker(Marker):
                 #cv2.drawContours(image2, [matched_contour], 0, (255, 0, 255), 1)
                 #cv2.imshow('Contours 2', image2)
                 #cv2.waitKey(0)
-                return True
+                return matched_contour
 
-        return False
+        return None
 
-    def match_contour(self, contour, marker_start_offset, direction, contour_arc_length=None, image=None):
+    def match_points(self, contour, marker_start_offset, direction, contour_arc_length=None, image=None):
 
         # Prepare constants
         min_threshold = 0.1
@@ -214,13 +217,15 @@ class CustomMarker(Marker):
 
             # Debug
             if image is not None:
-                draw_image = contour_util.draw_line(image=image, points=[contour[contour_idx1 % contour_length][0], contour[contour_idx2 % contour_length][0]], line_color=(0, 0, 255), name="Progress")
-                draw_image = contour_util.draw_line(scaled_image=draw_image, points=[contour[contour_idx2 % contour_length][0], contour[contour_idx3 % contour_length][0]], line_color=(128, 128, 255), name="Progress")
+                scale = 1
 
-                draw_image = contour_util.draw_contour(scaled_image=draw_image, contour=self.marker_contour, contour_color=(255, 0, 0), name="Progress")
+                draw_image = contour_util.draw_line(image=image, points=[contour[contour_idx1 % contour_length][0], contour[contour_idx2 % contour_length][0]], scale=scale, line_color=(0, 0, 255), name="Progress")
+                draw_image = contour_util.draw_line(scaled_image=draw_image, points=[contour[contour_idx2 % contour_length][0], contour[contour_idx3 % contour_length][0]], scale=scale, line_color=(128, 128, 255), name="Progress")
 
-                draw_image = contour_util.draw_line(scaled_image=draw_image, points=[self.marker_contour[(marker_offset + (direction*-1) + self.marker_length) % self.marker_length][0], self.marker_contour[marker_offset][0]], line_color=(0, 0, 255), name="Progress")
-                draw_image = contour_util.draw_line(scaled_image=draw_image, points=[self.marker_contour[marker_offset][0], self.marker_contour[(marker_offset + direction + self.marker_length) % self.marker_length][0]], line_color=(128, 128, 255), name="Progress")
+                draw_image = contour_util.draw_contour(scaled_image=draw_image, contour=self.marker_contour, contour_color=(255, 0, 0), scale=scale, name="Progress")
+
+                draw_image = contour_util.draw_line(scaled_image=draw_image, points=[self.marker_contour[(marker_offset + (direction*-1) + self.marker_length) % self.marker_length][0], self.marker_contour[marker_offset][0]], scale=scale, line_color=(0, 0, 255), name="Progress")
+                draw_image = contour_util.draw_line(scaled_image=draw_image, points=[self.marker_contour[marker_offset][0], self.marker_contour[(marker_offset + direction + self.marker_length) % self.marker_length][0]], scale=scale, line_color=(128, 128, 255), name="Progress")
 
                 cv2.waitKey(0)
 
