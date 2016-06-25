@@ -19,7 +19,38 @@
     </section>
 
     <section class="main-content">
-      <p>Interactive Tabletop Project:ed is a framework for creating interactive, digital tabletop projects, focusing mainly on board games played with physical bricks.</p>
+      <p>Interactive Tabletop Project:ed is a framework for creating interactive, digital tabletop projects, focusing mainly on board games played with physical bricks. It provides a JavaScript client API for easy content creation.</p>
+
+<p>A working prototype setup consisting of a portable projector and a Raspberry Pi with attached camera module can be seen from the github page.</p>
+
+<p>The computer vision backend is written in Python/OpenCV and communicates with the webpage through WebSockets. Getting up and running is as simple as starting the backend server:</p>
+
+<pre><code>$ cd Server/src
+$ python main.py
+</code></pre>
+
+<p>and referencing the client library in a web page and initializing it as follows (CoffeeScript source):</p>
+
+<pre><code>@client = new Client()
+@client.connect((() =&gt; @onConnected()), ((json) =&gt; @onMessage(json)))
+
+onConnected: -&gt;
+    @client.reset()
+
+onMessage: (json) -&gt;
+    switch json["action"]
+        ...
+</code></pre>
+
+<p>To create a tiled board of size (32, 20) and wait for a brick to be found in any of the top/left corner tiles implement the following few lines:</p>
+
+<pre><code>onMessage: (json) -&gt;
+    switch json["action"]
+        when "reset" then @client.initializeBoard()
+        when "initializeBoard" then @client.initializeTiledBoardArea(32, 20, 0.0, 0.0, 1.0, 1.0, 0)
+        when "initializeTiledBoardArea" then @client.reportBackWhenBrickFoundAtAnyOfPositions(0, ([0, 0], [1, 0], [1, 0]))
+        when "brickFoundAtPosition" then alert("Brick found at position: " + json["payload"]["position"])
+</code></pre>
 
       <footer class="site-footer">
         <span class="site-footer-owner"><a href="https://github.com/daniel-andersen/Interactive-Tabletop-Projected">Interactive Tabletop Project:ed</a> is maintained by <a href="https://github.com/daniel-andersen">daniel-andersen</a>.</span>
