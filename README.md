@@ -3,7 +3,7 @@ Interactive Tabletop Project:ed
 
 Interactive Tabletop Project:ed is a framework for creating interactive, digital tabletop projects, focusing mainly on board games played with physical bricks. It provides a JavaScript client API for easy content creation.
 
-A working prototype setup consisting of a portable projector and a Raspberry Pi with attached camera module can be seen from the github page.
+A working prototype setup consisting of a portable projector and a Raspberry Pi with attached camera module can be seen below.
 
 ![Magic Lamp](Photos/maze_1.jpg)
 
