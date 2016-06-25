@@ -19,11 +19,21 @@
     </section>
 
     <section class="main-content">
-      <p>Interactive Tabletop Project:ed is a framework for creating interactive, digital tabletop projects, focusing mainly on board games played with physical bricks. It provides a JavaScript client API for easy content creation.</p>
+      <h1>
+<a id="interactive-tabletop-projected" class="anchor" href="#interactive-tabletop-projected" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Interactive Tabletop Project:ed</h1>
 
-<p>A working prototype setup consisting of a portable projector and a Raspberry Pi with attached camera module can be seen from the github page.</p>
+<p>Interactive Tabletop Project:ed is a framework for creating interactive, digital tabletop projects, focusing mainly on board games played with physical bricks. It provides a JavaScript client API for easy content creation.</p>
 
-<p>The computer vision backend is written in Python/OpenCV and communicates with the webpage through WebSockets. Getting up and running is as simple as starting the backend server:</p>
+<p>A working prototype setup consisting of a portable projector and a Raspberry Pi with attached camera module can be seen below. Further info can be found on the github page.</p>
+
+<p><img src="https://raw.githubusercontent.com/daniel-andersen/Interactive-Tabletop-Projected/master/Photos/maze_1.jpg" alt="MAZE game"></p>
+
+<h1>
+<a id="getting-up-and-running" class="anchor" href="#getting-up-and-running" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Getting up and running</h1>
+
+<p>The computer vision backend is written in Python/OpenCV and communicates with the webpage through WebSockets.</p>
+
+<p>Given you have Python and OpenCV installed, getting up and running is as simple as starting the backend server:</p>
 
 <pre><code>$ cd Server/src
 $ python main.py
@@ -51,6 +61,17 @@ onMessage: (json) -&gt;
         when "initializeTiledBoardArea" then @client.reportBackWhenBrickFoundAtAnyOfPositions(0, ([0, 0], [1, 0], [1, 0]))
         when "brickFoundAtPosition" then alert("Brick found at position: " + json["payload"]["position"])
 </code></pre>
+
+<p>See Content/MAZE for a complete reference implementation of a simple MAZE game.</p>
+
+<h1>
+<a id="photos" class="anchor" href="#photos" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Photos</h1>
+
+<p><img src="https://raw.githubusercontent.com/daniel-andersen/Interactive-Tabletop-Projected/master/Photos/lamp_1.jpg" alt="Magic Lamp">
+<img src="https://raw.githubusercontent.com/daniel-andersen/Interactive-Tabletop-Projected/master/Photos/lamp_2.jpg" alt="Magic Lamp"></p>
+
+<p><img src="https://raw.githubusercontent.com/daniel-andersen/Interactive-Tabletop-Projected/master/Photos/lamp_3.jpg" alt="Magic Lamp">
+<img src="https://raw.githubusercontent.com/daniel-andersen/Interactive-Tabletop-Projected/master/Photos/lamp_4.jpg" alt="Magic Lamp"></p>
 
       <footer class="site-footer">
         <span class="site-footer-owner"><a href="https://github.com/daniel-andersen/Interactive-Tabletop-Projected">Interactive Tabletop Project:ed</a> is maintained by <a href="https://github.com/daniel-andersen">daniel-andersen</a>.</span>
