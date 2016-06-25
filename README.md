@@ -5,7 +5,7 @@ Interactive Tabletop Project:ed is a framework for creating interactive, digital
 
 A working prototype setup consisting of a portable projector and a Raspberry Pi with attached camera module can be seen below.
 
-![Magic Lamp](Photos/maze_1.jpg)
+![MAZE game](Photos/maze_1.jpg)
 
 Getting up and running
 ======================
