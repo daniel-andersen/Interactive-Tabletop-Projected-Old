@@ -7,6 +7,14 @@ A working prototype setup consisting of a portable projector and a Raspberry Pi 
 
 ![MAZE game](Photos/maze_1.jpg)
 
+Features
+========
+
+* Easy setup and content creation with plain HTML and JavaScript.
+* Detecting bricks on a tiled board.
+* Detecting simple shapes. Simple feed the algorithm with an image of the shape and start using the detector.
+* Detecting images. Simple feed the algorithm with an image and start using the detector. (WIP!)
+
 Getting up and running
 ======================
 
@@ -34,8 +42,8 @@ To create a tiled board of size (32, 20) and wait for a brick to be found in any
     onMessage: (json) ->
         switch json["action"]
             when "reset" then @client.initializeBoard()
-            when "initializeBoard" then @client.initializeTiledBoardArea(32, 20, 0.0, 0.0, 1.0, 1.0, 0)
-            when "initializeTiledBoardArea" then @client.reportBackWhenBrickFoundAtAnyOfPositions(0, ([0, 0], [1, 0], [1, 0]))
+            when "initializeBoard" then @client.initializeTiledBoardArea(tileCountX=32, tileCountY=20, x1=0.0, y1=0.0, x2=1.0, y2=1.0, areaId=0)
+            when "initializeTiledBoardArea" then @client.reportBackWhenBrickFoundAtAnyOfPositions(areaId=0, validPositions=([0, 0], [1, 0], [1, 0]))
             when "brickFoundAtPosition" then alert("Brick found at position: " + json["payload"]["position"])
 
 See Content/MAZE for a complete reference implementation of a simple MAZE game.
