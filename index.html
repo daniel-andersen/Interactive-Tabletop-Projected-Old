@@ -29,6 +29,16 @@
 <p><img src="https://raw.githubusercontent.com/daniel-andersen/Interactive-Tabletop-Projected/master/Photos/maze_1.jpg" alt="MAZE game"></p>
 
 <h1>
+<a id="features" class="anchor" href="#features" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Features</h1>
+
+<ul>
+<li>Easy setup and content creation with plain HTML and JavaScript.</li>
+<li>Detecting bricks on a tiled board.</li>
+<li>Detecting simple shapes. Simple feed the algorithm with an image of the shape and start using the detector.</li>
+<li>Detecting images. Simple feed the algorithm with an image and start using the detector. (WIP!)</li>
+</ul>
+
+<h1>
 <a id="getting-up-and-running" class="anchor" href="#getting-up-and-running" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Getting up and running</h1>
 
 <p>The computer vision backend is written in Python/OpenCV and communicates with the webpage through WebSockets.</p>
@@ -57,8 +67,8 @@ onMessage: (json) -&gt;
 <pre><code>onMessage: (json) -&gt;
     switch json["action"]
         when "reset" then @client.initializeBoard()
-        when "initializeBoard" then @client.initializeTiledBoardArea(32, 20, 0.0, 0.0, 1.0, 1.0, 0)
-        when "initializeTiledBoardArea" then @client.reportBackWhenBrickFoundAtAnyOfPositions(0, ([0, 0], [1, 0], [1, 0]))
+        when "initializeBoard" then @client.initializeTiledBoardArea(tileCountX=32, tileCountY=20, x1=0.0, y1=0.0, x2=1.0, y2=1.0, areaId=0)
+        when "initializeTiledBoardArea" then @client.reportBackWhenBrickFoundAtAnyOfPositions(areaId=0, validPositions=([0, 0], [1, 0], [1, 0]))
         when "brickFoundAtPosition" then alert("Brick found at position: " + json["payload"]["position"])
 </code></pre>
 
