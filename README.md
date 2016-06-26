@@ -12,8 +12,8 @@ Features
 
 * Easy setup and content creation with plain HTML and JavaScript.
 * Detecting bricks on a tiled board.
-* Detecting simple shapes. Simple feed the algorithm with an image of the shape and start using the detector.
-* Detecting images. Simple feed the algorithm with an image and start using the detector. (WIP!)
+* Detecting simple shapes. Simply feed the algorithm with an image of the shape and start using the detector.
+* Detecting images. Simply feed the algorithm with an image and start using the detector. (WIP!)
 
 Getting up and running
 ======================
