@@ -268,7 +268,7 @@ MazeGame = (function() {
   };
 
   MazeGame.prototype.requestPlayerInitialPosition = function(player) {
-    var id, position, positions;
+    var position, positions;
     positions = (function() {
       var j, len, ref, results;
       ref = this.mazeModel.positionsReachableFromPosition(player.position, player.reachDistance + 2);
@@ -279,11 +279,11 @@ MazeGame = (function() {
       }
       return results;
     }).call(this);
-    return this.client.reportBackWhenBrickMovedToPosition(0, [player.position.x, player.position.y], positions, id = player.index);
+    return this.client.reportBackWhenBrickMovedToPosition(0, [player.position.x, player.position.y], positions, player.index);
   };
 
   MazeGame.prototype.requestPlayerPosition = function(player) {
-    var id, j, len, otherPlayer, playerPositions, position, positions, ref;
+    var j, len, otherPlayer, playerPositions, position, positions, ref;
     playerPositions = this.mazeModel.positionsReachableByPlayer(player);
     ref = this.mazeModel.players;
     for (j = 0, len = ref.length; j < len; j++) {
@@ -311,7 +311,7 @@ MazeGame = (function() {
       }
       return results;
     })();
-    return this.client.reportBackWhenBrickMovedToAnyOfPositions(0, [player.position.x, player.position.y], positions, id = player.index);
+    return this.client.reportBackWhenBrickMovedToAnyOfPositions(0, [player.position.x, player.position.y], positions, player.index);
   };
 
   MazeGame.prototype.ready = function() {

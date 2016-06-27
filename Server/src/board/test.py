@@ -1,10 +1,9 @@
 import cv2
 import numpy as np
-import time
 from board.board_descriptor import BoardDescriptor
 from board.board_recognizer import BoardRecognizer
 from board.tile_brick_detector import TileBrickDetector
-from board.markers.custom_marker import CustomMarker
+from board.markers.shape_marker import ShapeMarker
 from board.markers.triangle_marker import TriangleMarker
 from board.board_areas.tiled_board_area import TiledBoardArea
 from util import contour_util
@@ -159,22 +158,22 @@ def tiled_brick_detector_test():
     print("%i tests passed, %i failed" % (passed, failed))
 
 
-def custom_marker_test():
+def shape_marker_test():
     test_set = {
         "triangle": {
-            "marker": CustomMarker(np.int32([[0, 0], [100, 0], [0, 100]]).reshape(-1, 1, 2), min_area=0.03, max_area=0.5, distance_tolerance=0.15),
+            "marker": ShapeMarker(np.int32([[0, 0], [100, 0], [0, 100]]).reshape(-1, 1, 2), min_area=0.03, max_area=0.5, distance_tolerance=0.15),
             "detect": [1, 2]
         },
         "square": {
-            "marker": CustomMarker(np.int32([[0, 0], [100, 0], [100, 100], [0, 100]]).reshape(-1, 1, 2)),
+            "marker": ShapeMarker(np.int32([[0, 0], [100, 0], [100, 100], [0, 100]]).reshape(-1, 1, 2)),
             "detect": [6]
         },
         "castle": {
-            "marker": CustomMarker(np.int32([[0, 0], [10, 0], [10, 20], [20, 20], [20, 10], [30, 10], [30, 20], [40, 20], [40, 0], [50, 0], [50, 50], [30, 50], [30, 40], [20, 40], [20, 50], [0, 50]]).reshape(-1, 1, 2), distance_tolerance=0.2, angle_tolerance=0.65),
+            "marker": ShapeMarker(np.int32([[0, 0], [10, 0], [10, 20], [20, 20], [20, 10], [30, 10], [30, 20], [40, 20], [40, 0], [50, 0], [50, 50], [30, 50], [30, 40], [20, 40], [20, 50], [0, 50]]).reshape(-1, 1, 2), distance_tolerance=0.2, angle_tolerance=0.65),
             "detect": [3, 5, 7]
         },
         "star": {
-            "marker": CustomMarker(marker_image=cv2.imread("board/training/marker_star.png"), distance_tolerance=0.50, angle_tolerance=0.35),
+            "marker": ShapeMarker(marker_image=cv2.imread("board/training/marker_star.png"), distance_tolerance=0.50, angle_tolerance=0.35),
             "detect": [11, 12]
         }
     }
@@ -210,9 +209,9 @@ def custom_marker_test():
 
     print("%i tests passed, %i failed" % (passed, failed))
 
-def custom_marker_camera_test():
+def shape_marker_camera_test():
     marker_image = cv2.imread("board/training/marker_star.png")
-    marker = CustomMarker(marker_image=marker_image, distance_tolerance=0.50, angle_tolerance=0.35)
+    marker = ShapeMarker(marker_image=marker_image, distance_tolerance=0.50, angle_tolerance=0.35)
 
     #image = cv2.imread("board/training/marker_star.png")
     #print(marker.find_marker_in_image(image))

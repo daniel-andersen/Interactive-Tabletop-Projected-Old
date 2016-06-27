@@ -223,6 +223,22 @@ Client = (function() {
     });
   };
 
+  Client.prototype.initializeShapeMarkerWithContour = function(markerId, contour) {
+    return this.sendMessage("initializeShapeMarker", {
+      "id": markerId,
+      "shape": contour
+    });
+  };
+
+  Client.prototype.initializeShapeMarkerWithImage = function(markerId, image) {
+    return this.convertImageToDataURL(image, function(base64Image) {
+      return this.sendMessage("initializeShapeMarker", {
+        "id": markerId,
+        "imageBase64": base64Image
+      });
+    });
+  };
+
   Client.prototype.reportBackWhenMarkerFound = function(areaId, markerId, id, stableTime, sleepTime) {
     if (id == null) {
       id = void 0;
@@ -241,6 +257,13 @@ Client = (function() {
     }, id != null ? {
       "id": id
     } : {}));
+  };
+
+  Client.prototype.requestMarkers = function(areaId, markerId) {
+    return this.sendMessage("requestMarkers", {
+      "areaId": areaId,
+      "markerId": markerId
+    });
   };
 
   Client.prototype.sendMessage = function(action, payload) {

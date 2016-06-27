@@ -6,7 +6,7 @@ from util import misc_math
 from util import contour_util
 
 
-class CustomMarker(Marker):
+class ShapeMarker(Marker):
 
     def __init__(self, contour=None, marker_image=None, distance_tolerance=0.15, angle_tolerance=0.15,
                  fine_grained=True, spike_tolerance=0.025, closed=True, min_arclength=0.1, max_arclength=100.0,
@@ -24,7 +24,7 @@ class CustomMarker(Marker):
         :param min_area: Minimum area scaled in percentage [0, 1] of image size
         :param max_area: Maximum area scaled in percentage [0, 1] of image size
         """
-        super(CustomMarker, self).__init__()
+        super(ShapeMarker, self).__init__()
 
         self.marker_contour = contour
         self.distance_tolerance = distance_tolerance
@@ -81,12 +81,11 @@ class CustomMarker(Marker):
         :return: Marker contour
         """
 
-        # OTSU image
-        image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-        ret, image = cv2.threshold(image, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
+        # Find all markers
+        markers = self.find_markers_in_image(image)
 
-        # Find marker in OTSU'ed image
-        return self.find_marker_in_thresholded_image(image)
+        # Return first marker
+        return markers[0] if len(markers) > 0 else None
 
     def find_marker_in_thresholded_image(self, image):
         """
@@ -96,13 +95,43 @@ class CustomMarker(Marker):
         :return: Marker contour
         """
 
+        # Find all markers
+        markers = self.find_markers_in_thresholded_image(image)
+
+        # Return first marker
+        return markers[0] if len(markers) > 0 else None
+
+    def find_markers_in_image(self, image):
+        """
+        Find all markers in image.
+
+        :param image: Image
+        :return: List of marker contours
+        """
+
+        # OTSU image
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        ret, image = cv2.threshold(image, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
+
+        # Find marker in OTSU'ed image
+        return self.find_markers_in_thresholded_image(image)
+
+    def find_markers_in_thresholded_image(self, image):
+        """
+        Find all markers in image which has already been thresholded.
+
+        :param image: Thresholded image
+        :return: List of marker contours
+        """
+
         # Find contours
         contours, _ = cv2.findContours(image.copy(), cv2.RETR_LIST, cv2.CHAIN_APPROX_NONE)
-
         if len(contours) == 0:
-            return None
+            return []
 
         # Find marker from contours
+        markers = []
+
         for contour in contours:
 
             # Match contour
@@ -113,10 +142,10 @@ class CustomMarker(Marker):
                 #cv2.drawContours(image2, [contour], 0, (255, 255, 0), 1)
                 #cv2.imshow('Contours', image2)
                 #cv2.waitKey(0)
-                return matched_contour
+                markers.append(matched_contour)
 
         # No marker found
-        return None
+        return markers
 
     def match_contour(self, contour, image):
         """

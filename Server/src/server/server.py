@@ -13,6 +13,7 @@ from board.board_descriptor import BoardDescriptor
 from board.board_areas.board_area import BoardArea
 from board.board_areas.tiled_board_area import TiledBoardArea
 from board.markers.image_marker import ImageMarker
+from board.markers.shape_marker import ShapeMarker
 from reporters.tiled_brick_position_reporter import TiledBrickPositionReporter
 from reporters.tiled_brick_moved_reporters import TiledBrickMovedToAnyOfPositionsReporter
 from reporters.tiled_brick_moved_reporters import TiledBrickMovedToPositionReporter
@@ -93,8 +94,12 @@ class Server(WebSocket):
             return self.report_back_when_brick_moved_to_position(payload)
         if action == "requestBrickPosition":
             return self.request_brick_position(payload)
+        if action == "initializeShapeMarker":
+            return self.initialize_shape_marker(payload)
         if action == "initializeImageMarker":
             return self.initialize_image_marker(payload)
+        if action == "requestMarkers":
+            return self.request_markers(payload)
         if action == "reportBackWhenMarkerFound":
             return self.report_back_when_marker_found(payload)
 
@@ -334,8 +339,8 @@ class Server(WebSocket):
         """
         Initializes image marker with given parameters.
 
-        id: Marker id.
-        imageBase64: Image as base 64 encoded PNG.
+        id: Marker id
+        imageBase64: Image as base 64 encoded PNG
         """
         raw_image = base64.b64decode(payload["imageBase64"])
         raw_bytes = np.asarray(bytearray(raw_image), dtype=np.uint8)
@@ -344,7 +349,28 @@ class Server(WebSocket):
         image_marker = ImageMarker(image)
         self.markers[payload["id"]] = image_marker
 
-        return "OK", {}
+        return "OK", {"id": payload["id"]}
+
+    def initialize_shape_marker(self, payload):
+        """
+        Initializes a shape marker with given image and parameters.
+
+        id: Marker id
+        shape: (Optional)Shape
+        imageBase64: (Optional)Image as base 64 encoded PNG
+        """
+        if "shape" in payload:
+            contour = np.int32(payload["shape"]).reshape(-1, 1, 2)
+            shape_marker = ShapeMarker(contour=contour)
+        else:
+            raw_image = base64.b64decode(payload["imageBase64"])
+            raw_bytes = np.asarray(bytearray(raw_image), dtype=np.uint8)
+            image = cv2.imdecode(raw_bytes, cv2.CV_LOAD_IMAGE_UNCHANGED)
+            shape_marker = ShapeMarker(marker_image=image)
+
+        self.markers[payload["id"]] = shape_marker
+
+        return "OK", {"id": payload["id"]}
 
     def report_back_when_marker_found(self, payload):
         """
@@ -372,6 +398,20 @@ class Server(WebSocket):
         self.reporters[reporter_id] = reporter
 
         return "OK", {"id": reporter_id}
+
+    def request_markers(self, payload):
+        """
+        Searches for the specified markers in given area.
+
+        areaId: Board area id
+        markerId: Marker id
+        """
+        board_area = self.board_areas[payload["areaId"]]
+        marker = self.markers[payload["markerId"]]
+
+        result = marker.find_markers_in_image(board_area.area_image)
+
+        return "OK", {"markers": result if result is not None else []}
 
     def reset_reporters(self):
         """

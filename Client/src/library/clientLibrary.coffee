@@ -123,6 +123,20 @@ class Client
             })
         )
 
+    initializeShapeMarkerWithContour: (markerId, contour) ->
+        this.sendMessage("initializeShapeMarker", {
+            "id": markerId,
+            "shape": contour
+        })
+
+    initializeShapeMarkerWithImage: (markerId, image) ->
+        @convertImageToDataURL(image, (base64Image) ->
+            this.sendMessage("initializeShapeMarker", {
+                "id": markerId,
+                "imageBase64": base64Image
+            })
+        )
+
     reportBackWhenMarkerFound: (areaId, markerId, id = undefined, stableTime = 1.5, sleepTime = 1.0) ->
         this.sendMessage("reportBackWhenMarkerFound", Object.assign({
             "areaId": areaId,
@@ -130,6 +144,12 @@ class Client
             "stableTime": stableTime,
             "sleepTime": sleepTime
         }, if id? then {"id": id} else {}))
+
+    requestMarkers: (areaId, markerId) ->
+        this.sendMessage("requestMarkers", {
+            "areaId": areaId,
+            "markerId": markerId
+        })
 
     sendMessage: (action, payload) ->
         message = {

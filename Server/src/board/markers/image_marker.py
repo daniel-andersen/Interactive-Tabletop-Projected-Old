@@ -66,3 +66,13 @@ class ImageMarker(Marker):
 
     def find_marker_in_thresholded_image(self, image):
         return self.find_marker_in_image(image)
+
+    def find_markers_in_image(self, image):
+        """
+        Find all markers in image.
+
+        :param image: Image
+        :return: List of marker contours
+        """
+        print("ImageMarker::find_markers_in_image - Not yet implemented!")
+        return None

@@ -14,13 +14,11 @@ class TriangleMarker(Marker):
         :return: Marker contour
         """
 
-        # OTSU image
-        image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-        image = cv2.blur(image, (2, 2))
-        ret, image = cv2.threshold(image, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
+        # Find all markers
+        markers = self.find_markers_in_image(image)
 
-        # Find marker in OTSU'ed image
-        return self.find_marker_in_thresholded_image(image)
+        # Return first marker
+        return markers[0] if len(markers) > 0 else None
 
     def find_marker_in_thresholded_image(self, image):
         """
@@ -30,24 +28,51 @@ class TriangleMarker(Marker):
         :return: Marker contour
         """
 
+        # Find all markers
+        markers = self.find_markers_in_thresholded_image(image)
+
+        # Return first marker
+        return markers[0] if len(markers) > 0 else None
+
+    def find_markers_in_image(self, image):
+        """
+        Find all markers in image.
+
+        :param image: Image
+        :return: List of marker contours
+        """
+
+        # OTSU image
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        image = cv2.blur(image, (2, 2))
+        ret, image = cv2.threshold(image, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
+
+        # Find marker in OTSU'ed image
+        return self.find_markers_in_thresholded_image(image)
+
+    def find_markers_in_thresholded_image(self, image):
+        """
+        Find all markers in image which has already been thresholded.
+
+        :param image: Thresholded image
+        :return: List of marker contours
+        """
+
         # Prepare constants
         image_height, image_width = image.shape[:2]
         min_marker_size = (image_width * 0.1) * (image_height * 0.1)
         max_marker_size = (image_width * 0.5) * (image_height * 0.5)
-
-        #cv2.imshow("Marker image", image)
-        #cv2.waitKey(0)
 
         # Find contours
         contours, hierarchy = \
             cv2.findContours(image, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
         if len(contours) == 0:
-            return None
+            return []
 
         # Filter away noise images
         if len(contours) > 8:
-            return None
+            return []
 
         # Simplify contours
         approxed_contours = []
@@ -64,7 +89,9 @@ class TriangleMarker(Marker):
         #cv2.imshow('Contours', image2)
         #cv2.waitKey(0)
 
-        # Find marker
+        # Find markers
+        markers = []
+
         for i in range(0, len(approxed_contours)):
             #image2 = cv2.cvtColor(image.copy(), cv2.COLOR_GRAY2BGR)
             #cv2.drawContours(image2, [approxed_contours[i]], -1, (255, 0, 255), 1)
@@ -78,10 +105,10 @@ class TriangleMarker(Marker):
                 #cv2.imshow('Contours', image2)
                 #cv2.waitKey(0)
 
-                return approxed_contours[i]
+                markers.append(approxed_contours[i])
 
         # No marker found
-        return None
+        return markers
 
     def are_marker_conditions_satisfied_for_contour(self, contours, approxed_contours, hierachy, index, min_marker_size, max_marker_size):
 
