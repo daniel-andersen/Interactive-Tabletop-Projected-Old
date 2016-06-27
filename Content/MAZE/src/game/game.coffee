@@ -244,7 +244,7 @@ class MazeGame
 
     requestPlayerInitialPosition: (player) ->
         positions = ([position.x, position.y] for position in @mazeModel.positionsReachableFromPosition(player.position, player.reachDistance + 2))
-        @client.reportBackWhenBrickMovedToPosition(0, [player.position.x, player.position.y], positions, id=player.index)
+        @client.reportBackWhenBrickMovedToPosition(0, [player.position.x, player.position.y], positions, player.index)
 
     requestPlayerPosition: (player) ->
 
@@ -258,7 +258,7 @@ class MazeGame
 
         # Request position
         positions = ([position.x, position.y] for position in playerPositions)
-        @client.reportBackWhenBrickMovedToAnyOfPositions(0, [player.position.x, player.position.y], positions, id=player.index)
+        @client.reportBackWhenBrickMovedToAnyOfPositions(0, [player.position.x, player.position.y], positions, player.index)
 
     ready: ->
         # Fade maze
