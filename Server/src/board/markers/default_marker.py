@@ -58,6 +58,9 @@ class DefaultMarker(Marker):
         :return: List of markers each in form (contour, [centerX, centerY, width, height, rotation])
         """
 
+        original_image = image
+
+        # Resize image 2x
         image_height, image_width = image.shape[:2]
         image = cv2.resize(image, (image_width * 2, image_height * 2))
 
@@ -120,7 +123,7 @@ class DefaultMarker(Marker):
                 markers.append(original_sized_contour)
 
         # Return markers
-        return self.contours_to_marker_result(markers)
+        return self.contours_to_marker_result(original_image, markers)
 
     def are_marker_conditions_satisfied_for_contour(self, contours, approxed_contours, hierachy, index, min_marker_size, max_marker_size, image_size):
 

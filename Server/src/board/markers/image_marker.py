@@ -62,7 +62,7 @@ class ImageMarker(Marker):
         dst = cv2.perspectiveTransform(pts, M)
 
         # Return resulting points
-        return self.contour_to_marker_result([np.int32(dst)])
+        return self.contour_to_marker_result(image, [np.int32(dst)])
 
     def find_marker_in_thresholded_image(self, image):
         return self.find_marker_in_image(image)

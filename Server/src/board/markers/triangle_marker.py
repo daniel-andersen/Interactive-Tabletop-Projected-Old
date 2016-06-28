@@ -108,7 +108,7 @@ class TriangleMarker(Marker):
                 markers.append(approxed_contours[i])
 
         # Return markers
-        return self.contours_to_marker_result(markers)
+        return self.contours_to_marker_result(image, markers)
 
     def are_marker_conditions_satisfied_for_contour(self, contours, approxed_contours, hierachy, index, min_marker_size, max_marker_size):
 

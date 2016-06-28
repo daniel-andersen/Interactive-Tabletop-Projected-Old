@@ -145,7 +145,7 @@ class ShapeMarker(Marker):
                 markers.append(matched_contour)
 
         # Return markers
-        return self.contours_to_marker_result(markers)
+        return self.contours_to_marker_result(image, markers)
 
     def match_contour(self, contour, image):
         """
