@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # Clean up previously running apps, gracefully at first then harshly
 killall -TERM matchbox-window-manager 2>/dev/null;
@@ -12,29 +12,26 @@ xset s off
 # Reset the framebuffer's colour-depth
 #fbset -depth $( cat /sys/module/*fb*/parameters/fbdepth );
 
-# Hide the cursor (move it to the bottom-right, comment out if you want mouse interaction)
-xwit -root -warp $( cat /sys/module/*fb*/parameters/fbwidth ) $( cat /sys/module/*fb*/parameters/fbheight )
-
 # Start the window manager (remove "-use_cursor no" if you actually want mouse interaction)
 matchbox-window-manager -use_titlebar no -use_cursor no &
 
 # Show splash
 feh -F ~/magic_lamp/Server/assets/splash.png & feh_pid=$!
+sleep 1
+
+# Compile client
+cd ~/magic_lamp/Client
+grunt
 
 # Start server
 cd ~/magic_lamp/Server/src
-python main.py &
-
-# Start client
-cd ~/magic_lamp/Client
-grunt run &
-sleep 10
+nice python -u main.py > ~/log/server.log 2>&1 &
 
 # Start the browser
-~/kiosk-browser/browser http://localhost:9000 & browser_pid=$!
-sleep 2
+cd ~/kiosk-browser
+./browser http://localhost:9002 1> console.log 2> error.log & browser_pid=$!
 
-# Remove splash
+sleep 5
 kill -9 $feh_pid
 
 wait $browser_pid
