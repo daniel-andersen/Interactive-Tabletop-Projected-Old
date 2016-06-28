@@ -19,16 +19,16 @@ class FindMarkersReporter(Reporter):
     def run_iteration(self):
 
         # Check if we have a board area image
-        if self.board_area.area_image() is None:
+        if self.board_area.area_image(reuse=True) is None:
             self.callback_function([])
             self.stop()
             return
 
-        # Find marker
-        contour, box = self.marker.find_markers_in_image(self.board_area.area_image(reuse=True))
+        # Find markers
+        markers = self.marker.find_markers_in_image(self.board_area.area_image(reuse=True))
 
         # Callback
-        self.callback_function(box)
+        self.callback_function(markers)
 
         # Stop reporter
         self.stop()
