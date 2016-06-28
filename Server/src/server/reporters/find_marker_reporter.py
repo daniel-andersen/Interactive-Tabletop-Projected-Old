@@ -8,7 +8,7 @@ class FindMarkerReporter(Reporter):
 
     def __init__(self, board_area, marker, stable_time, sleep_time, reporter_id, callback_function):
         """
-        :param board_area: Tiled board area
+        :param board_area: Board area
         :param marker: Marker
         :param stable_time Amount of time to wait for image to stabilize
         :param sleep_time: Time to sleep between searches
@@ -29,7 +29,7 @@ class FindMarkerReporter(Reporter):
             return
 
         # Find marker
-        contour, box = self.marker.find_marker_in_image(self.board_area.area_image())
+        contour, box = self.marker.find_marker_in_image(self.board_area.area_image(reuse=True))
 
         # Update marker history
         self.marker_found_history.append({"time": time.time(), "found": box is not None})

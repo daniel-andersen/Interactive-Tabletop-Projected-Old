@@ -18,6 +18,7 @@ from reporters.tiled_brick_position_reporter import TiledBrickPositionReporter
 from reporters.tiled_brick_moved_reporters import TiledBrickMovedToAnyOfPositionsReporter
 from reporters.tiled_brick_moved_reporters import TiledBrickMovedToPositionReporter
 from reporters.find_marker_reporter import FindMarkerReporter
+from reporters.find_markers_reporter import FindMarkersReporter
 
 if misc_util.module_exists("picamera"):
     print("Using Raspberry Pi camera")
@@ -411,15 +412,18 @@ class Server(WebSocket):
         """
         board_area = self.board_areas[payload["areaId"]]
         marker = self.markers[payload["markerId"]]
+        reporter_id = self.draw_reporter_id()
 
-        if not board_area.board_descriptor.is_recognized():
-            return "BOARD_NOT_RECOGNIZED", {}
+        reporter = FindMarkersReporter(
+            board_area,
+            marker,
+            reporter_id,
+            callback_function=lambda (markers): self.send_message("OK", "markersFound", {"id": reporter_id,
+                                                                                         "areaId": payload["areaId"],
+                                                                                         "markerId": payload["markerId"],
+                                                                                         "markers": [box for (contour, box) in markers]}))
+        self.reporters[reporter_id] = reporter
 
-        result = marker.find_markers_in_image(board_area.area_image())
-
-        self.send_message("OK", "markersFound", {"areaId": payload["areaId"],
-                                                 "markerId": payload["markerId"],
-                                                 "markers": [box for (contour, box) in result]})
         return None
 
     def reset_reporters(self):
