@@ -1,3 +1,4 @@
+from __future__ import with_statement
 import json
 import time
 import cv2
@@ -6,6 +7,7 @@ import base64
 import numpy as np
 from random import randint
 from threading import Thread
+from threading import RLock
 from SimpleWebSocketServer import SimpleWebSocketServer, WebSocket
 from util import misc_util
 from board.markers.marker_util import *
@@ -32,25 +34,14 @@ class Server(WebSocket):
     """
     Server which communicates with the client library.
     """
+    busy_lock = RLock()
+
     reporters = {}
     reporter_thread = None
 
     markers = {}
 
     board_areas = {}
-
-    def initialize_video(self, resolution):
-        if globals.camera is not None:
-            return
-
-        globals.camera = Camera()
-        globals.camera.start(resolution)
-
-    def initialize_reporter_thread(self):
-        if self.reporter_thread is None:
-            self.reporter_thread = Thread(target=self.reporter_run, args=())
-            self.reporter_thread.daemon = True
-            self.reporter_thread.start()
 
     def handleMessage(self):
         """
@@ -61,7 +52,10 @@ class Server(WebSocket):
 
         if "action" in json_dict:
             action = json_dict["action"]
-            result = self.handle_action(action, json_dict["payload"])
+
+            with self.busy_lock:
+                result = self.handle_action(action, json_dict["payload"])
+
             if result is not None:
                 self.send_message(result[0], action, result[1])
 
@@ -106,6 +100,20 @@ class Server(WebSocket):
             return self.request_markers(payload)
         if action == "reportBackWhenMarkerFound":
             return self.report_back_when_marker_found(payload)
+
+    def initialize_video(self, resolution):
+        with self.busy_lock:
+            if globals.camera is not None:
+                return
+
+            globals.camera = Camera()
+            globals.camera.start(resolution)
+
+    def initialize_reporter_thread(self):
+        if self.reporter_thread is None:
+            self.reporter_thread = Thread(target=self.reporter_run, args=())
+            self.reporter_thread.daemon = True
+            self.reporter_thread.start()
 
     def reset(self, payload):
         """
@@ -537,53 +545,56 @@ class Server(WebSocket):
             # Sleep a while
             time.sleep(0.1)
 
-            # Read image from camera
-            if globals.camera is None:
-                continue
+            # Do all in a lock to force sequential execution of handleMessage above
+            with self.busy_lock:
 
-            image = globals.camera.read()
-            if image is None:
-                continue
+                # Read image from camera
+                if globals.camera is None:
+                    continue
 
-            # Recognize board
-            if globals.board_descriptor is not None:
-                globals.board_descriptor.snapshot = globals.board_recognizer.find_board(image, globals.board_descriptor)
+                image = globals.camera.read()
+                if image is None:
+                    continue
 
-                # Board not recognized
-                if not globals.board_descriptor.is_recognized():
+                # Recognize board
+                if globals.board_descriptor is not None:
+                    globals.board_descriptor.snapshot = globals.board_recognizer.find_board(image, globals.board_descriptor)
 
-                    # Notify client that board is not recognized
-                    if board_recognized_time is not None and time.time() > board_recognized_time + globals.board_not_recognized_notify_delay:
-                        self.notify_board_not_recognized(globals.board_descriptor.snapshot)
-                        board_recognized_time = None
+                    # Board not recognized
+                    if not globals.board_descriptor.is_recognized():
 
-                else:
+                        # Notify client that board is not recognized
+                        if board_recognized_time is not None and time.time() > board_recognized_time + globals.board_not_recognized_notify_delay:
+                            self.notify_board_not_recognized(globals.board_descriptor.snapshot)
+                            board_recognized_time = None
 
-                    # Notify client that board is recognized
-                    if board_recognized_time is None:
-                        self.notify_board_recognized()
+                    else:
 
-                    board_recognized_time = time.time()
+                        # Notify client that board is recognized
+                        if board_recognized_time is None:
+                            self.notify_board_recognized()
 
-            # Reset all board area images in order to force extraction of new upon next request
-            for (_, board_area) in self.board_areas.copy().iteritems():
-                board_area.reset_area_image()
+                        board_recognized_time = time.time()
 
-            # Run all reporters
-            reporter_ids_to_remove = []
+                # Reset all board area images in order to force extraction of new upon next request
+                for (_, board_area) in self.board_areas.iteritems():
+                    board_area.reset_area_image()
 
-            for (reporter_id, reporter) in self.reporters.copy().iteritems():
+                # Run all reporters
+                reporter_ids_to_remove = []
 
-                # Run reporter
-                reporter.run_iteration()
+                for (reporter_id, reporter) in self.reporters.iteritems():
 
-                # Check if stopped
-                if reporter.stopped:
-                    reporter_ids_to_remove.append(reporter_id)
+                    # Run reporter
+                    reporter.run_iteration()
 
-            # Remove stopped reporters
-            for reporter_id in reporter_ids_to_remove:
-                self.reporters.pop(reporter_id)
+                    # Check if stopped
+                    if reporter.stopped:
+                        reporter_ids_to_remove.append(reporter_id)
+
+                # Remove stopped reporters
+                for reporter_id in reporter_ids_to_remove:
+                    self.reporters.pop(reporter_id)
 
 
 def start_server():
