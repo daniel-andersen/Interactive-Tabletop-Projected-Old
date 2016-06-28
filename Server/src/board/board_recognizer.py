@@ -215,15 +215,15 @@ class BoardRecognizer(object):
 
     def is_corner_combination_valid(self, contour):
         if abs(cv2.contourArea(contour, False)) < self.board_area_min:
-            print("Contour area to small: %f < %f" % (abs(cv2.contourArea(contour, False)), self.board_area_min))
+            #print("Contour area to small: %f < %f" % (abs(cv2.contourArea(contour, False)), self.board_area_min))
             return False
 
         if not self.has_correct_aspect_ratio(contour):
-            print("Contour has wrong aspect ratio: %f - %f < %f" % (self.contour_aspect_ratio(contour), self.board_aspect_ratio, self.board_aspect_ratio_deviation_max))
+            #print("Contour has wrong aspect ratio: %f - %f < %f" % (self.contour_aspect_ratio(contour), self.board_aspect_ratio, self.board_aspect_ratio_deviation_max))
             return False
 
         if misc_math.max_cosine_from_contour(contour) > self.board_cosinus_max_deviation:
-            print("Contour has wrong angles: %f > %f" % (misc_math.max_cosine_from_contour(contour), self.board_cosinus_max_deviation))
+            #print("Contour has wrong angles: %f > %f" % (misc_math.max_cosine_from_contour(contour), self.board_cosinus_max_deviation))
             return False
 
         return True

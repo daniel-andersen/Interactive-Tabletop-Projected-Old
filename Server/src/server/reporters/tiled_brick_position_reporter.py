@@ -46,8 +46,8 @@ class TiledBrickPositionReporter(Reporter):
             deviation = max(tile_medians) - min(tile_medians)
             max_deviation = max(max_deviation, deviation)
 
-        if globals.debug:
-            print("%i: Median deviation: %f" % (self.reporter_id, max_deviation))
+        #if globals.debug:
+        #    print("%i: Median deviation: %f" % (self.reporter_id, max_deviation))
 
         # Check sufficient stability
         if max_deviation > self.stability_level:

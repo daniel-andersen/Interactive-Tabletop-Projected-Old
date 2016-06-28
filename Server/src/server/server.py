@@ -394,7 +394,10 @@ class Server(WebSocket):
             stable_time,
             sleep_time,
             reporter_id,
-            callback_function=lambda position: self.send_message("OK", "markerFound", {"id": reporter_id, "position": position}))
+            callback_function=lambda position: self.send_message("OK", "markerFound", {"id": reporter_id,
+                                                                                       "areaId": payload["areaId"],
+                                                                                       "markerId": payload["markerId"],
+                                                                                       "marker": position}))
         self.reporters[reporter_id] = reporter
 
         return "OK", {"id": reporter_id}
@@ -409,9 +412,15 @@ class Server(WebSocket):
         board_area = self.board_areas[payload["areaId"]]
         marker = self.markers[payload["markerId"]]
 
+        if not board_area.board_descriptor.is_recognized():
+            return "BOARD_NOT_RECOGNIZED", {}
+
         result = marker.find_markers_in_image(board_area.area_image)
 
-        return "OK", {"markers": result if result is not None else []}
+        self.send_message("OK", "markersFound", {"areaId": payload["areaId"],
+                                                 "markerId": payload["markerId"],
+                                                 "markers": result if result is not None else []})
+        return None
 
     def reset_reporters(self):
         """
