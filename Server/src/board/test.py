@@ -187,7 +187,7 @@ def shape_marker_test():
         marker = test_set[marker_name]["marker"]
 
         for i in range(1, marker_test_images_count + 1):
-            #if marker_name != "castle" or image_name != "marker_test_3":
+            #if marker_name != "square" or i != 6:
             #    continue
 
             image_filename = "board/training/marker_test_{0}.png".format(i)
