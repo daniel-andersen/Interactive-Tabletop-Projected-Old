@@ -29,7 +29,7 @@ class FindMarkerReporter(Reporter):
             return
 
         # Find marker
-        position = self.marker.find_marker_in_image(self.board_area.area_image)
+        position = self.marker.find_marker_in_image(self.board_area.area_image())
 
         # Update marker history
         self.marker_found_history.append({"time": time.time(), "found": position is not None})

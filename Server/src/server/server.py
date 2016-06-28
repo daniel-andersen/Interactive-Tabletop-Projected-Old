@@ -415,7 +415,7 @@ class Server(WebSocket):
         if not board_area.board_descriptor.is_recognized():
             return "BOARD_NOT_RECOGNIZED", {}
 
-        result = marker.find_markers_in_image(board_area.area_image)
+        result = marker.find_markers_in_image(board_area.area_image())
 
         self.send_message("OK", "markersFound", {"areaId": payload["areaId"],
                                                  "markerId": payload["markerId"],
