@@ -180,7 +180,7 @@ class BoardRecognizer(object):
         thresholded_image = self.threshold_image(image, threshold_mode)
 
         # Find marker contour
-        contour = corner_marker.find_marker_in_thresholded_image(thresholded_image)
+        contour, box = corner_marker.find_marker_in_thresholded_image(thresholded_image)
         if contour is None:
             return None
 

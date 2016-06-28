@@ -394,10 +394,10 @@ class Server(WebSocket):
             stable_time,
             sleep_time,
             reporter_id,
-            callback_function=lambda position: self.send_message("OK", "markerFound", {"id": reporter_id,
-                                                                                       "areaId": payload["areaId"],
-                                                                                       "markerId": payload["markerId"],
-                                                                                       "marker": position}))
+            callback_function=lambda (contour, box): self.send_message("OK", "markerFound", {"id": reporter_id,
+                                                                                             "areaId": payload["areaId"],
+                                                                                             "markerId": payload["markerId"],
+                                                                                             "marker": box}))
         self.reporters[reporter_id] = reporter
 
         return "OK", {"id": reporter_id}
@@ -419,7 +419,7 @@ class Server(WebSocket):
 
         self.send_message("OK", "markersFound", {"areaId": payload["areaId"],
                                                  "markerId": payload["markerId"],
-                                                 "markers": result if result is not None else []})
+                                                 "markers": [box for (contour, box) in result]})
         return None
 
     def reset_reporters(self):

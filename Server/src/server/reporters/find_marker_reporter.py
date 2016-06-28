@@ -29,10 +29,10 @@ class FindMarkerReporter(Reporter):
             return
 
         # Find marker
-        position = self.marker.find_marker_in_image(self.board_area.area_image())
+        contour, box = self.marker.find_marker_in_image(self.board_area.area_image())
 
         # Update marker history
-        self.marker_found_history.append({"time": time.time(), "found": position is not None})
+        self.marker_found_history.append({"time": time.time(), "found": box is not None})
         while len(self.marker_found_history) > 1 and self.marker_found_history[0]["time"] < time.time() - self.stable_time:
             self.marker_found_history.pop(0)
 
@@ -45,5 +45,5 @@ class FindMarkerReporter(Reporter):
         if percentage >= 0.8:
             if globals.debug:
                 print("%i: Marker recognized")
-            self.callback_function(position)
+            self.callback_function(box)
             self.stop()

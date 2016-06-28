@@ -31,7 +31,7 @@ class ImageMarker(Marker):
         Find marker in image.
 
         :param image: Image
-        :return: Marker contour
+        :return: Marker in form (contour, [centerX, centerY, width, height, rotation])
         """
 
         # Find features in image
@@ -48,7 +48,7 @@ class ImageMarker(Marker):
 
         # Check number of matches
         if len(good_matches) < self.min_matches:
-            return None
+            return None, None
 
         # Find homography between matches
         src_pts = np.float32([self.kp1[m.queryIdx].pt for m in good_matches]).reshape(-1, 1, 2)
@@ -62,7 +62,7 @@ class ImageMarker(Marker):
         dst = cv2.perspectiveTransform(pts, M)
 
         # Return resulting points
-        return [np.int32(dst)]
+        return self.contour_to_marker_result([np.int32(dst)])
 
     def find_marker_in_thresholded_image(self, image):
         return self.find_marker_in_image(image)
@@ -72,7 +72,7 @@ class ImageMarker(Marker):
         Find all markers in image.
 
         :param image: Image
-        :return: List of marker contours
+        :return: List of markers each in form (contour, [centerX, centerY, width, height, rotation])
         """
         print("ImageMarker::find_markers_in_image - Not yet implemented!")
-        return None
+        return []

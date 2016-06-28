@@ -78,35 +78,35 @@ class ShapeMarker(Marker):
         Find marker in image.
 
         :param image: Image
-        :return: Marker contour
+        :return: Marker in form (contour, [centerX, centerY, width, height, rotation])
         """
 
         # Find all markers
         markers = self.find_markers_in_image(image)
 
         # Return first marker
-        return markers[0] if len(markers) > 0 else None
+        return markers[0] if len(markers) > 0 else (None, None)
 
     def find_marker_in_thresholded_image(self, image):
         """
         Find marker in image which has already been thresholded.
 
         :param image: Thresholded image
-        :return: Marker contour
+        :return: Marker in form (contour, [centerX, centerY, width, height, rotation])
         """
 
         # Find all markers
         markers = self.find_markers_in_thresholded_image(image)
 
         # Return first marker
-        return markers[0] if len(markers) > 0 else None
+        return markers[0] if len(markers) > 0 else (None, None)
 
     def find_markers_in_image(self, image):
         """
         Find all markers in image.
 
         :param image: Image
-        :return: List of marker contours
+        :return: List of markers each in form (contour, [centerX, centerY, width, height, rotation])
         """
 
         # OTSU image
@@ -121,7 +121,7 @@ class ShapeMarker(Marker):
         Find all markers in image which has already been thresholded.
 
         :param image: Thresholded image
-        :return: List of marker contours
+        :return: List of markers each in form (contour, [centerX, centerY, width, height, rotation])
         """
 
         # Find contours
@@ -144,8 +144,8 @@ class ShapeMarker(Marker):
                 #cv2.waitKey(0)
                 markers.append(matched_contour)
 
-        # No marker found
-        return markers
+        # Return markers
+        return self.contours_to_marker_result(markers)
 
     def match_contour(self, contour, image):
         """

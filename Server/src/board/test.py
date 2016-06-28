@@ -196,10 +196,10 @@ def shape_marker_test():
             if image is None:
                 continue
 
-            result = marker.find_marker_in_image(image)
+            contour, box = marker.find_marker_in_image(image)
 
             expected_found = i in test_set[marker_name]["detect"]
-            found = result is not None
+            found = contour is not None
 
             if found != expected_found:
                 print("Test failed: %s marker, image %i. Marker found: %s but was expected: %s." % (marker_name, i, "YES" if found else "NO", "YES" if expected_found else "NO"))
