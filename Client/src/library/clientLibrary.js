@@ -259,10 +259,14 @@ Client = (function() {
     } : {}));
   };
 
-  Client.prototype.requestMarkers = function(areaId, markerId) {
+  Client.prototype.requestMarkers = function(areaId, markerId, stableTime) {
+    if (stableTime == null) {
+      stableTime = 1.5;
+    }
     return this.sendMessage("requestMarkers", {
       "areaId": areaId,
-      "markerId": markerId
+      "markerId": markerId,
+      "stableTime": stableTime
     });
   };
 

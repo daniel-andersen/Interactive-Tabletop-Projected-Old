@@ -409,14 +409,17 @@ class Server(WebSocket):
 
         areaId: Board area id
         markerId: Marker id
+        stableTime: (Optional) Amount of time for markers to be stabily found
         """
         board_area = self.board_areas[payload["areaId"]]
         marker = self.markers[payload["markerId"]]
+        stable_time = payload["stableTime"] if "stableTime" in payload else 1.5
         reporter_id = self.draw_reporter_id()
 
         reporter = FindMarkersReporter(
             board_area,
             marker,
+            stable_time,
             reporter_id,
             callback_function=lambda (markers): self.send_message("OK", "markersFound", {"id": reporter_id,
                                                                                          "areaId": payload["areaId"],

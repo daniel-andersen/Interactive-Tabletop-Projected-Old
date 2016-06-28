@@ -145,10 +145,11 @@ class Client
             "sleepTime": sleepTime
         }, if id? then {"id": id} else {}))
 
-    requestMarkers: (areaId, markerId) ->
+    requestMarkers: (areaId, markerId, stableTime = 1.5) ->
         this.sendMessage("requestMarkers", {
             "areaId": areaId,
-            "markerId": markerId
+            "markerId": markerId,
+            "stableTime": stableTime
         })
 
     sendMessage: (action, payload) ->
