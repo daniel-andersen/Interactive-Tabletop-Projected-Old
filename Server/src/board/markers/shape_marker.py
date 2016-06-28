@@ -8,7 +8,7 @@ from util import contour_util
 
 class ShapeMarker(Marker):
 
-    def __init__(self, contour=None, marker_image=None, distance_tolerance=0.15, angle_tolerance=0.15,
+    def __init__(self, contour=None, marker_image=None, distance_tolerance=0.35, angle_tolerance=0.15,
                  fine_grained=True, spike_tolerance=0.025, closed=True, min_arclength=0.1, max_arclength=100.0,
                  min_area=0.0025, max_area=1.0):
         """
@@ -161,9 +161,11 @@ class ShapeMarker(Marker):
         max_contour_length = max(image_width, image_height) * self.max_arclength
 
         if arclength < min_contour_length:
+            #print("Arclength to small: %f < %f" % (arclength, min_contour_length))
             return None
 
         if arclength > max_contour_length:
+            #print("Arclength to large: %f > %f" % (arclength, max_contour_length))
             return None
 
         # Check contour area
@@ -177,9 +179,11 @@ class ShapeMarker(Marker):
         max_contour_area = image_width * image_height * self.max_area
 
         if area < min_contour_area:
+            #print("Area to small: %f < %f" % (area, min_contour_area))
             return None
 
         if area > max_contour_area:
+            #print("Area to large: %f > %f" % (area, max_contour_area))
             return None
 
         # Simplify contour
@@ -190,9 +194,11 @@ class ShapeMarker(Marker):
 
         # Check number of lines compared to marker
         if len(approxed_contour) < len(self.marker_contour):
+            #print("Number of lines to few: %f < %f" % (len(approxed_contour), len(self.marker_contour)))
             return None
 
         if len(approxed_contour) > len(self.marker_contour) * 2:
+            #print("Number of lines to many: %f < %f" % (len(approxed_contour), len(self.marker_contour) * 2))
             return None
 
         # Go through source points
