@@ -86,6 +86,14 @@ class Client
             "id": areaId
         })
 
+    removeMarkers: ->
+        this.sendMessage("removeMarkers", {})
+
+    removeMarker: (markerId) ->
+        this.sendMessage("removeMarker", {
+            "id": markerId
+        })
+
     requestTiledObjectPosition: (areaId, validPositions) ->
         this.sendMessage("requestBrickPosition", {
             "areaId": areaId,

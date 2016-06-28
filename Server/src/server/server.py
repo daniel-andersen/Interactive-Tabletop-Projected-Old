@@ -41,8 +41,7 @@ class Server(WebSocket):
 
     def initialize_video(self, resolution):
         if globals.camera is not None:
-            globals.camera.stop()
-            globals.camera = None
+            return
 
         globals.camera = Camera()
         globals.camera.start(resolution)
@@ -87,6 +86,10 @@ class Server(WebSocket):
             return self.remove_board_area(payload)
         if action == "removeBoardAreas":
             return self.remove_board_areas()
+        if action == "removeMarker":
+            return self.remove_marker(payload)
+        if action == "removeMarkers":
+            return self.remove_markers()
         if action == "reportBackWhenBrickFoundAtAnyOfPositions":
             return self.report_back_when_brick_found_at_any_of_positions(payload)
         if action == "reportBackWhenBrickMovedToAnyOfPositions":
@@ -118,6 +121,7 @@ class Server(WebSocket):
         self.initialize_reporter_thread()
         self.reset_reporters()
         self.remove_board_areas()
+        self.remove_markers()
 
         self.initialize_video(resolution)
 
@@ -229,6 +233,25 @@ class Server(WebSocket):
         """
         area_id = payload["id"]
         del self.board_areas[area_id]
+
+        return "OK", {}
+
+    def remove_markers(self):
+        """
+        Removes all markers.
+        """
+        self.markers = {}
+
+        return "OK", {}
+
+    def remove_marker(self, payload):
+        """
+        Removes the given marker.
+
+        id: Marker ID.
+        """
+        marker_id = payload["id"]
+        del self.markers[marker_id]
 
         return "OK", {}
 
