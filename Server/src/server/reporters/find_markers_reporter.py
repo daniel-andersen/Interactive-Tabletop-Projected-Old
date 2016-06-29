@@ -30,9 +30,15 @@ class FindMarkersReporter(Reporter):
         markers = self.marker.find_markers_in_image(self.board_area.area_image(reuse=True))
 
         # Update marker history
+        oldest_time = self.image_stable_history[0]["time"] if len(self.image_stable_history) > 0 else time.time()
+
         self.markers_history.append({"time": time.time(), "markerCount": len(markers)})
         while len(self.markers_history) > 1 and self.markers_history[0]["time"] < time.time() - self.stable_time:
             self.markers_history.pop(0)
+
+        # Check if enough time has ellapsed
+        if oldest_time > time.time() - self.stable_time:
+            return
 
         # Check that all markers are the same
         marker_count = len(markers)

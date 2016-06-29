@@ -32,9 +32,15 @@ class FindMarkerReporter(Reporter):
         contour, box = self.marker.find_marker_in_image(self.board_area.area_image(reuse=True))
 
         # Update marker history
+        oldest_time = self.image_stable_history[0]["time"] if len(self.image_stable_history) > 0 else time.time()
+
         self.marker_found_history.append({"time": time.time(), "found": box is not None})
         while len(self.marker_found_history) > 1 and self.marker_found_history[0]["time"] < time.time() - self.stable_time:
             self.marker_found_history.pop(0)
+
+        # Check if enough time has ellapsed
+        if oldest_time > time.time() - self.stable_time:
+            return
 
         # Count percentage of successes
         found_list = [entry["found"] for entry in self.marker_found_history]

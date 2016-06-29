@@ -34,9 +34,15 @@ class TiledBrickPositionReporter(Reporter):
         medians = globals.brick_detector.medians_of_tiles(tile_strip_image, self.valid_positions, self.tiled_board_area)
 
         # Update stability history
+        oldest_time = self.image_stable_history[0]["time"] if len(self.image_stable_history) > 0 else time.time()
+
         self.image_stable_history.append({"time": time.time(), "medians": medians})
         while len(self.image_stable_history) > 1 and self.image_stable_history[0]["time"] < time.time() - self.stable_time:
             self.image_stable_history.pop(0)
+
+        # Check if enough time has ellapsed
+        if oldest_time > time.time() - self.stable_time:
+            return
 
         # Calculate image stability score
         max_deviation = 0.0
