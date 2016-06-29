@@ -381,7 +381,7 @@ class Server(WebSocket):
         image_marker = ImageMarker(image)
         self.markers[payload["markerId"]] = image_marker
 
-        return "OK", {"markerId": payload["markerId"]}
+        return "OK", {"id": payload["markerId"]}
 
     def initialize_shape_marker(self, payload):
         """
@@ -402,7 +402,7 @@ class Server(WebSocket):
 
         self.markers[payload["markerId"]] = shape_marker
 
-        return "OK", {"markerId": payload["markerId"]}
+        return "OK", {"id": payload["markerId"]}
 
     def report_back_when_marker_found(self, payload):
         """
