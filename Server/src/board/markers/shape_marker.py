@@ -9,8 +9,8 @@ from util import contour_util
 class ShapeMarker(Marker):
 
     def __init__(self, contour=None, marker_image=None, distance_tolerance=0.35, angle_tolerance=0.15,
-                 fine_grained=True, spike_tolerance=0.025, closed=True, min_arclength=0.1, max_arclength=100.0,
-                 min_area=0.0025, max_area=1.0):
+                 fine_grained=True, spike_tolerance=0.25, closed=True, min_arclength=0.1, max_arclength=100.0,
+                 min_area=0.0025, max_area=0.9):
         """
         :param contour: Simplified marker contour (containing fx. only corners)
         :param marker_image: Image from which to extract marker contour
@@ -150,6 +150,10 @@ class ShapeMarker(Marker):
     def match_contour(self, contour, image):
         """
         Algorithm: XXX
+
+        :param contour: Contour
+        :param image: Image
+        :return Matched contour
         """
 
         image_height, image_width = image.shape[:2]
@@ -205,19 +209,28 @@ class ShapeMarker(Marker):
         for start_index in range(0, self.marker_length):
 
             # Match points in contour with marker
-            matched_contour = self.match_points(approxed_contour, start_index, 1 if orientation == self.marker_orientation else -1, contour_arc_length=arclength, image=None)
+            matched_contour_index_map = self.match_points(approxed_contour, start_index, 1 if orientation == self.marker_orientation else -1, contour_arc_length=arclength, image=None)
 
             # Check match
-            if matched_contour is not None:
-                #image2 = cv2.cvtColor(image.copy(), cv2.COLOR_GRAY2BGR)
-                #cv2.drawContours(image2, [matched_contour], 0, (255, 0, 255), 1)
-                #cv2.imshow('Contours 2', image2)
-                #cv2.waitKey(0)
-                return matched_contour
+            if matched_contour_index_map is not None:
+                distance_map = self.distance_map_for_contour(approxed_contour, direction=1, index_map=matched_contour_index_map)
+
+                if self.verify_fine_grained_lines(approxed_contour, matched_contour_index_map, distance_map):
+                    return np.int32([approxed_contour[index] for index in matched_contour_index_map]).reshape(-1, 1, 2)
 
         return None
 
     def match_points(self, contour, marker_start_offset, direction, contour_arc_length=None, image=None):
+        """
+        Match points against marker.
+
+        :param contour: Contour
+        :param marker_start_offset: Start offset in marker
+        :param direction: Direction, -1 or 1
+        :param contour_arc_length: Contour arc length, for optimization reasons
+        :param image: Image, for debug
+        :return: Matched points index map in contour
+        """
 
         # Prepare constants
         min_threshold = 0.1
@@ -288,13 +301,13 @@ class ShapeMarker(Marker):
                 if abs(delta_angle) <= self.angle_tolerance:
 
                     # Build contour
-                    matched_points.append(contour[contour_idx2 % contour_length])
+                    matched_points.append(contour_idx2 % contour_length)
 
                     # Next point in marker
                     marker_offset = (marker_offset + direction + self.marker_length) % self.marker_length
 
                     if marker_offset == marker_start_offset:
-                        return np.int32(matched_points).reshape(-1, 1, 2)
+                        return matched_points
 
                     # Next point in contour
                     contour_idx1 = contour_idx2
@@ -312,10 +325,7 @@ class ShapeMarker(Marker):
                 contour_idx3 += 1
                 contour_idx_drifting += 1
 
-
-
-
-    def verify_fine_grained_lines(self, contour, index_map, distance_map, start_index):
+    def verify_fine_grained_lines(self, contour, index_map, distance_map):
         """
         Verifies that all lines not covered by index map points lies within range of lines spanned by points in
         distance map.
@@ -323,7 +333,6 @@ class ShapeMarker(Marker):
         :param contour: Contour
         :param index_map: Index map
         :param distance_map: Distance map
-        :param start_index: Index at which to start
         :return: Whether all lines not covered by index map points lies on lines spanned by points in distance map
         """
 
@@ -354,7 +363,6 @@ class ShapeMarker(Marker):
 
                 # Calculate line length
                 lines_distance += misc_math.line_length(contour[idx][0], contour[prev_idx][0])
-                #print("Line distance: %f" % misc_math.line_length(contour[idx][0], contour[prev_idx][0]))
 
                 prev_idx = idx
 
@@ -362,19 +370,19 @@ class ShapeMarker(Marker):
             distance = distance_map[i][0]
             distance_ratio = max(distance, lines_distance) / min(distance, lines_distance)
 
-            #print("Distance: %f vs %f = ratio: %f" % (lines_distance, distance_map[i][0], distance_ratio))
             if distance_ratio - 1.0 > self.spike_tolerance:
                 return False
 
         # Success
         return True
 
-    def distance_map_for_contour(self, contour, direction):
+    def distance_map_for_contour(self, contour, direction, index_map=None):
         """
         Calculates the distance map of each point of the contour in range [0, arc length] and [0, 1].
 
         :param contour: Contour
         :param direction: Direction
+        :param index_map: Index map. (Optional)
         :return: Distance map in form [(distance, normalized distance), ...]
         """
 
@@ -383,14 +391,20 @@ class ShapeMarker(Marker):
 
         offset = -1 if direction == -1 else 0
 
+        # Calculate index map
+        if index_map is None:
+            index_map = [i for i in range(0, contour_length)]
+
+        index_map_length = len(index_map)
+
         # Calculate distance offset
         distance_map = []
 
-        for i in range(0, contour_length):
-            idx1 = ((i + offset    ) + contour_length) % contour_length
-            idx2 = ((i + offset + 1) + contour_length) % contour_length
+        for i in range(0, index_map_length):
+            idx1 = ((i + offset    ) + index_map_length) % index_map_length
+            idx2 = ((i + offset + 1) + index_map_length) % index_map_length
 
-            line_length = misc_math.line_length(contour[idx1][0], contour[idx2][0])
+            line_length = misc_math.line_length(contour[index_map[idx1]][0], contour[index_map[idx2]][0])
 
             distance_map.append(line_length)
 
@@ -408,15 +422,13 @@ class ShapeMarker(Marker):
 
         contour_length = len(contour)
 
-        offset = 0  #-1 if direction == -1 else 0
-
         # Compute angle map
         angle_map = []
 
         for i in range(0, contour_length):
-            idx1 = ((i + offset - direction) + contour_length) % contour_length
-            idx2 = ((i + offset            ) + contour_length) % contour_length
-            idx3 = ((i + offset + direction) + contour_length) % contour_length
+            idx1 = ((i - direction) + contour_length) % contour_length
+            idx2 = ((i            ) + contour_length) % contour_length
+            idx3 = ((i + direction) + contour_length) % contour_length
 
             angle = self.contour_angle(contour, idx1, idx2, idx3)
             angle_map.append(angle)
