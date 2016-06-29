@@ -102,6 +102,7 @@ Install dependencies:
     $ sudo apt-get install build-essential cmake pkg-config  # Build essentials
     $ sudo apt-get install libjpeg8-dev libjasper-dev libpng12-dev  # Image handling
     $ sudo apt-get install libatlas-base-dev gfortran   # For optimizations within OpenCV
+    $ sudo apt-get install libv4l-dev v4l-utils qv4l2 v4l2ucp  # For Linux
     $ sudo apt-get install python-pip python-dev python-picamera
     $ ./install_packages.sh
 
