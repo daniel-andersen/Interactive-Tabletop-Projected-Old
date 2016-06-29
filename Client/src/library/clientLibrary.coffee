@@ -36,9 +36,9 @@ class Client
         this.sendMessage("enableDebug", {})
 
     reset: (resolution = undefined) ->
-        this.sendMessage("reset",
-            if resolution? then "resolution": resolution else {}
-        )
+        json = {}
+        if resolution? then json["resolution"] = resolution
+        this.sendMessage("reset", json)
 
     resetReporters: ->
         this.sendMessage("resetReporters", {})
@@ -49,9 +49,9 @@ class Client
         })
 
     takeScreenshot: (filename = undefined) ->
-        this.sendMessage("takeScreenshot",
-            if filename? then "filename": filename else {}
-        )
+        json = {}
+        if filename? then json["filename"] = filename
+        this.sendMessage("takeScreenshot", json)
 
     initializeBoard: (borderPctX = 0.0, borderPctY = 0.0, cornerMarker = "DEFAULT") ->
         this.sendMessage("initializeBoard", {
@@ -61,22 +61,26 @@ class Client
         })
 
     initializeBoardArea: (x1 = 0.0, y1 = 0.0, x2 = 1.0, y2 = 1.0, areaId = undefined) ->
-        this.sendMessage("initializeBoardArea", Object.assign({
+        json = {
             "x1": x1,
             "y1": y1,
             "x2": x2,
             "y2": y2
-        }, if areaId? then {"id": areaId} else {}))
+        }
+        if areaId? then json["id"] = areaId
+        this.sendMessage("initializeBoardArea", json)
 
     initializeTiledBoardArea: (tileCountX, tileCountY, x1 = 0.0, y1 = 0.0, x2 = 1.0, y2 = 1.0, areaId = undefined) ->
-        this.sendMessage("initializeTiledBoardArea", Object.assign({
+        json = {
             "tileCountX": tileCountX,
             "tileCountY": tileCountY,
             "x1": x1,
             "y1": y1,
             "x2": x2,
             "y2": y2
-        }, if areaId? then {"id": areaId} else {}))
+        }
+        if areaId? then json["id"] = areaId
+        this.sendMessage("initializeTiledBoardArea", json)
 
     removeBoardAreas: ->
         this.sendMessage("removeBoardAreas", {})
@@ -101,27 +105,33 @@ class Client
         })
 
     reportBackWhenBrickFoundAtAnyOfPositions: (areaId, validPositions, id = undefined, stableTime = 1.5) ->
-        this.sendMessage("reportBackWhenBrickFoundAtAnyOfPositions", Object.assign({
+        json = {
               "areaId": areaId,
               "validPositions": validPositions,
               "stableTime": stableTime
-        }, if id? then {"id": id} else {}))
+        }
+        if id? then json["id"] = id
+        this.sendMessage("reportBackWhenBrickFoundAtAnyOfPositions", json)
 
     reportBackWhenBrickMovedToAnyOfPositions: (areaId, initialPosition, validPositions, id = undefined, stableTime = 1.5) ->
-        this.sendMessage("reportBackWhenBrickMovedToAnyOfPositions", Object.assign({
+        json = {
             "areaId": areaId,
             "initialPosition": initialPosition,
             "validPositions": validPositions,
             "stableTime": stableTime
-        }, if id? then {"id": id} else {}))
+        }
+        if id? then json["id"] = id
+        this.sendMessage("reportBackWhenBrickMovedToAnyOfPositions", json)
 
     reportBackWhenBrickMovedToPosition: (areaId, position, validPositions, id = undefined, stableTime = 1.5) ->
-        this.sendMessage("reportBackWhenBrickMovedToPosition", Object.assign({
+        json = {
             "areaId": areaId,
             "position": position,
             "validPositions": validPositions,
             "stableTime": stableTime
-        }, if id? then {"id": id} else {}))
+        }
+        if id? then json["id"] = id
+        this.sendMessage("reportBackWhenBrickMovedToPosition", json)
 
     initializeImageMarker: (markerId, image) ->
         @convertImageToDataURL(image, (base64Image) =>
@@ -146,12 +156,14 @@ class Client
         )
 
     reportBackWhenMarkerFound: (areaId, markerId, id = undefined, stableTime = 1.5, sleepTime = 1.0) ->
-        this.sendMessage("reportBackWhenMarkerFound", Object.assign({
+        json = {
             "areaId": areaId,
             "markerId": markerId,
             "stableTime": stableTime,
             "sleepTime": sleepTime
-        }, if id? then {"id": id} else {}))
+        }
+        if id? then json["id"] = id
+        this.sendMessage("reportBackWhenMarkerFound", json)
 
     requestMarkers: (areaId, markerId, stableTime = 1.5) ->
         this.sendMessage("requestMarkers", {

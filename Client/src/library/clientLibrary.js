@@ -49,12 +49,15 @@ Client = (function() {
   };
 
   Client.prototype.reset = function(resolution) {
+    var json;
     if (resolution == null) {
       resolution = void 0;
     }
-    return this.sendMessage("reset", resolution != null ? {
-      "resolution": resolution
-    } : {});
+    json = {};
+    if (resolution != null) {
+      json["resolution"] = resolution;
+    }
+    return this.sendMessage("reset", json);
   };
 
   Client.prototype.resetReporters = function() {
@@ -68,12 +71,15 @@ Client = (function() {
   };
 
   Client.prototype.takeScreenshot = function(filename) {
+    var json;
     if (filename == null) {
       filename = void 0;
     }
-    return this.sendMessage("takeScreenshot", filename != null ? {
-      "filename": filename
-    } : {});
+    json = {};
+    if (filename != null) {
+      json["filename"] = filename;
+    }
+    return this.sendMessage("takeScreenshot", json);
   };
 
   Client.prototype.initializeBoard = function(borderPctX, borderPctY, cornerMarker) {
@@ -94,6 +100,7 @@ Client = (function() {
   };
 
   Client.prototype.initializeBoardArea = function(x1, y1, x2, y2, areaId) {
+    var json;
     if (x1 == null) {
       x1 = 0.0;
     }
@@ -109,17 +116,20 @@ Client = (function() {
     if (areaId == null) {
       areaId = void 0;
     }
-    return this.sendMessage("initializeBoardArea", Object.assign({
+    json = {
       "x1": x1,
       "y1": y1,
       "x2": x2,
       "y2": y2
-    }, areaId != null ? {
-      "id": areaId
-    } : {}));
+    };
+    if (areaId != null) {
+      json["id"] = areaId;
+    }
+    return this.sendMessage("initializeBoardArea", json);
   };
 
   Client.prototype.initializeTiledBoardArea = function(tileCountX, tileCountY, x1, y1, x2, y2, areaId) {
+    var json;
     if (x1 == null) {
       x1 = 0.0;
     }
@@ -135,16 +145,18 @@ Client = (function() {
     if (areaId == null) {
       areaId = void 0;
     }
-    return this.sendMessage("initializeTiledBoardArea", Object.assign({
+    json = {
       "tileCountX": tileCountX,
       "tileCountY": tileCountY,
       "x1": x1,
       "y1": y1,
       "x2": x2,
       "y2": y2
-    }, areaId != null ? {
-      "id": areaId
-    } : {}));
+    };
+    if (areaId != null) {
+      json["id"] = areaId;
+    }
+    return this.sendMessage("initializeTiledBoardArea", json);
   };
 
   Client.prototype.removeBoardAreas = function() {
@@ -157,6 +169,16 @@ Client = (function() {
     });
   };
 
+  Client.prototype.removeMarkers = function() {
+    return this.sendMessage("removeMarkers", {});
+  };
+
+  Client.prototype.removeMarker = function(markerId) {
+    return this.sendMessage("removeMarker", {
+      "id": markerId
+    });
+  };
+
   Client.prototype.requestTiledObjectPosition = function(areaId, validPositions) {
     return this.sendMessage("requestBrickPosition", {
       "areaId": areaId,
@@ -165,53 +187,62 @@ Client = (function() {
   };
 
   Client.prototype.reportBackWhenBrickFoundAtAnyOfPositions = function(areaId, validPositions, id, stableTime) {
+    var json;
     if (id == null) {
       id = void 0;
     }
     if (stableTime == null) {
       stableTime = 1.5;
     }
-    return this.sendMessage("reportBackWhenBrickFoundAtAnyOfPositions", Object.assign({
+    json = {
       "areaId": areaId,
       "validPositions": validPositions,
       "stableTime": stableTime
-    }, id != null ? {
-      "id": id
-    } : {}));
+    };
+    if (id != null) {
+      json["id"] = id;
+    }
+    return this.sendMessage("reportBackWhenBrickFoundAtAnyOfPositions", json);
   };
 
   Client.prototype.reportBackWhenBrickMovedToAnyOfPositions = function(areaId, initialPosition, validPositions, id, stableTime) {
+    var json;
     if (id == null) {
       id = void 0;
     }
     if (stableTime == null) {
       stableTime = 1.5;
     }
-    return this.sendMessage("reportBackWhenBrickMovedToAnyOfPositions", Object.assign({
+    json = {
       "areaId": areaId,
       "initialPosition": initialPosition,
       "validPositions": validPositions,
       "stableTime": stableTime
-    }, id != null ? {
-      "id": id
-    } : {}));
+    };
+    if (id != null) {
+      json["id"] = id;
+    }
+    return this.sendMessage("reportBackWhenBrickMovedToAnyOfPositions", json);
   };
 
   Client.prototype.reportBackWhenBrickMovedToPosition = function(areaId, position, validPositions, id, stableTime) {
+    var json;
     if (id == null) {
       id = void 0;
     }
     if (stableTime == null) {
       stableTime = 1.5;
     }
-    return this.sendMessage("reportBackWhenBrickMovedToPosition", Object.assign({
+    json = {
       "areaId": areaId,
       "position": position,
       "validPositions": validPositions,
       "stableTime": stableTime
-    }, id != null ? {
-      "id": id
-    } : {}));
+    };
+    if (id != null) {
+      json["id"] = id;
+    }
+    return this.sendMessage("reportBackWhenBrickMovedToPosition", json);
   };
 
   Client.prototype.initializeImageMarker = function(markerId, image) {
@@ -244,6 +275,7 @@ Client = (function() {
   };
 
   Client.prototype.reportBackWhenMarkerFound = function(areaId, markerId, id, stableTime, sleepTime) {
+    var json;
     if (id == null) {
       id = void 0;
     }
@@ -253,14 +285,16 @@ Client = (function() {
     if (sleepTime == null) {
       sleepTime = 1.0;
     }
-    return this.sendMessage("reportBackWhenMarkerFound", Object.assign({
+    json = {
       "areaId": areaId,
       "markerId": markerId,
       "stableTime": stableTime,
       "sleepTime": sleepTime
-    }, id != null ? {
-      "id": id
-    } : {}));
+    };
+    if (id != null) {
+      json["id"] = id;
+    }
+    return this.sendMessage("reportBackWhenMarkerFound", json);
   };
 
   Client.prototype.requestMarkers = function(areaId, markerId, stableTime) {
