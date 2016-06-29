@@ -107,9 +107,9 @@ Install dependencies:
 
 Install OpenCV:
 
-    $ wget -O opencv-2.4.10.zip http://sourceforge.net/projects/opencvlibrary/files/opencv-unix/2.4.10/opencv-2.4.10.zip/download
-    $ unzip opencv-2.4.10.zip
-    $ cd opencv-2.4.10
+    $ wget -O opencv-2.4.13.zip https://codeload.github.com/Itseez/opencv/zip/2.4.13
+    $ unzip opencv-2.4.13.zip
+    $ cd opencv-2.4.13
 
     $ mkdir build
     $ cd build
