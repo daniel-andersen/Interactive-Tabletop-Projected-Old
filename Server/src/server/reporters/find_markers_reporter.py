@@ -47,6 +47,6 @@ class FindMarkersReporter(Reporter):
                 return
 
         if globals.debug:
-            print("%i: Markers found")
+            print("%i: Markers found" % self.reporter_id)
         self.callback_function(markers)
         self.stop()

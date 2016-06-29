@@ -50,6 +50,6 @@ class FindMarkerReporter(Reporter):
 
         if percentage >= 0.8:
             if globals.debug:
-                print("%i: Marker recognized")
+                print("%i: Marker recognized" % self.reporter_id)
             self.callback_function(box)
             self.stop()
