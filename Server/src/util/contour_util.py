@@ -44,7 +44,9 @@ def simplify_contour(contour, lookahead_length=8, image=None):
             comparison_vector = contour[comparison_end_point_index][0] - contour[i][0]
 
             # Make comparison vector same length as direction vector
-            comparison_vector = comparison_vector * misc_math.line_length([0.0, 0.0], direction_vector) / misc_math.line_length([0.0, 0.0], comparison_vector)
+            length = misc_math.line_length([0.0, 0.0], comparison_vector)
+            if length > 0.0:
+                comparison_vector = comparison_vector * misc_math.line_length([0.0, 0.0], direction_vector) / length
 
         # Check line difference from comparison vector
         if misc_math.line_length(direction_vector, comparison_vector) > max_deviation:
