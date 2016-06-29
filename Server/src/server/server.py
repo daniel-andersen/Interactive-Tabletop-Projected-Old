@@ -371,7 +371,7 @@ class Server(WebSocket):
         """
         Initializes image marker with given parameters.
 
-        id: Marker id
+        markerId: Marker id
         imageBase64: Image as base 64 encoded PNG
         """
         raw_image = base64.b64decode(payload["imageBase64"])
@@ -379,15 +379,15 @@ class Server(WebSocket):
         image = cv2.imdecode(raw_bytes, cv2.CV_LOAD_IMAGE_UNCHANGED)
 
         image_marker = ImageMarker(image)
-        self.markers[payload["id"]] = image_marker
+        self.markers[payload["markerId"]] = image_marker
 
-        return "OK", {"id": payload["id"]}
+        return "OK", {"markerId": payload["markerId"]}
 
     def initialize_shape_marker(self, payload):
         """
         Initializes a shape marker with given image and parameters.
 
-        id: Marker id
+        markerId: Marker id
         shape: (Optional)Shape
         imageBase64: (Optional)Image as base 64 encoded PNG
         """
@@ -400,9 +400,9 @@ class Server(WebSocket):
             image = cv2.imdecode(raw_bytes, cv2.CV_LOAD_IMAGE_UNCHANGED)
             shape_marker = ShapeMarker(marker_image=image)
 
-        self.markers[payload["id"]] = shape_marker
+        self.markers[payload["markerId"]] = shape_marker
 
-        return "OK", {"id": payload["id"]}
+        return "OK", {"markerId": payload["markerId"]}
 
     def report_back_when_marker_found(self, payload):
         """

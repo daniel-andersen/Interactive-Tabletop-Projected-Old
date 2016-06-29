@@ -124,7 +124,7 @@ class Client
         }, if id? then {"id": id} else {}))
 
     initializeImageMarker: (markerId, image) ->
-        @convertImageToDataURL(image, (base64Image) ->
+        @convertImageToDataURL(image, (base64Image) =>
             this.sendMessage("initializeImageMarker", {
                 "markerId": markerId,
                 "imageBase64": base64Image
@@ -138,7 +138,7 @@ class Client
         })
 
     initializeShapeMarkerWithImage: (markerId, image) ->
-        @convertImageToDataURL(image, (base64Image) ->
+        @convertImageToDataURL(image, (base64Image) =>
             this.sendMessage("initializeShapeMarker", {
                 "id": markerId,
                 "imageBase64": base64Image
@@ -178,6 +178,7 @@ class Client
         ctx.drawImage(image, 0, 0)
 
         dataURL = canvas.toDataURL("image/png")
+        dataURL = dataURL.replace(/^data:image\/png;base64,/, "")
 
         callback(dataURL)
 

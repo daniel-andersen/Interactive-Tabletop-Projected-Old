@@ -215,12 +215,14 @@ Client = (function() {
   };
 
   Client.prototype.initializeImageMarker = function(markerId, image) {
-    return this.convertImageToDataURL(image, function(base64Image) {
-      return this.sendMessage("initializeImageMarker", {
-        "markerId": markerId,
-        "imageBase64": base64Image
-      });
-    });
+    return this.convertImageToDataURL(image, (function(_this) {
+      return function(base64Image) {
+        return _this.sendMessage("initializeImageMarker", {
+          "markerId": markerId,
+          "imageBase64": base64Image
+        });
+      };
+    })(this));
   };
 
   Client.prototype.initializeShapeMarkerWithContour = function(markerId, contour) {
@@ -231,12 +233,14 @@ Client = (function() {
   };
 
   Client.prototype.initializeShapeMarkerWithImage = function(markerId, image) {
-    return this.convertImageToDataURL(image, function(base64Image) {
-      return this.sendMessage("initializeShapeMarker", {
-        "id": markerId,
-        "imageBase64": base64Image
-      });
-    });
+    return this.convertImageToDataURL(image, (function(_this) {
+      return function(base64Image) {
+        return _this.sendMessage("initializeShapeMarker", {
+          "id": markerId,
+          "imageBase64": base64Image
+        });
+      };
+    })(this));
   };
 
   Client.prototype.reportBackWhenMarkerFound = function(areaId, markerId, id, stableTime, sleepTime) {
@@ -287,6 +291,7 @@ Client = (function() {
     ctx = canvas.getContext("2d");
     ctx.drawImage(image, 0, 0);
     dataURL = canvas.toDataURL("image/png");
+    dataURL = dataURL.replace(/^data:image\/png;base64,/, "");
     callback(dataURL);
     return canvas = null;
   };
