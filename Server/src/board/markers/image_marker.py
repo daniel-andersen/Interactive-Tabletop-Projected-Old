@@ -4,7 +4,7 @@ from marker import Marker
 
 
 class ImageMarker(Marker):
-    def __init__(self, marker_image, min_matches=30):
+    def __init__(self, marker_image, min_matches=10):
         """
         :param marker_image: Marker image
         :param min_matches: Minimum number of matches for marker to be detected
