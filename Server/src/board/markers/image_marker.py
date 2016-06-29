@@ -79,5 +79,16 @@ class ImageMarker(Marker):
         :param image: Image
         :return: List of markers each in form (contour, [centerX, centerY, width, height, rotation])
         """
-        print("ImageMarker::find_markers_in_image - Not yet implemented!")
-        return []
+
+        # TODO! Extract all markers!
+        contour, box = self.find_marker_in_image(image)
+        return [(contour, box)] if contour is not None else []
+
+    def find_markers_in_thresholded_image(self, image):
+        """
+        Find all markers in image which has already been thresholded.
+
+        :param image: Thresholded image
+        :return: List of markers each in form (contour, [centerX, centerY, width, height, rotation])
+        """
+        return self.find_markers_in_image(image)
