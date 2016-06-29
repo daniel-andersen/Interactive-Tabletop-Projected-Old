@@ -4,7 +4,7 @@ from marker import Marker
 
 
 class ImageMarker(Marker):
-    def __init__(self, marker_image, min_matches=10):
+    def __init__(self, marker_image, min_matches=30):
         """
         :param marker_image: Marker image
         :param min_matches: Minimum number of matches for marker to be detected
@@ -12,6 +12,9 @@ class ImageMarker(Marker):
         super(ImageMarker, self).__init__()
 
         self.min_matches = min_matches
+
+        # Get size of query image
+        self.query_image_height, self.query_image_width = marker_image.shape[:2]
 
         # Initialize SIFT detector
         self.sift = cv2.SIFT()
@@ -37,6 +40,9 @@ class ImageMarker(Marker):
         # Find features in image
         kp2, des2 = self.sift.detectAndCompute(image, None)
 
+        if len(self.kp1) < 2 or len(kp2) < 2:
+            return None, None
+
         # Find matches
         matches = self.flann.knnMatch(self.des1, des2, k=2)
 
@@ -57,12 +63,11 @@ class ImageMarker(Marker):
         M, mask = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC, 5.0)
 
         # Transform points to board area
-        height, width = image.shape
-        pts = np.float32([[0, 0], [0, height - 1], [width - 1, height - 1], [width - 1, 0]]).reshape(-1,1,2)
+        pts = np.float32([[0, 0], [0, self.query_image_height - 1], [self.query_image_width - 1, self.query_image_height - 1], [self.query_image_width - 1, 0]]).reshape(-1,1,2)
         dst = cv2.perspectiveTransform(pts, M)
 
         # Return resulting points
-        return self.contour_to_marker_result(image, [np.int32(dst)])
+        return self.contour_to_marker_result(image, np.int32(dst))
 
     def find_marker_in_thresholded_image(self, image):
         return self.find_marker_in_image(image)

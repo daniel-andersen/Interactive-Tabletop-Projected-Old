@@ -5,6 +5,7 @@ from board.board_recognizer import BoardRecognizer
 from board.tile_brick_detector import TileBrickDetector
 from board.markers.shape_marker import ShapeMarker
 from board.markers.triangle_marker import TriangleMarker
+from board.markers.image_marker import ImageMarker
 from board.board_areas.tiled_board_area import TiledBoardArea
 from util import contour_util
 
@@ -161,7 +162,7 @@ def tiled_brick_detector_test():
 def shape_marker_test():
     test_set = {
         "triangle": {
-            "marker": ShapeMarker(np.int32([[0, 0], [100, 0], [0, 100]]).reshape(-1, 1, 2), min_area=0.03, max_area=0.5, distance_tolerance=0.15),
+            "marker": ShapeMarker(np.int32([[0, 0], [100, 0], [0, 100]]).reshape(-1, 1, 2), max_area=0.5),
             "detect": [1, 2]
         },
         "square": {
@@ -175,28 +176,36 @@ def shape_marker_test():
         "star": {
             "marker": ShapeMarker(marker_image=cv2.imread("board/training/marker_star.png"), distance_tolerance=0.50, angle_tolerance=0.35),
             "detect": [11, 12]
+        },
+        "dog": {
+            "marker": ImageMarker(marker_image=cv2.imread("board/training/marker_dog.png")),
+            "detect": [13]
         }
     }
 
     failed = 0
     passed = 0
 
-    marker_test_images_count = 12
+    marker_test_images_count = 13
 
     for marker_name in test_set.keys():
         marker = test_set[marker_name]["marker"]
 
         for i in range(1, marker_test_images_count + 1):
-            #if marker_name != "square" or i != 6:
+            #if marker_name != "square" or i != 13:
             #    continue
 
             image_filename = "board/training/marker_test_{0}.png".format(i)
-
             image = cv2.imread(image_filename)
             if image is None:
                 continue
 
             contour, box = marker.find_marker_in_image(image)
+
+            #if contour is not None:
+            #    image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+            #    contour_util.draw_contour(image, contour=contour, scale=1)
+            #    cv2.waitKey(0)
 
             expected_found = i in test_set[marker_name]["detect"]
             found = contour is not None
