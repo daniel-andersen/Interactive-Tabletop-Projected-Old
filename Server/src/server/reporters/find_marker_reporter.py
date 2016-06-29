@@ -20,7 +20,7 @@ class FindMarkerReporter(Reporter):
         self.stable_time = stable_time
         self.sleep_time = sleep_time
 
-        self.marker_found_history = []
+        self.markers_history = []
 
     def run_iteration(self):
 
@@ -32,18 +32,18 @@ class FindMarkerReporter(Reporter):
         contour, box = self.marker.find_marker_in_image(self.board_area.area_image(reuse=True))
 
         # Update marker history
-        oldest_time = self.image_stable_history[0]["time"] if len(self.image_stable_history) > 0 else time.time()
+        oldest_time = self.markers_history[0]["time"] if len(self.markers_history) > 0 else time.time()
 
-        self.marker_found_history.append({"time": time.time(), "found": box is not None})
-        while len(self.marker_found_history) > 1 and self.marker_found_history[0]["time"] < time.time() - self.stable_time:
-            self.marker_found_history.pop(0)
+        self.markers_history.append({"time": time.time(), "found": box is not None})
+        while len(self.markers_history) > 1 and self.markers_history[0]["time"] < time.time() - self.stable_time:
+            self.markers_history.pop(0)
 
         # Check if enough time has ellapsed
         if oldest_time > time.time() - self.stable_time:
             return
 
         # Count percentage of successes
-        found_list = [entry["found"] for entry in self.marker_found_history]
+        found_list = [entry["found"] for entry in self.markers_history]
         found_count = found_list.count(True)
 
         percentage = float(found_count) / float(len(found_list))
