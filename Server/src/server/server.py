@@ -47,17 +47,20 @@ class Server(WebSocket):
         """
         Handles incoming message.
         """
-        print("Got message: %s" % self.data)
-        json_dict = json.loads(self.data)
+        try:
+            print("Got message: %s" % self.data)
+            json_dict = json.loads(self.data)
 
-        if "action" in json_dict:
-            action = json_dict["action"]
+            if "action" in json_dict:
+                action = json_dict["action"]
 
-            with self.busy_lock:
-                result = self.handle_action(action, json_dict["payload"])
+                with self.busy_lock:
+                    result = self.handle_action(action, json_dict["payload"])
 
-            if result is not None:
-                self.send_message(result[0], action, result[1])
+                if result is not None:
+                    self.send_message(result[0], action, result[1])
+        except Exception, exception:
+            print("Exception in handleMessage: %s" % str(exception))
 
     def handle_action(self, action, payload):
         if action == "enableDebug":
@@ -541,59 +544,63 @@ class Server(WebSocket):
 
         while True:
 
-            # Sleep a while
-            time.sleep(0.1)
+            try:
+                # Sleep a while
+                time.sleep(0.1)
 
-            # Read image from camera
-            if globals.camera is None:
-                continue
+                # Read image from camera
+                if globals.camera is None:
+                    continue
 
-            image = globals.camera.read()
-            if image is None:
-                continue
+                image = globals.camera.read()
+                if image is None:
+                    continue
 
-            # Do all in a lock to force sequential execution of handleMessage above
-            with self.busy_lock:
+                # Do all in a lock to force sequential execution of handleMessage above
+                with self.busy_lock:
 
-                # Recognize board
-                if globals.board_descriptor is not None:
-                    globals.board_descriptor.snapshot = globals.board_recognizer.find_board(image, globals.board_descriptor)
+                    # Recognize board
+                    if globals.board_descriptor is not None:
+                        globals.board_descriptor.snapshot = globals.board_recognizer.find_board(image, globals.board_descriptor)
 
-                    # Board not recognized
-                    if not globals.board_descriptor.is_recognized():
+                        # Board not recognized
+                        if not globals.board_descriptor.is_recognized():
 
-                        # Notify client that board is not recognized
-                        if board_recognized_time is not None and time.time() > board_recognized_time + globals.board_not_recognized_notify_delay:
-                            self.notify_board_not_recognized(globals.board_descriptor.snapshot)
-                            board_recognized_time = None
+                            # Notify client that board is not recognized
+                            if board_recognized_time is not None and time.time() > board_recognized_time + globals.board_not_recognized_notify_delay:
+                                self.notify_board_not_recognized(globals.board_descriptor.snapshot)
+                                board_recognized_time = None
 
-                    else:
+                        else:
 
-                        # Notify client that board is recognized
-                        if board_recognized_time is None:
-                            self.notify_board_recognized()
+                            # Notify client that board is recognized
+                            if board_recognized_time is None:
+                                self.notify_board_recognized()
 
-                        board_recognized_time = time.time()
+                            board_recognized_time = time.time()
 
-                # Reset all board area images in order to force extraction of new upon next request
-                for (_, board_area) in self.board_areas.copy().iteritems():
-                    board_area.reset_area_image()
+                    # Reset all board area images in order to force extraction of new upon next request
+                    for (_, board_area) in self.board_areas.copy().iteritems():
+                        board_area.reset_area_image()
 
-                # Run all reporters
-                reporter_ids_to_remove = []
+                    # Run all reporters
+                    reporter_ids_to_remove = []
 
-                for (reporter_id, reporter) in self.reporters.copy().iteritems():
+                    for (reporter_id, reporter) in self.reporters.copy().iteritems():
 
-                    # Run reporter
-                    reporter.run_iteration()
+                        # Run reporter
+                        reporter.run_iteration()
 
-                    # Check if stopped
-                    if reporter.stopped:
-                        reporter_ids_to_remove.append(reporter_id)
+                        # Check if stopped
+                        if reporter.stopped:
+                            reporter_ids_to_remove.append(reporter_id)
 
-                # Remove stopped reporters
-                for reporter_id in reporter_ids_to_remove:
-                    self.reporters.pop(reporter_id)
+                    # Remove stopped reporters
+                    for reporter_id in reporter_ids_to_remove:
+                        self.reporters.pop(reporter_id)
+
+            except Exception, exception:
+                print("Exception in reporter loop: %s" % str(exception))
 
 
 def start_server():
