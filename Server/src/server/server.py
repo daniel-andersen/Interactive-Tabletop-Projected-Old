@@ -7,7 +7,7 @@ import base64
 import numpy as np
 from random import randint
 from threading import Thread
-from threading import RLock
+from threading import Lock
 from SimpleWebSocketServer import SimpleWebSocketServer, WebSocket
 from util import misc_util
 from board.markers.marker_util import *
@@ -34,7 +34,7 @@ class Server(WebSocket):
     """
     Server which communicates with the client library.
     """
-    busy_lock = RLock()
+    busy_lock = Lock()
 
     reporters = {}
     reporter_thread = None
@@ -102,12 +102,11 @@ class Server(WebSocket):
             return self.report_back_when_marker_found(payload)
 
     def initialize_video(self, resolution):
-        with self.busy_lock:
-            if globals.camera is not None:
-                return
+        if globals.camera is not None:
+            return
 
-            globals.camera = Camera()
-            globals.camera.start(resolution)
+        globals.camera = Camera()
+        globals.camera.start(resolution)
 
     def initialize_reporter_thread(self):
         if self.reporter_thread is None:
