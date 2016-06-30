@@ -544,16 +544,16 @@ class Server(WebSocket):
             # Sleep a while
             time.sleep(0.1)
 
+            # Read image from camera
+            if globals.camera is None:
+                continue
+
+            image = globals.camera.read()
+            if image is None:
+                continue
+
             # Do all in a lock to force sequential execution of handleMessage above
             with self.busy_lock:
-
-                # Read image from camera
-                if globals.camera is None:
-                    continue
-
-                image = globals.camera.read()
-                if image is None:
-                    continue
 
                 # Recognize board
                 if globals.board_descriptor is not None:
@@ -576,13 +576,13 @@ class Server(WebSocket):
                         board_recognized_time = time.time()
 
                 # Reset all board area images in order to force extraction of new upon next request
-                for (_, board_area) in self.board_areas.iteritems():
+                for (_, board_area) in self.board_areas.copy().iteritems():
                     board_area.reset_area_image()
 
                 # Run all reporters
                 reporter_ids_to_remove = []
 
-                for (reporter_id, reporter) in self.reporters.iteritems():
+                for (reporter_id, reporter) in self.reporters.copy().iteritems():
 
                     # Run reporter
                     reporter.run_iteration()
