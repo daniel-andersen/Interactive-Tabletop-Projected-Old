@@ -8,7 +8,7 @@ from util import contour_util
 
 class ShapeMarker(Marker):
 
-    def __init__(self, contour=None, marker_image=None, distance_tolerance=0.35, angle_tolerance=0.15,
+    def __init__(self, contour=None, marker_image=None, distance_tolerance=0.35, angle_tolerance=0.25,
                  fine_grained=True, spike_tolerance=0.25, closed=True, min_arclength=0.1, max_arclength=100.0,
                  min_area=0.0025, max_area=0.9):
         """
