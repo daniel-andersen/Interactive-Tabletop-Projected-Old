@@ -493,14 +493,14 @@ class Server(WebSocket):
 
         :param board_snapshot Board snapshot
         """
-        if board_snapshot.missing_corners is not None:
+        if board_snapshot is not None and board_snapshot.missing_corners is not None:
             self.send_message("BOARD_NOT_RECOGNIZED", "recognizeBoard",
                               {"unrecognizedCorners": board_snapshot.missing_corners})
         else:
             self.send_message("BOARD_NOT_RECOGNIZED", "recognizeBoard", {})
 
         # Output debug image
-        if globals.debug:
+        if globals.debug and board_snapshot is not None:
             cv2.imwrite("debug/board_not_recognized_{0}.png".format(time.time()), board_snapshot.camera_image)
 
     def notify_board_recognized(self):
