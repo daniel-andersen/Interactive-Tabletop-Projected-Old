@@ -73,11 +73,14 @@ class TiledBoardArea(BoardArea):
 
         tile_width, tile_height = self.tile_size()
 
+        image_width = int(float(len(coordinates)) * tile_width)
+        image_height = int(tile_height)
+
         channels = source_image.shape[2] if len(source_image.shape) > 2 else 1
         if channels > 1:
-            size = (int(tile_height), int(float(len(coordinates)) * tile_width), channels)
+            size = (image_height, image_width, channels)
         else:
-            size = (int(tile_height), int(float(len(coordinates)) * tile_width))
+            size = (image_height, image_width * tile_width)
 
         image = np.zeros(size, source_image.dtype)
 
@@ -85,7 +88,7 @@ class TiledBoardArea(BoardArea):
         for (x, y) in coordinates:
             x1, y1, x2, y2 = self.tile_region(x, y)[:4]
             tile_image = source_image[y1:y2, x1:x2]
-            image[0:int(tile_height), int(offset):int(offset) + int(tile_width)] = tile_image
+            image[0:image_height, int(offset):min(int(offset) + int(tile_width), image_width)] = tile_image
             offset += tile_width
 
         return image
