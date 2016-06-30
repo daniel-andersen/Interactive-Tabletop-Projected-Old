@@ -143,7 +143,7 @@ class Client
 
     initializeShapeMarkerWithContour: (markerId, contour) ->
         this.sendMessage("initializeShapeMarker", {
-            "id": markerId,
+            "markerId": markerId,
             "shape": contour
         })
 
