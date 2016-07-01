@@ -80,7 +80,7 @@ class TiledBoardArea(BoardArea):
         if channels > 1:
             size = (image_height, image_width, channels)
         else:
-            size = (image_height, image_width * tile_width)
+            size = (image_height, image_width)
 
         image = np.zeros(size, source_image.dtype)
 
