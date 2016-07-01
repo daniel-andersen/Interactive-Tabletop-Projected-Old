@@ -1,4 +1,5 @@
 from __future__ import with_statement
+import sys, traceback
 import json
 import time
 import cv2
@@ -62,6 +63,7 @@ class Server(WebSocket):
 
         except Exception, e:
             print("Exception in handleMessage: %s" % str(e))
+            traceback.print_exc(file=sys.stdout)
 
     def handle_action(self, action, payload):
         if action == "enableDebug":
@@ -603,7 +605,7 @@ class Server(WebSocket):
 
             except Exception, e:
                 print("Exception in reporter loop: %s" % str(e))
-
+                traceback.print_exc(file=sys.stdout)
 
 def start_server():
     print("Starting server...")
