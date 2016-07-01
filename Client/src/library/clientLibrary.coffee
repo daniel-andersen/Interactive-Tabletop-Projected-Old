@@ -150,7 +150,7 @@ class Client
     initializeShapeMarkerWithImage: (markerId, image) ->
         @convertImageToDataURL(image, (base64Image) =>
             this.sendMessage("initializeShapeMarker", {
-                "id": markerId,
+                "markerId": markerId,
                 "imageBase64": base64Image
             })
         )
