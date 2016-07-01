@@ -431,7 +431,7 @@ class Server(WebSocket):
             stable_time,
             sleep_time,
             reporter_id,
-            callback_function=lambda (contour, box): self.send_message("OK", "markerFound", {"id": reporter_id,
+            callback_function=lambda (box): self.send_message("OK", "markerFound", {"id": reporter_id,
                                                                                              "areaId": payload["areaId"],
                                                                                              "markerId": payload["markerId"],
                                                                                              "marker": box}))
