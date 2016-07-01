@@ -22,12 +22,15 @@ class FindMarkersReporter(Reporter):
 
     def run_iteration(self):
 
+        # Get area image
+        image = self.board_area.area_image(reuse=True)
+
         # Check if we have a board area image
-        if self.board_area.area_image() is None:
+        if image is None:
             return
 
         # Find marker
-        markers = self.marker.find_markers_in_image(self.board_area.area_image(reuse=True))
+        markers = self.marker.find_markers_in_image(image)
 
         # Update marker history
         oldest_time = self.markers_history[0]["time"] if len(self.markers_history) > 0 else time.time()
