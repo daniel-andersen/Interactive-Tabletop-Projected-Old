@@ -1,24 +1,21 @@
 class Client
-    socket = null
-
-    action = "action"
-    payload = "payload";
 
     constructor: (@port = 9001) ->
         @debug_textField = null
         @debug_log = []
+        @socket = undefined
 
-        this.socketOpen = false
+        @socketOpen = false
 
     connect: (onSocketOpen, onMessage) ->
-        this.disconnect()
+        @disconnect()
 
-        this.socket = new WebSocket("ws://localhost:" + this.port + "/")
+        @socket = new WebSocket("ws://localhost:" + @port + "/")
 
-        this.socket.onopen = (event) =>
+        @socket.onopen = (event) =>
             onSocketOpen()
 
-        this.socket.onmessage = (event) =>
+        @socket.onmessage = (event) =>
             json = JSON.parse(event.data)
             onMessage(json)
 
@@ -28,33 +25,33 @@ class Client
 
 
     disconnect: ->
-        if this.socket
-            this.socket.close()
-            this.socket = null
+        if @socket?
+            @socket.close()
+            @socket = undefined
 
     enableDebug: () ->
-        this.sendMessage("enableDebug", {})
+        @sendMessage("enableDebug", {})
 
     reset: (resolution = undefined) ->
         json = {}
         if resolution? then json["resolution"] = resolution
-        this.sendMessage("reset", json)
+        @sendMessage("reset", json)
 
     resetReporters: ->
-        this.sendMessage("resetReporters", {})
+        @sendMessage("resetReporters", {})
 
     resetReporter: (reporterId) ->
-        this.sendMessage("resetReporter", {
+        @sendMessage("resetReporter", {
             "id": reporterId
         })
 
     takeScreenshot: (filename = undefined) ->
         json = {}
         if filename? then json["filename"] = filename
-        this.sendMessage("takeScreenshot", json)
+        @sendMessage("takeScreenshot", json)
 
     initializeBoard: (borderPctX = 0.0, borderPctY = 0.0, cornerMarker = "DEFAULT") ->
-        this.sendMessage("initializeBoard", {
+        @sendMessage("initializeBoard", {
             "borderPctX": borderPctX,
             "borderPctY": borderPctY,
             "cornerMarker": cornerMarker
@@ -68,7 +65,7 @@ class Client
             "y2": y2
         }
         if areaId? then json["id"] = areaId
-        this.sendMessage("initializeBoardArea", json)
+        @sendMessage("initializeBoardArea", json)
 
     initializeTiledBoardArea: (tileCountX, tileCountY, x1 = 0.0, y1 = 0.0, x2 = 1.0, y2 = 1.0, areaId = undefined) ->
         json = {
@@ -80,26 +77,26 @@ class Client
             "y2": y2
         }
         if areaId? then json["id"] = areaId
-        this.sendMessage("initializeTiledBoardArea", json)
+        @sendMessage("initializeTiledBoardArea", json)
 
     removeBoardAreas: ->
-        this.sendMessage("removeBoardAreas", {})
+        @sendMessage("removeBoardAreas", {})
 
     removeBoardArea: (areaId) ->
-        this.sendMessage("removeBoardArea", {
+        @sendMessage("removeBoardArea", {
             "id": areaId
         })
 
     removeMarkers: ->
-        this.sendMessage("removeMarkers", {})
+        @sendMessage("removeMarkers", {})
 
     removeMarker: (markerId) ->
-        this.sendMessage("removeMarker", {
+        @sendMessage("removeMarker", {
             "id": markerId
         })
 
     requestTiledObjectPosition: (areaId, validPositions) ->
-        this.sendMessage("requestBrickPosition", {
+        @sendMessage("requestBrickPosition", {
             "areaId": areaId,
             "validPositions": validPositions
         })
@@ -111,7 +108,7 @@ class Client
               "stableTime": stableTime
         }
         if id? then json["id"] = id
-        this.sendMessage("reportBackWhenBrickFoundAtAnyOfPositions", json)
+        @sendMessage("reportBackWhenBrickFoundAtAnyOfPositions", json)
 
     reportBackWhenBrickMovedToAnyOfPositions: (areaId, initialPosition, validPositions, id = undefined, stableTime = 1.5) ->
         json = {
@@ -121,7 +118,7 @@ class Client
             "stableTime": stableTime
         }
         if id? then json["id"] = id
-        this.sendMessage("reportBackWhenBrickMovedToAnyOfPositions", json)
+        @sendMessage("reportBackWhenBrickMovedToAnyOfPositions", json)
 
     reportBackWhenBrickMovedToPosition: (areaId, position, validPositions, id = undefined, stableTime = 1.5) ->
         json = {
@@ -131,25 +128,25 @@ class Client
             "stableTime": stableTime
         }
         if id? then json["id"] = id
-        this.sendMessage("reportBackWhenBrickMovedToPosition", json)
+        @sendMessage("reportBackWhenBrickMovedToPosition", json)
 
     initializeImageMarker: (markerId, image) ->
         @convertImageToDataURL(image, (base64Image) =>
-            this.sendMessage("initializeImageMarker", {
+            @sendMessage("initializeImageMarker", {
                 "markerId": markerId,
                 "imageBase64": base64Image
             })
         )
 
     initializeShapeMarkerWithContour: (markerId, contour) ->
-        this.sendMessage("initializeShapeMarker", {
+        @sendMessage("initializeShapeMarker", {
             "markerId": markerId,
             "shape": contour
         })
 
     initializeShapeMarkerWithImage: (markerId, image) ->
         @convertImageToDataURL(image, (base64Image) =>
-            this.sendMessage("initializeShapeMarker", {
+            @sendMessage("initializeShapeMarker", {
                 "markerId": markerId,
                 "imageBase64": base64Image
             })
@@ -163,10 +160,10 @@ class Client
             "sleepTime": sleepTime
         }
         if id? then json["id"] = id
-        this.sendMessage("reportBackWhenMarkerFound", json)
+        @sendMessage("reportBackWhenMarkerFound", json)
 
     requestMarkers: (areaId, markerId, stableTime = 1.5) ->
-        this.sendMessage("requestMarkers", {
+        @sendMessage("requestMarkers", {
             "areaId": areaId,
             "markerId": markerId,
             "stableTime": stableTime
@@ -174,10 +171,10 @@ class Client
 
     sendMessage: (action, payload) ->
         message = {
-            action: action,
-            payload: payload
+            "action": action,
+            "payload": payload
         }
-        this.socket.send(JSON.stringify(message))
+        @socket.send(JSON.stringify(message))
 
 
 

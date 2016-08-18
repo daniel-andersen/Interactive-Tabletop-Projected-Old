@@ -1,18 +1,11 @@
 var Client;
 
 Client = (function() {
-  var action, payload, socket;
-
-  socket = null;
-
-  action = "action";
-
-  payload = "payload";
-
   function Client(port) {
     this.port = port != null ? port : 9001;
     this.debug_textField = null;
     this.debug_log = [];
+    this.socket = void 0;
     this.socketOpen = false;
   }
 
@@ -38,9 +31,9 @@ Client = (function() {
   };
 
   Client.prototype.disconnect = function() {
-    if (this.socket) {
+    if (this.socket != null) {
       this.socket.close();
-      return this.socket = null;
+      return this.socket = void 0;
     }
   };
 
@@ -258,7 +251,7 @@ Client = (function() {
 
   Client.prototype.initializeShapeMarkerWithContour = function(markerId, contour) {
     return this.sendMessage("initializeShapeMarker", {
-      "id": markerId,
+      "markerId": markerId,
       "shape": contour
     });
   };
@@ -267,7 +260,7 @@ Client = (function() {
     return this.convertImageToDataURL(image, (function(_this) {
       return function(base64Image) {
         return _this.sendMessage("initializeShapeMarker", {
-          "id": markerId,
+          "markerId": markerId,
           "imageBase64": base64Image
         });
       };
@@ -311,8 +304,8 @@ Client = (function() {
   Client.prototype.sendMessage = function(action, payload) {
     var message;
     message = {
-      action: action,
-      payload: payload
+      "action": action,
+      "payload": payload
     };
     return this.socket.send(JSON.stringify(message));
   };
