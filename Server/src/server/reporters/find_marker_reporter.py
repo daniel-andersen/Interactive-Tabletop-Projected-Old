@@ -6,21 +6,17 @@ from reporter import Reporter
 
 class FindMarkerReporter(Reporter):
 
-    def __init__(self, board_area, marker, stable_time, sleep_time, reporter_id, callback_function):
+    def __init__(self, board_area, marker, stability_level, reporter_id, callback_function):
         """
         :param board_area: Board area
         :param marker: Marker
-        :param stable_time Amount of time to wait for image to stabilize
-        :param sleep_time: Time to sleep between searches
+        :param stability_level Minimum board area stability level before searching for marker
         """
         super(FindMarkerReporter, self).__init__(reporter_id, callback_function)
 
         self.board_area = board_area
         self.marker = marker
-        self.stable_time = stable_time
-        self.sleep_time = sleep_time
-
-        self.markers_history = []
+        self.stability_level = stability_level
 
     def run_iteration(self):
 
@@ -31,28 +27,17 @@ class FindMarkerReporter(Reporter):
         if image is None:
             return
 
-        # Find marker
-        contour, box = self.marker.find_marker_in_image(image)
-
-        # Update marker history
-        oldest_time = self.markers_history[0]["time"] if len(self.markers_history) > 0 else time.time()
-
-        self.markers_history.append({"time": time.time(), "found": box is not None})
-        while len(self.markers_history) > 1 and self.markers_history[0]["time"] < time.time() - self.stable_time:
-            self.markers_history.pop(0)
-
-        # Check if enough time has ellapsed
-        if oldest_time > time.time() - self.stable_time:
+        # Check sufficient stability
+        if self.board_area.stability_score() < self.stability_level:
             return
 
-        # Count percentage of successes
-        found_list = [entry["found"] for entry in self.markers_history]
-        found_count = found_list.count(True)
+        # Find marker
+        contour, box = self.marker.find_marker_in_image(image)
+        if box is None:
+            return
 
-        percentage = float(found_count) / float(len(found_list))
-
-        if percentage >= 0.8:
-            if globals.debug:
-                print("%i: Marker recognized" % self.reporter_id)
-            self.callback_function(box)
-            self.stop()
+        if globals.debug:
+            print("%i: Marker recognized" % self.reporter_id)
+            #cv2.imwrite("area.png", self.board_area.area_image(reuse=True))
+        self.callback_function(box)
+        self.stop()

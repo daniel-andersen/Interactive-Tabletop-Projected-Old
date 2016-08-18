@@ -179,18 +179,18 @@ Client = (function() {
     });
   };
 
-  Client.prototype.reportBackWhenBrickFoundAtAnyOfPositions = function(areaId, validPositions, id, stableTime) {
+  Client.prototype.reportBackWhenBrickFoundAtAnyOfPositions = function(areaId, validPositions, id, stabilityLevel) {
     var json;
     if (id == null) {
       id = void 0;
     }
-    if (stableTime == null) {
-      stableTime = 1.5;
+    if (stabilityLevel == null) {
+      stabilityLevel = 0.95;
     }
     json = {
       "areaId": areaId,
       "validPositions": validPositions,
-      "stableTime": stableTime
+      "stabilityLevel": stabilityLevel
     };
     if (id != null) {
       json["id"] = id;
@@ -198,19 +198,19 @@ Client = (function() {
     return this.sendMessage("reportBackWhenBrickFoundAtAnyOfPositions", json);
   };
 
-  Client.prototype.reportBackWhenBrickMovedToAnyOfPositions = function(areaId, initialPosition, validPositions, id, stableTime) {
+  Client.prototype.reportBackWhenBrickMovedToAnyOfPositions = function(areaId, initialPosition, validPositions, id, stabilityLevel) {
     var json;
     if (id == null) {
       id = void 0;
     }
-    if (stableTime == null) {
-      stableTime = 1.5;
+    if (stabilityLevel == null) {
+      stabilityLevel = 0.95;
     }
     json = {
       "areaId": areaId,
       "initialPosition": initialPosition,
       "validPositions": validPositions,
-      "stableTime": stableTime
+      "stabilityLevel": stabilityLevel
     };
     if (id != null) {
       json["id"] = id;
@@ -218,19 +218,19 @@ Client = (function() {
     return this.sendMessage("reportBackWhenBrickMovedToAnyOfPositions", json);
   };
 
-  Client.prototype.reportBackWhenBrickMovedToPosition = function(areaId, position, validPositions, id, stableTime) {
+  Client.prototype.reportBackWhenBrickMovedToPosition = function(areaId, position, validPositions, id, stabilityLevel) {
     var json;
     if (id == null) {
       id = void 0;
     }
-    if (stableTime == null) {
-      stableTime = 1.5;
+    if (stabilityLevel == null) {
+      stabilityLevel = 0.95;
     }
     json = {
       "areaId": areaId,
       "position": position,
       "validPositions": validPositions,
-      "stableTime": stableTime
+      "stabilityLevel": stabilityLevel
     };
     if (id != null) {
       json["id"] = id;
@@ -267,22 +267,18 @@ Client = (function() {
     })(this));
   };
 
-  Client.prototype.reportBackWhenMarkerFound = function(areaId, markerId, id, stableTime, sleepTime) {
+  Client.prototype.reportBackWhenMarkerFound = function(areaId, markerId, id, stabilityLevel) {
     var json;
     if (id == null) {
       id = void 0;
     }
-    if (stableTime == null) {
-      stableTime = 1.5;
-    }
-    if (sleepTime == null) {
-      sleepTime = 1.0;
+    if (stabilityLevel == null) {
+      stabilityLevel = 0.95;
     }
     json = {
       "areaId": areaId,
       "markerId": markerId,
-      "stableTime": stableTime,
-      "sleepTime": sleepTime
+      "stabilityLevel": stabilityLevel
     };
     if (id != null) {
       json["id"] = id;
@@ -290,14 +286,14 @@ Client = (function() {
     return this.sendMessage("reportBackWhenMarkerFound", json);
   };
 
-  Client.prototype.requestMarkers = function(areaId, markerId, stableTime) {
-    if (stableTime == null) {
-      stableTime = 1.5;
+  Client.prototype.requestMarkers = function(areaId, markerId, stabilityLevel) {
+    if (stabilityLevel == null) {
+      stabilityLevel = 0.95;
     }
     return this.sendMessage("requestMarkers", {
       "areaId": areaId,
       "markerId": markerId,
-      "stableTime": stableTime
+      "stabilityLevel": stabilityLevel
     });
   };
 

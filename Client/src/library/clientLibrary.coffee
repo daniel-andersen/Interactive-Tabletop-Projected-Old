@@ -101,31 +101,31 @@ class Client
             "validPositions": validPositions
         })
 
-    reportBackWhenBrickFoundAtAnyOfPositions: (areaId, validPositions, id = undefined, stableTime = 1.5) ->
+    reportBackWhenBrickFoundAtAnyOfPositions: (areaId, validPositions, id = undefined, stabilityLevel = 0.95) ->
         json = {
               "areaId": areaId,
               "validPositions": validPositions,
-              "stableTime": stableTime
+              "stabilityLevel": stabilityLevel
         }
         if id? then json["id"] = id
         @sendMessage("reportBackWhenBrickFoundAtAnyOfPositions", json)
 
-    reportBackWhenBrickMovedToAnyOfPositions: (areaId, initialPosition, validPositions, id = undefined, stableTime = 1.5) ->
+    reportBackWhenBrickMovedToAnyOfPositions: (areaId, initialPosition, validPositions, id = undefined, stabilityLevel = 0.95) ->
         json = {
             "areaId": areaId,
             "initialPosition": initialPosition,
             "validPositions": validPositions,
-            "stableTime": stableTime
+            "stabilityLevel": stabilityLevel
         }
         if id? then json["id"] = id
         @sendMessage("reportBackWhenBrickMovedToAnyOfPositions", json)
 
-    reportBackWhenBrickMovedToPosition: (areaId, position, validPositions, id = undefined, stableTime = 1.5) ->
+    reportBackWhenBrickMovedToPosition: (areaId, position, validPositions, id = undefined, stabilityLevel = 0.95) ->
         json = {
             "areaId": areaId,
             "position": position,
             "validPositions": validPositions,
-            "stableTime": stableTime
+            "stabilityLevel": stabilityLevel
         }
         if id? then json["id"] = id
         @sendMessage("reportBackWhenBrickMovedToPosition", json)
@@ -152,21 +152,20 @@ class Client
             })
         )
 
-    reportBackWhenMarkerFound: (areaId, markerId, id = undefined, stableTime = 1.5, sleepTime = 1.0) ->
+    reportBackWhenMarkerFound: (areaId, markerId, id = undefined, stabilityLevel = 0.95) ->
         json = {
             "areaId": areaId,
             "markerId": markerId,
-            "stableTime": stableTime,
-            "sleepTime": sleepTime
+            "stabilityLevel": stabilityLevel
         }
         if id? then json["id"] = id
         @sendMessage("reportBackWhenMarkerFound", json)
 
-    requestMarkers: (areaId, markerId, stableTime = 1.5) ->
+    requestMarkers: (areaId, markerId, stabilityLevel = 0.95) ->
         @sendMessage("requestMarkers", {
             "areaId": areaId,
             "markerId": markerId,
-            "stableTime": stableTime
+            "stabilityLevel": stabilityLevel
         })
 
     sendMessage: (action, payload) ->

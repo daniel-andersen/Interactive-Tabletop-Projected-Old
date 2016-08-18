@@ -1,6 +1,7 @@
 import cv2
 from random import randint
 from server import globals
+from board import histogram_util
 
 
 class BoardArea(object):
@@ -14,6 +15,8 @@ class BoardArea(object):
     """
     extracted_area_image = None
     extracted_grayscaled_area_image = None
+    foreground_mask = None
+    foreground_mask_should_update = True
 
     def __init__(self, area_id=None, board_area_pct=[0.0, 0.0, 1.0, 1.0], board_descriptor=None):
         """
@@ -26,12 +29,16 @@ class BoardArea(object):
         self.area_id = area_id if area_id is not None else randint(0, 100000)
         self.board_area_pct = board_area_pct
         self.board_descriptor = board_descriptor if board_descriptor is not None else globals.board_descriptor
+        self.background_subtractor = cv2.BackgroundSubtractorMOG2(history=5, varThreshold=16)
+        self.current_stability_score = 1.0
 
     def reset_area_image(self):
         """
         Resets the area image to force extraction of new image on next request.
         """
         self.extracted_area_image = None
+        self.extracted_grayscaled_area_image = None
+        self.foreground_mask_should_update = True
 
     def area_image(self, reuse=False):
         """
@@ -83,3 +90,32 @@ class BoardArea(object):
         self.extracted_grayscaled_area_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
         return self.extracted_grayscaled_area_image
+
+    def update_stability_score(self):
+        if not self.foreground_mask_should_update:
+            return
+
+        # Get area image
+        image = self.grayscaled_area_image(reuse=True)
+        if self.foreground_mask is not None:
+            mask_height, mask_width = self.foreground_mask.shape[:2]
+            image = cv2.resize(image, (mask_width, mask_height))
+
+        # Update foreground mask with area image
+        self.foreground_mask = self.background_subtractor.apply(image, learningRate=0.5)
+        self.foreground_mask_should_update = False
+
+        mask_height, mask_width = self.foreground_mask.shape[:2]
+
+        # Calculate stability score
+        histogram = histogram_util.histogram_from_bw_image(self.foreground_mask)
+        histogram_median = histogram_util.histogram_median(histogram, mask_width * mask_height)
+        self.current_stability_score = 1.0 - (histogram_median / 255.0)
+
+        #image_height, image_width = image.shape[:2]
+        #print("Score %i: %f --- %i, %i" % (self.area_id, self.current_stability_score, image_width, image_height))
+        #cv2.imwrite("image_%i.png" % self.area_id, image)
+        #cv2.imwrite("mask_%i.png" % self.area_id, self.foreground_mask)
+
+    def stability_score(self):
+        return self.current_stability_score

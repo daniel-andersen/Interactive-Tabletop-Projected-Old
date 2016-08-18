@@ -274,18 +274,18 @@ class Server(WebSocket):
 
         areaId: Board area id
         validPositions: Positions to search for object in.
-        stableTime: (Optional) Amount of time to wait for image to stabilize
+        stabilityLevel: (Optional) Minimum board area stability level before searching for object
         id: (Optional) Reporter id.
         """
         board_area = self.board_areas[payload["areaId"]]
         reporter_id = payload["id"] if "id" in payload else self.draw_reporter_id()
         valid_positions = payload["validPositions"]
-        stable_time = payload["stableTime"] if "stableTime" in payload else 1.5
+        stability_evel = payload["stabilityLevel"] if "stabilityLevel" in payload else 0.95
 
         reporter = TiledBrickPositionReporter(
             board_area,
             valid_positions,
-            stable_time,
+            stability_evel,
             reporter_id,
             callback_function=lambda tile: self.send_message("OK", "brickFoundAtPosition", {"id": reporter_id, "position": tile})
         )
@@ -300,20 +300,20 @@ class Server(WebSocket):
         areaId: Board area id
         initialPosition: Initial position.
         validPositions: Positions to search for object in.
-        stableTime: (Optional) Amount of time to wait for image to stabilize
+        stabilityLevel: (Optional) Minimum board area stability level before searching for object
         id: (Optional) Reporter id.
         """
         board_area = self.board_areas[payload["areaId"]]
         reporter_id = payload["id"] if "id" in payload else self.draw_reporter_id()
         initial_position = payload["initialPosition"]
         valid_positions = payload["validPositions"]
-        stable_time = payload["stableTime"] if "stableTime" in payload else 1.5
+        stability_level = payload["stabilityLevel"] if "stabilityLevel" in payload else 0.95
 
         reporter = TiledBrickMovedToAnyOfPositionsReporter(
             board_area,
             initial_position,
             valid_positions,
-            stable_time,
+            stability_level,
             reporter_id,
             callback_function=lambda tile: self.send_message("OK", "brickMovedToPosition", {"id": reporter_id, "position": tile, "initialPosition": initial_position}))
         self.reporters[reporter_id] = reporter
@@ -327,20 +327,20 @@ class Server(WebSocket):
         areaId: Board area id
         position: Position for brick to be found
         validPositions: Positions to search for object in
-        stableTime: (Optional) Amount of time to wait for image to stabilize
+        stabilityLevel: (Optional) Minimum board area stability level before searching for object
         id: (Optional) Reporter id
         """
         board_area = self.board_areas[payload["areaId"]]
         reporter_id = payload["id"] if "id" in payload else self.draw_reporter_id()
         position = payload["position"]
         valid_positions = payload["validPositions"]
-        stable_time = payload["stableTime"] if "stableTime" in payload else 1.5
+        stability_level = payload["stabilityLevel"] if "stabilityLevel" in payload else 0.95
 
         reporter = TiledBrickMovedToPositionReporter(
             board_area,
             position,
             valid_positions,
-            stable_time,
+            stability_level,
             reporter_id,
             callback_function=lambda tile: self.send_message("OK", "brickMovedToPosition", {"id": reporter_id, "position": tile}))
         self.reporters[reporter_id] = reporter
@@ -415,21 +415,18 @@ class Server(WebSocket):
 
         areaId: Board area id
         markerId: Marker id
-        stableTime: (Optional) Amount of time for marker to be stabily found
-        sleepTime: (Optional) Amount of time to sleep between marker searches
+        stabilityLevel: (Optional) Minimum board area stability level before searching for marker
         id: (Optional) Reporter id
         """
         board_area = self.board_areas[payload["areaId"]]
         marker = self.markers[payload["markerId"]]
         reporter_id = payload["id"] if "id" in payload else self.draw_reporter_id()
-        stable_time = payload["stableTime"] if "stableTime" in payload else 1.5
-        sleep_time = payload["sleepTime"] if "sleepTime" in payload else 1.0
+        stability_level = payload["stability_level"] if "stability_level" in payload else 0.95
 
         reporter = FindMarkerReporter(
             board_area,
             marker,
-            stable_time,
-            sleep_time,
+            stability_level,
             reporter_id,
             callback_function=lambda (box): self.send_message("OK", "markerFound", {"id": reporter_id,
                                                                                              "areaId": payload["areaId"],
@@ -445,17 +442,17 @@ class Server(WebSocket):
 
         areaId: Board area id
         markerId: Marker id
-        stableTime: (Optional) Amount of time for markers to be stabily found
+        stabilityLevel: (Optional) Minimum board area stability level before searching for marker
         """
         board_area = self.board_areas[payload["areaId"]]
         marker = self.markers[payload["markerId"]]
-        stable_time = payload["stableTime"] if "stableTime" in payload else 1.5
+        stability_level = payload["stabilityLevel"] if "stabilityLevel" in payload else 0.95
         reporter_id = self.draw_reporter_id()
 
         reporter = FindMarkersReporter(
             board_area,
             marker,
-            stable_time,
+            stability_level,
             reporter_id,
             callback_function=lambda (markers): self.send_message("OK", "markersFound", {"id": reporter_id,
                                                                                          "areaId": payload["areaId"],
@@ -548,7 +545,7 @@ class Server(WebSocket):
         while True:
 
             # Sleep a while
-            time.sleep(0.1)
+            time.sleep(0.01)
 
             try:
                 # Read image from camera
@@ -574,8 +571,10 @@ class Server(WebSocket):
                                 self.notify_board_not_recognized(globals.board_descriptor.snapshot)
                                 board_recognized_time = None
 
-                            cv2.imwrite("board.png", image)
+                            #cv2.imwrite("board.png", image)
                         else:
+
+                            #cv2.imwrite("board.png", image)
 
                             # Notify client that board is recognized
                             if board_recognized_time is None:
@@ -583,9 +582,15 @@ class Server(WebSocket):
 
                             board_recognized_time = time.time()
 
-                    # Reset all board area images in order to force extraction of new upon next request
+                    # Update board areas
                     for (_, board_area) in self.board_areas.copy().iteritems():
+
+                        # Reset area image in order to force extraction of new upon next request
                         board_area.reset_area_image()
+
+                        # Update stability score
+                        if globals.board_descriptor.is_recognized():
+                            board_area.update_stability_score()
 
                     # Run all reporters
                     reporter_ids_to_remove = []
@@ -606,6 +611,7 @@ class Server(WebSocket):
             except Exception, e:
                 print("Exception in reporter loop: %s" % str(e))
                 traceback.print_exc(file=sys.stdout)
+
 
 def start_server():
     print("Starting server...")
