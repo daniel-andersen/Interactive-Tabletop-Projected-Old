@@ -21,7 +21,7 @@ class Camera(object):
         self.stopped = False
 
         # Initialize camera
-        self.camera = cv2.VideoCapture(1)
+        self.camera = cv2.VideoCapture(0)
         self.camera.set(cv2.cv.CV_CAP_PROP_FRAME_WIDTH, resolution[0])
         self.camera.set(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT, resolution[1])
         self.grab_image()
