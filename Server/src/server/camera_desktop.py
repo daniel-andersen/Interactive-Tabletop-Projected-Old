@@ -1,12 +1,15 @@
+from __future__ import with_statement
 import cv2
 import time
 from threading import Thread
+from threading import Lock
 
 
 class Camera(object):
     stopped = False
     image = None
     camera = None
+    lock = Lock()
 
     def start(self, resolution=(640, 480), framerate=16):
         """
@@ -18,7 +21,7 @@ class Camera(object):
         self.stopped = False
 
         # Initialize camera
-        self.camera = cv2.VideoCapture(0)
+        self.camera = cv2.VideoCapture(1)
         self.camera.set(cv2.cv.CV_CAP_PROP_FRAME_WIDTH, resolution[0])
         self.camera.set(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT, resolution[1])
         self.grab_image()
@@ -38,7 +41,8 @@ class Camera(object):
         """
         Returns the most recent image read from the camera input.
         """
-        return self.image
+        with self.lock:
+            return self.image
 
     def update(self):
         """
@@ -52,4 +56,6 @@ class Camera(object):
         """
         Grabs an image from the camera input.
         """
-        _, self.image = self.camera.read()
+        _, camera_image = self.camera.read()
+        with self.lock:
+            self.image = camera_image

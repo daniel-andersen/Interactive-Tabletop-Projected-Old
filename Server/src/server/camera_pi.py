@@ -1,6 +1,7 @@
 import cv2
 import time
 from threading import Thread
+from threading import Lock
 from picamera.array import PiRGBArray
 from picamera import PiCamera
 
@@ -11,6 +12,7 @@ class Camera(object):
     camera = None
     raw_capture = None
     stream = None
+    lock = Lock()
 
     def start(self, resolution=(640, 480), framerate=16):
         """
@@ -46,7 +48,8 @@ class Camera(object):
         """
         Returns the most recent image read from the camera input.
         """
-        return self.image
+        with self.lock:
+            return self.image
 
     def update(self):
         """
@@ -65,7 +68,11 @@ class Camera(object):
             (height, width) = rotated_image.shape[:2]
             center = (width / 2, height / 2)
             matrix = cv2.getRotationMatrix2D(center, 180, 1.0)
-            self.image = cv2.warpAffine(rotated_image, matrix, (width, height))
+            rotated_image = cv2.warpAffine(rotated_image, matrix, (width, height))
+
+            # Grab image
+            with self.lock:
+                self.image = rotated_image
 
             # Stop
             if self.stopped:
