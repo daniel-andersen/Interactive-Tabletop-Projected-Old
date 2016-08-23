@@ -16,6 +16,7 @@ from board.board_descriptor import BoardDescriptor
 from board.board_areas.board_area import BoardArea
 from board.board_areas.tiled_board_area import TiledBoardArea
 from board.markers.image_marker import ImageMarker
+from board.markers.haar_classifier_marker import HaarClassifierMarker
 from board.markers.shape_marker import ShapeMarker
 from reporters.tiled_brick_position_reporter import TiledBrickPositionReporter
 from reporters.tiled_brick_moved_reporters import TiledBrickMovedToAnyOfPositionsReporter
@@ -102,6 +103,8 @@ class Server(WebSocket):
             return self.initialize_shape_marker(payload)
         if action == "initializeImageMarker":
             return self.initialize_image_marker(payload)
+        if action == "initializeHaarClassifierMarker":
+            return self.initialize_haar_classifier_marker(payload)
         if action == "requestMarkers":
             return self.request_markers(payload)
         if action == "reportBackWhenMarkerFound":
@@ -388,6 +391,19 @@ class Server(WebSocket):
 
         return "OK", {"id": payload["markerId"]}
 
+    def initialize_haar_classifier_marker(self, payload):
+        """
+        Initializes haar classifier marker with given parameters.
+
+        markerId: Marker id
+        dataBase64: Base 64 encoded Haar Cascade Classifier data
+        """
+        cascade_data = base64.b64decode(payload["dataBase64"])
+        haar_classifier_marker = HaarClassifierMarker(cascade_data)
+        self.markers[payload["markerId"]] = haar_classifier_marker
+
+        return "OK", {"id": payload["markerId"]}
+
     def initialize_shape_marker(self, payload):
         """
         Initializes a shape marker with given image and parameters.
@@ -429,9 +445,9 @@ class Server(WebSocket):
             stability_level,
             reporter_id,
             callback_function=lambda (box): self.send_message("OK", "markerFound", {"id": reporter_id,
-                                                                                             "areaId": payload["areaId"],
-                                                                                             "markerId": payload["markerId"],
-                                                                                             "marker": box}))
+                                                                                    "areaId": payload["areaId"],
+                                                                                    "markerId": payload["markerId"],
+                                                                                    "marker": box}))
         self.reporters[reporter_id] = reporter
 
         return "OK", {"id": reporter_id}

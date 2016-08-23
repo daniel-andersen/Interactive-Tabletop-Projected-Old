@@ -249,6 +249,17 @@ Client = (function() {
     })(this));
   };
 
+  Client.prototype.initializeHaarClassifierMarker = function(markerId, filename) {
+    return this.readFileBase64(filename, (function(_this) {
+      return function(base64Data) {
+        return _this.sendMessage("initializeHaarClassifierMarker", {
+          "markerId": markerId,
+          "dataBase64": base64Data
+        });
+      };
+    })(this));
+  };
+
   Client.prototype.initializeShapeMarkerWithContour = function(markerId, contour) {
     return this.sendMessage("initializeShapeMarker", {
       "markerId": markerId,
@@ -314,9 +325,40 @@ Client = (function() {
     ctx = canvas.getContext("2d");
     ctx.drawImage(image, 0, 0);
     dataURL = canvas.toDataURL("image/png");
-    dataURL = dataURL.replace(/^data:image\/png;base64,/, "");
+    dataURL = dataURL.replace(/^.*;base64,/, "");
     callback(dataURL);
     return canvas = null;
+  };
+
+  Client.prototype.readFileBase64 = function(filename, callback) {
+    var xhr;
+    xhr = new XMLHttpRequest();
+    xhr.open("GET", filename, true);
+    xhr.responseType = "blob";
+    xhr.onload = function(e) {
+      var blob, fileReader;
+      if (this.status === 200) {
+        blob = new Blob([this.response], {
+          type: "text/xml"
+        });
+        fileReader = new FileReader();
+        fileReader.onload = (function(_this) {
+          return function(e) {
+            var contents;
+            contents = e.target.result;
+            contents = contents.replace(/^.*;base64,/, "");
+            return callback(contents);
+          };
+        })(this);
+        fileReader.onerror = (function(_this) {
+          return function(e) {
+            return console.log("Error loading file: " + e);
+          };
+        })(this);
+        return fileReader.readAsDataURL(blob);
+      }
+    };
+    return xhr.send();
   };
 
   return Client;

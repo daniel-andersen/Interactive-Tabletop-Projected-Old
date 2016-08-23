@@ -39,5 +39,6 @@ class FindMarkerReporter(Reporter):
         if globals.debug:
             print("%i: Marker recognized" % self.reporter_id)
             #cv2.imwrite("area.png", self.board_area.area_image(reuse=True))
+
         self.callback_function(box)
         self.stop()
