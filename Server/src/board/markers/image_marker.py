@@ -4,12 +4,13 @@ from marker import Marker
 
 
 class ImageMarker(Marker):
-    def __init__(self, marker_image, min_matches=10):
+    def __init__(self, marker_id, marker_image, min_matches=8):
         """
+        :param marker_id: Marker ID
         :param marker_image: Marker image
         :param min_matches: Minimum number of matches for marker to be detected
         """
-        super(ImageMarker, self).__init__()
+        super(ImageMarker, self).__init__(marker_id)
 
         self.min_matches = min_matches
 
@@ -34,14 +35,14 @@ class ImageMarker(Marker):
         Find marker in image.
 
         :param image: Image
-        :return: Marker in form (contour, [centerX, centerY, width, height, rotation])
+        :return: Marker in form {"markerId", "x", "y", "width", "height", "angle", "contour"}
         """
 
         # Find features in image
         kp2, des2 = self.sift.detectAndCompute(image, None)
 
         if len(self.kp1) < 2 or len(kp2) < 2:
-            return None, None
+            return None
 
         # Find matches
         matches = self.flann.knnMatch(self.des1, des2, k=2)
@@ -49,12 +50,12 @@ class ImageMarker(Marker):
         # Sort out bad matches
         good_matches = []
         for m, n in matches:
-            if m.distance < 0.65 * n.distance:
+            if m.distance < 0.666 * n.distance:
                 good_matches.append(m)
 
         # Check number of matches
         if len(good_matches) < self.min_matches:
-            return None, None
+            return None
 
         # Find homography between matches
         src_pts = np.float32([self.kp1[m.queryIdx].pt for m in good_matches]).reshape(-1, 1, 2)
@@ -70,6 +71,12 @@ class ImageMarker(Marker):
         return self.contour_to_marker_result(image, np.int32(dst))
 
     def find_marker_in_thresholded_image(self, image):
+        """
+        Find marker in image which has already been thresholded.
+
+        :param image: Thresholded image
+        :return: Marker in form {"markerId", "x", "y", "width", "height", "angle", "contour"}
+        """
         return self.find_marker_in_image(image)
 
     def find_markers_in_image(self, image):
@@ -77,18 +84,18 @@ class ImageMarker(Marker):
         Find all markers in image.
 
         :param image: Image
-        :return: List of markers each in form (contour, [centerX, centerY, width, height, rotation])
+        :return: List of markers each in form {"markerId", "x", "y", "width", "height", "angle", "contour"}
         """
 
         # TODO! Extract all markers!
-        contour, box = self.find_marker_in_image(image)
-        return [(contour, box)] if contour is not None else []
+        result = self.find_marker_in_image(image)
+        return [result] if result is not None else []
 
     def find_markers_in_thresholded_image(self, image):
         """
         Find all markers in image which has already been thresholded.
 
         :param image: Thresholded image
-        :return: List of markers each in form (contour, [centerX, centerY, width, height, rotation])
+        :return: List of markers each in form {"markerId", "x", "y", "width", "height", "angle", "contour"}
         """
         return self.find_markers_in_image(image)

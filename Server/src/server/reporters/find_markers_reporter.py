@@ -4,16 +4,16 @@ from reporter import Reporter
 
 class FindMarkersReporter(Reporter):
 
-    def __init__(self, board_area, marker, stability_level, reporter_id, callback_function):
+    def __init__(self, board_area, markers, stability_level, reporter_id, callback_function):
         """
         :param board_area: Board area
-        :param marker: Marker
-        :param stability_level Minimum board area stability level before searching for marker
+        :param markers: Markers to search for
+        :param stability_level Minimum board area stability level before searching for markers
         """
         super(FindMarkersReporter, self).__init__(reporter_id, callback_function)
 
         self.board_area = board_area
-        self.marker = marker
+        self.markers = markers
         self.stability_level = stability_level
 
     def run_iteration(self):
@@ -29,10 +29,12 @@ class FindMarkersReporter(Reporter):
         if self.board_area.stability_score() < self.stability_level:
             return
 
-        # Find marker
-        markers = self.marker.find_markers_in_image(image)
+        # Find markers
+        result = []
+        for marker in self.markers:
+            result += marker.find_markers_in_image(image)
 
         if globals.debug:
-            print("%i: Markers found" % self.reporter_id)
-        self.callback_function(markers)
+            print("%i: Markers found: %i" % (self.reporter_id, len(result)))
+        self.callback_function(result)
         self.stop()

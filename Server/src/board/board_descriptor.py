@@ -44,7 +44,7 @@ class BoardDescriptor(object):
         self.board_size = None
         self.border_percentage_size = [0.0, 0.0]
         self.tile_count = None
-        self.corner_marker = DefaultMarker()
+        self.corner_marker = DefaultMarker(marker_id=-2)
 
     def is_recognized(self):
         """

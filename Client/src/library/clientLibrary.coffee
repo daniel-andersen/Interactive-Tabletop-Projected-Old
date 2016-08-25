@@ -101,41 +101,43 @@ class Client
             "validPositions": validPositions
         })
 
-    reportBackWhenBrickFoundAtAnyOfPositions: (areaId, validPositions, id = undefined, stabilityLevel = 0.95) ->
+    reportBackWhenBrickFoundAtAnyOfPositions: (areaId, validPositions, id = undefined, stabilityLevel = undefined) ->
         json = {
               "areaId": areaId,
-              "validPositions": validPositions,
-              "stabilityLevel": stabilityLevel
+              "validPositions": validPositions
         }
         if id? then json["id"] = id
+        if stabilityLevel? then json["stabilityLevel"] = stabilityLevel
         @sendMessage("reportBackWhenBrickFoundAtAnyOfPositions", json)
 
-    reportBackWhenBrickMovedToAnyOfPositions: (areaId, initialPosition, validPositions, id = undefined, stabilityLevel = 0.95) ->
+    reportBackWhenBrickMovedToAnyOfPositions: (areaId, initialPosition, validPositions, id = undefined, stabilityLevel = undefined) ->
         json = {
             "areaId": areaId,
             "initialPosition": initialPosition,
-            "validPositions": validPositions,
-            "stabilityLevel": stabilityLevel
+            "validPositions": validPositions
         }
         if id? then json["id"] = id
+        if stabilityLevel? then json["stabilityLevel"] = stabilityLevel
         @sendMessage("reportBackWhenBrickMovedToAnyOfPositions", json)
 
-    reportBackWhenBrickMovedToPosition: (areaId, position, validPositions, id = undefined, stabilityLevel = 0.95) ->
+    reportBackWhenBrickMovedToPosition: (areaId, position, validPositions, id = undefined, stabilityLevel = undefined) ->
         json = {
             "areaId": areaId,
             "position": position,
-            "validPositions": validPositions,
-            "stabilityLevel": stabilityLevel
+            "validPositions": validPositions
         }
         if id? then json["id"] = id
+        if stabilityLevel? then json["stabilityLevel"] = stabilityLevel
         @sendMessage("reportBackWhenBrickMovedToPosition", json)
 
-    initializeImageMarker: (markerId, image) ->
+    initializeImageMarker: (markerId, image, minMatches = undefined) ->
         @convertImageToDataURL(image, (base64Image) =>
-            @sendMessage("initializeImageMarker", {
+            json = {
                 "markerId": markerId,
                 "imageBase64": base64Image
-            })
+            }
+            if minMatches? then json["minMatches"] = minMatches
+            @sendMessage("initializeImageMarker", json)
         )
 
     initializeHaarClassifierMarker: (markerId, filename) ->
@@ -160,21 +162,22 @@ class Client
             })
         )
 
-    reportBackWhenMarkerFound: (areaId, markerId, id = undefined, stabilityLevel = 0.95) ->
+    reportBackWhenMarkerFound: (areaId, markerId, id = undefined, stabilityLevel = undefined) ->
         json = {
             "areaId": areaId,
-            "markerId": markerId,
-            "stabilityLevel": stabilityLevel
+            "markerId": markerId
         }
         if id? then json["id"] = id
+        if stabilityLevel? then json["stabilityLevel"] = stabilityLevel
         @sendMessage("reportBackWhenMarkerFound", json)
 
-    requestMarkers: (areaId, markerId, stabilityLevel = 0.95) ->
-        @sendMessage("requestMarkers", {
+    requestMarkers: (areaId, markerIds, stabilityLevel = undefined) ->
+        json = {
             "areaId": areaId,
-            "markerId": markerId,
-            "stabilityLevel": stabilityLevel
-        })
+            "markerIds": markerIds
+        }
+        if stabilityLevel? then json["stabilityLevel"] = stabilityLevel
+        @sendMessage("requestMarkers", json)
 
     sendMessage: (action, payload) ->
         message = {

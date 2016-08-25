@@ -32,13 +32,14 @@ class FindMarkerReporter(Reporter):
             return
 
         # Find marker
-        contour, box = self.marker.find_marker_in_image(image)
-        if box is None:
+        marker_result = self.marker.find_marker_in_image(image)
+        if marker_result is None:
             return
 
         if globals.debug:
             print("%i: Marker recognized" % self.reporter_id)
             #cv2.imwrite("area.png", self.board_area.area_image(reuse=True))
 
-        self.callback_function(box)
+
+        self.callback_function(marker_result)
         self.stop()

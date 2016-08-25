@@ -11,35 +11,35 @@ class DefaultMarker(Marker):
         Find marker in image.
 
         :param image: Image
-        :return: Marker in form (contour, [centerX, centerY, width, height, rotation])
+        :return: Marker in form {"markerId", "x", "y", "width", "height", "angle", "contour"}
         """
 
         # Find all markers
         markers = self.find_markers_in_image(image)
 
         # Return first marker
-        return markers[0] if len(markers) > 0 else (None, None)
+        return markers[0] if len(markers) > 0 else None
 
     def find_marker_in_thresholded_image(self, image):
         """
         Find marker in image which has already been thresholded.
 
         :param image: Thresholded image
-        :return: Marker in form (contour, [centerX, centerY, width, height, rotation])
+        :return: Marker in form {"markerId", "x", "y", "width", "height", "angle", "contour"}
         """
 
         # Find all markers
         markers = self.find_markers_in_thresholded_image(image)
 
         # Return first marker
-        return markers[0] if len(markers) > 0 else (None, None)
+        return markers[0] if len(markers) > 0 else None
 
     def find_markers_in_image(self, image):
         """
         Find all markers in image.
 
         :param image: Image
-        :return: List of markers each in form (contour, [centerX, centerY, width, height, rotation])
+        :return: List of markers each in form {"markerId", "x", "y", "width", "height", "angle", "contour"}
         """
 
         # OTSU image
@@ -55,7 +55,7 @@ class DefaultMarker(Marker):
         Find all markers in image which has already been thresholded.
 
         :param image: Thresholded image
-        :return: List of markers each in form (contour, [centerX, centerY, width, height, rotation])
+        :return: List of markers each in form {"markerId", "x", "y", "width", "height", "angle", "contour"}
         """
 
         original_image = image

@@ -200,7 +200,7 @@ def shape_marker_test():
             if image is None:
                 continue
 
-            contour, box = marker.find_marker_in_image(image)
+            marker_result = marker.find_marker_in_image(image)
 
             #if contour is not None:
             #    image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -208,7 +208,7 @@ def shape_marker_test():
             #    cv2.waitKey(0)
 
             expected_found = i in test_set[marker_name]["detect"]
-            found = contour is not None
+            found = marker_result is not None
 
             if found != expected_found:
                 print("Test failed: %s marker, image %i. Marker found: %s but was expected: %s." % (marker_name, i, "YES" if found else "NO", "YES" if expected_found else "NO"))
@@ -231,10 +231,10 @@ def shape_marker_camera_test():
         res, image = cap.read()
         image = cv2.resize(image, (640, 480))
 
-        contour = marker.find_marker_in_image(image)
-        if contour is not None:
+        marker_result = marker.find_marker_in_image(image)
+        if marker_result is not None:
             image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-            contour_util.draw_contour(image=image, contour=contour, scale=1, name="Marker")
+            contour_util.draw_contour(image=image, contour=marker_result["contour"], scale=1, name="Marker")
         else:
             cv2.imshow("Marker", image)
 

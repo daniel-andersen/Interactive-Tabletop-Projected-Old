@@ -8,10 +8,11 @@ from util import contour_util
 
 class ShapeMarker(Marker):
 
-    def __init__(self, contour=None, marker_image=None, distance_tolerance=0.35, angle_tolerance=0.25,
+    def __init__(self, marker_id, contour=None, marker_image=None, distance_tolerance=0.35, angle_tolerance=0.25,
                  fine_grained=True, spike_tolerance=0.25, closed=True, min_arclength=0.1, max_arclength=100.0,
                  min_area=0.0025, max_area=0.9):
         """
+        :param marker_id: Marker ID
         :param contour: Simplified marker contour (containing fx. only corners)
         :param marker_image: Image from which to extract marker contour
         :param distance_tolerance: Distance tolerance in multitudes of length
@@ -24,7 +25,7 @@ class ShapeMarker(Marker):
         :param min_area: Minimum area scaled in percentage [0, 1] of image size
         :param max_area: Maximum area scaled in percentage [0, 1] of image size
         """
-        super(ShapeMarker, self).__init__()
+        super(ShapeMarker, self).__init__(marker_id)
 
         self.marker_contour = contour
         self.distance_tolerance = distance_tolerance
@@ -78,35 +79,35 @@ class ShapeMarker(Marker):
         Find marker in image.
 
         :param image: Image
-        :return: Marker in form (contour, [centerX, centerY, width, height, rotation])
+        :return: Marker in form {"markerId", "x", "y", "width", "height", "angle", "contour"}
         """
 
         # Find all markers
         markers = self.find_markers_in_image(image)
 
         # Return first marker
-        return markers[0] if len(markers) > 0 else (None, None)
+        return markers[0] if len(markers) > 0 else None
 
     def find_marker_in_thresholded_image(self, image):
         """
         Find marker in image which has already been thresholded.
 
         :param image: Thresholded image
-        :return: Marker in form (contour, [centerX, centerY, width, height, rotation])
+        :return: Marker in form {"markerId", "x", "y", "width", "height", "angle", "contour"}
         """
 
         # Find all markers
         markers = self.find_markers_in_thresholded_image(image)
 
         # Return first marker
-        return markers[0] if len(markers) > 0 else (None, None)
+        return markers[0] if len(markers) > 0 else None
 
     def find_markers_in_image(self, image):
         """
         Find all markers in image.
 
         :param image: Image
-        :return: List of markers each in form (contour, [centerX, centerY, width, height, rotation])
+        :return: List of markers each in form {"markerId", "x", "y", "width", "height", "angle", "contour"}
         """
 
         # OTSU image
@@ -121,7 +122,7 @@ class ShapeMarker(Marker):
         Find all markers in image which has already been thresholded.
 
         :param image: Thresholded image
-        :return: List of markers each in form (contour, [centerX, centerY, width, height, rotation])
+        :return: List of markers each in form {"markerId", "x", "y", "width", "height", "angle", "contour"}
         """
 
         # Find contours

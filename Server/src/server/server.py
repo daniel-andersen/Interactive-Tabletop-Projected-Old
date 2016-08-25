@@ -188,7 +188,7 @@ class Server(WebSocket):
             payload["borderPctX"] if "borderPctX" in payload else 0.0,
             payload["borderPctY"] if "borderPctY" in payload else 0.0
         ]
-        globals.board_descriptor.corner_marker = create_marker_from_name(payload["cornerMarker"]) if "cornerMarker" in payload else DefaultMarker()
+        globals.board_descriptor.corner_marker = create_marker_from_name(payload["cornerMarker"], marker_id=-1) if "cornerMarker" in payload else DefaultMarker(marker_id=-1)
 
         return "OK", {}
 
@@ -381,15 +381,18 @@ class Server(WebSocket):
 
         markerId: Marker id
         imageBase64: Image as base 64 encoded PNG
+        minMatches: (Optional)Minimum number of required matches
         """
         raw_image = base64.b64decode(payload["imageBase64"])
         raw_bytes = np.asarray(bytearray(raw_image), dtype=np.uint8)
         image = cv2.imdecode(raw_bytes, cv2.CV_LOAD_IMAGE_UNCHANGED)
 
-        image_marker = ImageMarker(image)
-        self.markers[payload["markerId"]] = image_marker
+        marker_id = payload["markerId"]
+        min_matches = payload["minMatches"] if "minMatches" in payload else 8
+        image_marker = ImageMarker(marker_id, image, min_matches=min_matches)
+        self.markers[marker_id] = image_marker
 
-        return "OK", {"id": payload["markerId"]}
+        return "OK", {"id": marker_id}
 
     def initialize_haar_classifier_marker(self, payload):
         """
@@ -399,10 +402,11 @@ class Server(WebSocket):
         dataBase64: Base 64 encoded Haar Cascade Classifier data
         """
         cascade_data = base64.b64decode(payload["dataBase64"])
-        haar_classifier_marker = HaarClassifierMarker(cascade_data)
-        self.markers[payload["markerId"]] = haar_classifier_marker
+        marker_id = payload["markerId"]
+        haar_classifier_marker = HaarClassifierMarker(marker_id, cascade_data)
+        self.markers[marker_id] = haar_classifier_marker
 
-        return "OK", {"id": payload["markerId"]}
+        return "OK", {"id": marker_id}
 
     def initialize_shape_marker(self, payload):
         """
@@ -412,18 +416,19 @@ class Server(WebSocket):
         shape: (Optional)Shape
         imageBase64: (Optional)Image as base 64 encoded PNG
         """
+        marker_id = payload["markerId"]
         if "shape" in payload:
             contour = np.int32(payload["shape"]).reshape(-1, 1, 2)
-            shape_marker = ShapeMarker(contour=contour)
+            shape_marker = ShapeMarker(marker_id, contour=contour)
         else:
             raw_image = base64.b64decode(payload["imageBase64"])
             raw_bytes = np.asarray(bytearray(raw_image), dtype=np.uint8)
             image = cv2.imdecode(raw_bytes, cv2.CV_LOAD_IMAGE_UNCHANGED)
-            shape_marker = ShapeMarker(marker_image=image)
+            shape_marker = ShapeMarker(marker_id, marker_image=image)
 
-        self.markers[payload["markerId"]] = shape_marker
+        self.markers[marker_id] = shape_marker
 
-        return "OK", {"id": payload["markerId"]}
+        return "OK", {"id": marker_id}
 
     def report_back_when_marker_found(self, payload):
         """
@@ -444,10 +449,9 @@ class Server(WebSocket):
             marker,
             stability_level,
             reporter_id,
-            callback_function=lambda (box): self.send_message("OK", "markerFound", {"id": reporter_id,
-                                                                                    "areaId": payload["areaId"],
-                                                                                    "markerId": payload["markerId"],
-                                                                                    "marker": box}))
+            callback_function=lambda (marker): self.send_message("OK", "markerFound", {"id": reporter_id,
+                                                                                       "areaId": payload["areaId"],
+                                                                                       "marker": filter_out_contour_from_marker_result(marker)}))
         self.reporters[reporter_id] = reporter
 
         return "OK", {"id": reporter_id}
@@ -457,23 +461,22 @@ class Server(WebSocket):
         Searches for the specified markers in given area.
 
         areaId: Board area id
-        markerId: Marker id
-        stabilityLevel: (Optional) Minimum board area stability level before searching for marker
+        markerIds: List of marker id's
+        stabilityLevel: (Optional) Minimum board area stability level before searching for markers
         """
         board_area = self.board_areas[payload["areaId"]]
-        marker = self.markers[payload["markerId"]]
+        markers = [self.markers[marker_id] for marker_id in payload["markerIds"]]
         stability_level = payload["stabilityLevel"] if "stabilityLevel" in payload else 0.95
         reporter_id = self.draw_reporter_id()
 
         reporter = FindMarkersReporter(
             board_area,
-            marker,
+            markers,
             stability_level,
             reporter_id,
-            callback_function=lambda (markers): self.send_message("OK", "markersFound", {"id": reporter_id,
-                                                                                         "areaId": payload["areaId"],
-                                                                                         "markerId": payload["markerId"],
-                                                                                         "markers": [box for (contour, box) in markers]}))
+            callback_function=lambda (result): self.send_message("OK", "markersFound", {"id": reporter_id,
+                                                                                        "areaId": payload["areaId"],
+                                                                                        "markers": filter_out_contour_from_marker_result_list(result)}))
         self.reporters[reporter_id] = reporter
 
         return None
@@ -590,7 +593,7 @@ class Server(WebSocket):
                             #cv2.imwrite("board.png", image)
                         else:
 
-                            #cv2.imwrite("board.png", image)
+                            #cv2.imwrite("board.png", globals.board_descriptor.snapshot.board_image)
 
                             # Notify client that board is recognized
                             if board_recognized_time is None:

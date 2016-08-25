@@ -185,15 +185,17 @@ Client = (function() {
       id = void 0;
     }
     if (stabilityLevel == null) {
-      stabilityLevel = 0.95;
+      stabilityLevel = void 0;
     }
     json = {
       "areaId": areaId,
-      "validPositions": validPositions,
-      "stabilityLevel": stabilityLevel
+      "validPositions": validPositions
     };
     if (id != null) {
       json["id"] = id;
+    }
+    if (stabilityLevel != null) {
+      json["stabilityLevel"] = stabilityLevel;
     }
     return this.sendMessage("reportBackWhenBrickFoundAtAnyOfPositions", json);
   };
@@ -204,16 +206,18 @@ Client = (function() {
       id = void 0;
     }
     if (stabilityLevel == null) {
-      stabilityLevel = 0.95;
+      stabilityLevel = void 0;
     }
     json = {
       "areaId": areaId,
       "initialPosition": initialPosition,
-      "validPositions": validPositions,
-      "stabilityLevel": stabilityLevel
+      "validPositions": validPositions
     };
     if (id != null) {
       json["id"] = id;
+    }
+    if (stabilityLevel != null) {
+      json["stabilityLevel"] = stabilityLevel;
     }
     return this.sendMessage("reportBackWhenBrickMovedToAnyOfPositions", json);
   };
@@ -224,27 +228,37 @@ Client = (function() {
       id = void 0;
     }
     if (stabilityLevel == null) {
-      stabilityLevel = 0.95;
+      stabilityLevel = void 0;
     }
     json = {
       "areaId": areaId,
       "position": position,
-      "validPositions": validPositions,
-      "stabilityLevel": stabilityLevel
+      "validPositions": validPositions
     };
     if (id != null) {
       json["id"] = id;
     }
+    if (stabilityLevel != null) {
+      json["stabilityLevel"] = stabilityLevel;
+    }
     return this.sendMessage("reportBackWhenBrickMovedToPosition", json);
   };
 
-  Client.prototype.initializeImageMarker = function(markerId, image) {
+  Client.prototype.initializeImageMarker = function(markerId, image, minMatches) {
+    if (minMatches == null) {
+      minMatches = void 0;
+    }
     return this.convertImageToDataURL(image, (function(_this) {
       return function(base64Image) {
-        return _this.sendMessage("initializeImageMarker", {
+        var json;
+        json = {
           "markerId": markerId,
           "imageBase64": base64Image
-        });
+        };
+        if (minMatches != null) {
+          json["minMatches"] = minMatches;
+        }
+        return _this.sendMessage("initializeImageMarker", json);
       };
     })(this));
   };
@@ -284,28 +298,34 @@ Client = (function() {
       id = void 0;
     }
     if (stabilityLevel == null) {
-      stabilityLevel = 0.95;
+      stabilityLevel = void 0;
     }
     json = {
       "areaId": areaId,
-      "markerId": markerId,
-      "stabilityLevel": stabilityLevel
+      "markerId": markerId
     };
     if (id != null) {
       json["id"] = id;
     }
+    if (stabilityLevel != null) {
+      json["stabilityLevel"] = stabilityLevel;
+    }
     return this.sendMessage("reportBackWhenMarkerFound", json);
   };
 
-  Client.prototype.requestMarkers = function(areaId, markerId, stabilityLevel) {
+  Client.prototype.requestMarkers = function(areaId, markerIds, stabilityLevel) {
+    var json;
     if (stabilityLevel == null) {
-      stabilityLevel = 0.95;
+      stabilityLevel = void 0;
     }
-    return this.sendMessage("requestMarkers", {
+    json = {
       "areaId": areaId,
-      "markerId": markerId,
-      "stabilityLevel": stabilityLevel
-    });
+      "markerIds": markerIds
+    };
+    if (stabilityLevel != null) {
+      json["stabilityLevel"] = stabilityLevel;
+    }
+    return this.sendMessage("requestMarkers", json);
   };
 
   Client.prototype.sendMessage = function(action, payload) {
@@ -328,6 +348,37 @@ Client = (function() {
     dataURL = dataURL.replace(/^.*;base64,/, "");
     callback(dataURL);
     return canvas = null;
+  };
+
+  Client.prototype.readFileBase64 = function(filename, callback) {
+    var xhr;
+    xhr = new XMLHttpRequest();
+    xhr.open("GET", filename, true);
+    xhr.responseType = "blob";
+    xhr.onload = function(e) {
+      var blob, fileReader;
+      if (this.status === 200) {
+        blob = new Blob([this.response], {
+          type: "text/xml"
+        });
+        fileReader = new FileReader();
+        fileReader.onload = (function(_this) {
+          return function(e) {
+            var contents;
+            contents = e.target.result;
+            contents = contents.replace(/^.*;base64,/, "");
+            return callback(contents);
+          };
+        })(this);
+        fileReader.onerror = (function(_this) {
+          return function(e) {
+            return console.log("Error loading file: " + e);
+          };
+        })(this);
+        return fileReader.readAsDataURL(blob);
+      }
+    };
+    return xhr.send();
   };
 
   Client.prototype.readFileBase64 = function(filename, callback) {

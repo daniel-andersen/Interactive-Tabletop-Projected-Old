@@ -5,11 +5,12 @@ from marker import Marker
 
 
 class HaarClassifierMarker(Marker):
-    def __init__(self, cascade_data):
+    def __init__(self, marker_id, cascade_data):
         """
+        :param marker_id: Marker ID
         :param cascade_data: Haar cascade classifier data
         """
-        super(HaarClassifierMarker, self).__init__()
+        super(HaarClassifierMarker, self).__init__(marker_id)
 
         # Create the classifier from a temporary file containing the given data
         cascade_file = tempfile.NamedTemporaryFile(delete=False)
@@ -28,25 +29,31 @@ class HaarClassifierMarker(Marker):
         Find marker in image.
 
         :param image: Image
-        :return: Marker in form (contour, [centerX, centerY, width, height, rotation])
+        :return: Marker in form {"markerId", "x", "y", "width", "height", "angle", "contour"}
         """
         image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         return self.find_marker_in_thresholded_image(image)
 
     def find_marker_in_thresholded_image(self, image):
+        """
+        Find marker in image which has already been thresholded.
+
+        :param image: Thresholded image
+        :return: Marker in form {"markerId", "x", "y", "width", "height", "angle", "contour"}
+        """
 
         # Find all markers
         markers = self.find_markers_in_thresholded_image(image)
 
         # Return first marker
-        return markers[0] if len(markers) > 0 else (None, None)
+        return markers[0] if len(markers) > 0 else None
 
     def find_markers_in_image(self, image):
         """
         Find all markers in image.
 
         :param image: Image
-        :return: List of markers each in form (contour, [centerX, centerY, width, height, rotation])
+        :return: List of markers each in form {"markerId", "x", "y", "width", "height", "angle", "contour"}
         """
         image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         return self.find_markers_in_thresholded_image(image)
@@ -56,7 +63,12 @@ class HaarClassifierMarker(Marker):
         Find all markers in image which has already been thresholded.
 
         :param image: Thresholded image
-        :return: List of markers each in form (contour, [centerX, centerY, width, height, rotation])
+        :return: List of markers each in form {"markerId", "x", "y", "width", "height", "angle", "contour"}
         """
         matches = self.cascade_data.detectMultiScale(image)
-        return [(None, [[int(x - (width / 2)), int(y - (height / 2))], [int(width), int(height)], 0]) for (x, y, width, height) in matches]
+        return [{"markerId": self.marker_id,
+                 "x": int(x - (width / 2)),
+                 "y": int(y - (height / 2)),
+                 "width": int(width),
+                 "height": int(height),
+                 "angle": 0} for (x, y, width, height) in matches]
