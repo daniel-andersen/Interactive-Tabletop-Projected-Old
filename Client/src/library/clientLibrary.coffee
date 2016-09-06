@@ -148,18 +148,24 @@ class Client
             })
         )
 
-    initializeShapeMarkerWithContour: (markerId, contour) ->
-        @sendMessage("initializeShapeMarker", {
+    initializeShapeMarkerWithContour: (markerId, contour, minArea = undefined, maxArea = undefined) ->
+        json = {
             "markerId": markerId,
             "shape": contour
-        })
+        }
+        if minArea? then json["minArea"] = minArea
+        if maxArea? then json["maxArea"] = maxArea
+        @sendMessage("initializeShapeMarker", json)
 
-    initializeShapeMarkerWithImage: (markerId, image) ->
+    initializeShapeMarkerWithImage: (markerId, image, minArea = undefined, maxArea = undefined) ->
         @convertImageToDataURL(image, (base64Image) =>
-            @sendMessage("initializeShapeMarker", {
+            json = {
                 "markerId": markerId,
                 "imageBase64": base64Image
-            })
+            }
+            if minArea? then json["minArea"] = minArea
+            if maxArea? then json["maxArea"] = maxArea
+            @sendMessage("initializeShapeMarker", json)
         )
 
     reportBackWhenMarkerFound: (areaId, markerId, id = undefined, stabilityLevel = undefined) ->

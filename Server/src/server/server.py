@@ -415,16 +415,24 @@ class Server(WebSocket):
         markerId: Marker id
         shape: (Optional)Shape
         imageBase64: (Optional)Image as base 64 encoded PNG
+        minArea: (Optional)Minimum area in percent of destination image
+        maxArea: (Optional)Maximum area in percent of destination image
         """
         marker_id = payload["markerId"]
         if "shape" in payload:
             contour = np.int32(payload["shape"]).reshape(-1, 1, 2)
-            shape_marker = ShapeMarker(marker_id, contour=contour)
+            shape_marker = ShapeMarker(marker_id,
+                                       contour=contour,
+                                       min_area=payload["minArea"] if "minArea" in payload else 0.0025,
+                                       max_area=payload["maxArea"] if "maxArea" in payload else 0.9)
         else:
             raw_image = base64.b64decode(payload["imageBase64"])
             raw_bytes = np.asarray(bytearray(raw_image), dtype=np.uint8)
             image = cv2.imdecode(raw_bytes, cv2.CV_LOAD_IMAGE_UNCHANGED)
-            shape_marker = ShapeMarker(marker_id, marker_image=image)
+            shape_marker = ShapeMarker(marker_id,
+                                       marker_image=image,
+                                       min_area=payload["minArea"] if "minArea" in payload else 0.0025,
+                                       max_area=payload["maxArea"] if "maxArea" in payload else 0.9)
 
         self.markers[marker_id] = shape_marker
 

@@ -274,20 +274,48 @@ Client = (function() {
     })(this));
   };
 
-  Client.prototype.initializeShapeMarkerWithContour = function(markerId, contour) {
-    return this.sendMessage("initializeShapeMarker", {
+  Client.prototype.initializeShapeMarkerWithContour = function(markerId, contour, minArea, maxArea) {
+    var json;
+    if (minArea == null) {
+      minArea = void 0;
+    }
+    if (maxArea == null) {
+      maxArea = void 0;
+    }
+    json = {
       "markerId": markerId,
       "shape": contour
-    });
+    };
+    if (minArea != null) {
+      json["minArea"] = minArea;
+    }
+    if (maxArea != null) {
+      json["maxArea"] = maxArea;
+    }
+    return this.sendMessage("initializeShapeMarker", json);
   };
 
-  Client.prototype.initializeShapeMarkerWithImage = function(markerId, image) {
+  Client.prototype.initializeShapeMarkerWithImage = function(markerId, image, minArea, maxArea) {
+    if (minArea == null) {
+      minArea = void 0;
+    }
+    if (maxArea == null) {
+      maxArea = void 0;
+    }
     return this.convertImageToDataURL(image, (function(_this) {
       return function(base64Image) {
-        return _this.sendMessage("initializeShapeMarker", {
+        var json;
+        json = {
           "markerId": markerId,
           "imageBase64": base64Image
-        });
+        };
+        if (minArea != null) {
+          json["minArea"] = minArea;
+        }
+        if (maxArea != null) {
+          json["maxArea"] = maxArea;
+        }
+        return _this.sendMessage("initializeShapeMarker", json);
       };
     })(this));
   };
@@ -348,37 +376,6 @@ Client = (function() {
     dataURL = dataURL.replace(/^.*;base64,/, "");
     callback(dataURL);
     return canvas = null;
-  };
-
-  Client.prototype.readFileBase64 = function(filename, callback) {
-    var xhr;
-    xhr = new XMLHttpRequest();
-    xhr.open("GET", filename, true);
-    xhr.responseType = "blob";
-    xhr.onload = function(e) {
-      var blob, fileReader;
-      if (this.status === 200) {
-        blob = new Blob([this.response], {
-          type: "text/xml"
-        });
-        fileReader = new FileReader();
-        fileReader.onload = (function(_this) {
-          return function(e) {
-            var contents;
-            contents = e.target.result;
-            contents = contents.replace(/^.*;base64,/, "");
-            return callback(contents);
-          };
-        })(this);
-        fileReader.onerror = (function(_this) {
-          return function(e) {
-            return console.log("Error loading file: " + e);
-          };
-        })(this);
-        return fileReader.readAsDataURL(blob);
-      }
-    };
-    return xhr.send();
   };
 
   Client.prototype.readFileBase64 = function(filename, callback) {
