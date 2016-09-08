@@ -113,7 +113,7 @@ class ShapeMarker(Marker):
 
         # OTSU image
         image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-        ret, image = cv2.threshold(image, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
+        image = cv2.adaptiveThreshold(image, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 11, 2)
 
         # Find marker in OTSU'ed image
         return self.find_markers_in_thresholded_image(image)
