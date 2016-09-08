@@ -70,6 +70,6 @@ class Marker(object):
 
         :param image: Image
         :param contours: Contours
-        :return: Result in form [{markerId, box: [{"markerId", "x", "y", "width", "height", "angle", "contour"}, ...]
+        :return: List of markers each in form {"markerId", "x", "y", "width", "height", "angle", "contour"}
         """
         return [self.contour_to_marker_result(image, contour) for contour in contours]

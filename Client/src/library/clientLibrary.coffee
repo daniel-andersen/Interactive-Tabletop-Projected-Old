@@ -177,13 +177,22 @@ class Client
         if stabilityLevel? then json["stabilityLevel"] = stabilityLevel
         @sendMessage("reportBackWhenMarkerFound", json)
 
-    requestMarkers: (areaId, markerIds, stabilityLevel = undefined) ->
+    requestMarkers: (areaId, markerIds, id = undefined, stabilityLevel = undefined) ->
         json = {
             "areaId": areaId,
             "markerIds": markerIds
         }
+        if id? then json["id"] = id
         if stabilityLevel? then json["stabilityLevel"] = stabilityLevel
         @sendMessage("requestMarkers", json)
+
+    startTrackingMarker: (areaId, markerId, id = undefined) ->
+        json = {
+            "areaId": areaId,
+            "markerId": markerId
+        }
+        if id? then json["id"] = id
+        @sendMessage("startTrackingMarker", json)
 
     sendMessage: (action, payload) ->
         message = {

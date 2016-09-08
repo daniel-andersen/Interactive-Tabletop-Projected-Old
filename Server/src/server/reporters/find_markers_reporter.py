@@ -32,7 +32,9 @@ class FindMarkersReporter(Reporter):
         # Find markers
         result = []
         for marker in self.markers:
-            result += marker.find_markers_in_image(image)
+            marker_result = marker.find_marker_in_image(image)
+            if marker_result:
+                result.append(marker_result)
 
         if globals.debug:
             print("%i: Markers found: %i" % (self.reporter_id, len(result)))

@@ -1,6 +1,22 @@
 import cv2
 import numpy as np
+import math
 import misc_math
+
+
+def contour_center(contour):
+    contour_length = len(contour)
+    return (sum([p[0][0] for p in contour]) / float(contour_length),
+            sum([p[0][1] for p in contour]) / float(contour_length))
+
+
+def contour_angle(contour, reference_point, center_point=None):
+    center_point = contour_center(contour) if not center_point else center_point
+    return points_axis_angle(center_point, reference_point)
+
+
+def points_axis_angle(pt1, pt2):
+    return math.atan2(pt1[1] - pt2[1], pt1[0] - pt2[0])
 
 
 def simplify_contour(contour, lookahead_length=8, image=None):

@@ -48,6 +48,7 @@ class ShapeMarker(Marker):
                                     self.distance_map_for_contour(self.marker_contour,  1)]
         self.marker_angle_map = [self.angle_map_for_contour(self.marker_contour, -1),
                                  self.angle_map_for_contour(self.marker_contour,  1)]
+        self.marker_center = contour_util.contour_center(self.marker_contour)
 
         self.marker_orientation = -1 if self.marker_area < 0 else 1
 
@@ -136,17 +137,39 @@ class ShapeMarker(Marker):
         for contour in contours:
 
             # Match contour
-            matched_contour = self.match_contour(contour, image)
+            matched_contour, marker_contour_start_index = self.match_contour(contour, image)
 
             if matched_contour is not None:
                 #image2 = cv2.cvtColor(image.copy(), cv2.COLOR_GRAY2BGR)
                 #cv2.drawContours(image2, [contour], 0, (255, 255, 0), 1)
                 #cv2.imshow('Contours', image2)
                 #cv2.waitKey(0)
-                markers.append(matched_contour)
+
+                # Extract result
+                result = self.contour_to_marker_result(image, matched_contour)
+
+                # Calculate correct angle and center
+                matched_contour_center = contour_util.contour_center(matched_contour)
+
+                contour_angle = contour_util.contour_angle(matched_contour,
+                                                           matched_contour[0][0],
+                                                           matched_contour_center)
+                marker_angle = contour_util.contour_angle(self.marker_contour,
+                                                          self.marker_contour[marker_contour_start_index][0],
+                                                          self.marker_center)
+                angle = contour_angle - marker_angle
+
+                image_height, image_width = image.shape[:2]
+
+                result["angle"] = angle * 180.0 / math.pi
+                result["x"] = matched_contour_center[0] / float(image_width),
+                result["y"] = matched_contour_center[1] / float(image_height)
+
+                # Append marker to result list
+                markers.append(result)
 
         # Return markers
-        return self.contours_to_marker_result(image, markers)
+        return markers
 
     def match_contour(self, contour, image):
         """
@@ -154,7 +177,7 @@ class ShapeMarker(Marker):
 
         :param contour: Contour
         :param image: Image
-        :return Matched contour
+        :return (Matched contour, start index into marker contour)
         """
 
         image_height, image_width = image.shape[:2]
@@ -167,11 +190,11 @@ class ShapeMarker(Marker):
 
         if arclength < min_contour_length:
             #print("Arclength to small: %f < %f" % (arclength, min_contour_length))
-            return None
+            return None, None
 
         if arclength > max_contour_length:
             #print("Arclength to large: %f > %f" % (arclength, max_contour_length))
-            return None
+            return None, None
 
         # Check contour area
         area = cv2.contourArea(contour, True)
@@ -185,11 +208,11 @@ class ShapeMarker(Marker):
 
         if area < min_contour_area:
             #print("Area to small: %f < %f" % (area, min_contour_area))
-            return None
+            return None, None
 
         if area > max_contour_area:
             #print("Area to large: %f > %f" % (area, max_contour_area))
-            return None
+            return None, None
 
         # Simplify contour
         approxed_contour = contour_util.simplify_contour(contour)
@@ -200,11 +223,11 @@ class ShapeMarker(Marker):
         # Check number of lines compared to marker
         if len(approxed_contour) < len(self.marker_contour):
             #print("Number of lines to few: %f < %f" % (len(approxed_contour), len(self.marker_contour)))
-            return None
+            return None, None
 
         if len(approxed_contour) > len(self.marker_contour) * 2:
             #print("Number of lines to many: %f < %f" % (len(approxed_contour), len(self.marker_contour) * 2))
-            return None
+            return None, None
 
         # Go through source points
         for start_index in range(0, self.marker_length):
@@ -217,9 +240,9 @@ class ShapeMarker(Marker):
                 distance_map = self.distance_map_for_contour(approxed_contour, direction=1, index_map=matched_contour_index_map)
 
                 if self.verify_fine_grained_lines(approxed_contour, matched_contour_index_map, distance_map):
-                    return np.int32([approxed_contour[index] for index in matched_contour_index_map]).reshape(-1, 1, 2)
+                    return np.int32([approxed_contour[index] for index in matched_contour_index_map]).reshape(-1, 1, 2), start_index
 
-        return None
+        return None, None
 
     def match_points(self, contour, marker_start_offset, direction, contour_arc_length=None, image=None):
         """

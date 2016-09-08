@@ -23,6 +23,7 @@ from reporters.tiled_brick_moved_reporters import TiledBrickMovedToAnyOfPosition
 from reporters.tiled_brick_moved_reporters import TiledBrickMovedToPositionReporter
 from reporters.find_marker_reporter import FindMarkerReporter
 from reporters.find_markers_reporter import FindMarkersReporter
+from reporters.marker_tracker import MarkerTracker
 
 if misc_util.module_exists("picamera"):
     print("Using Raspberry Pi camera")
@@ -109,6 +110,8 @@ class Server(WebSocket):
             return self.request_markers(payload)
         if action == "reportBackWhenMarkerFound":
             return self.report_back_when_marker_found(payload)
+        if action == "startTrackingMarker":
+            return self.start_tracking_marker(payload)
 
     def initialize_video(self, resolution):
         if globals.camera is not None:
@@ -471,11 +474,12 @@ class Server(WebSocket):
         areaId: Board area id
         markerIds: List of marker id's
         stabilityLevel: (Optional) Minimum board area stability level before searching for markers
+        id: (Optional) Reporter id
         """
         board_area = self.board_areas[payload["areaId"]]
         markers = [self.markers[marker_id] for marker_id in payload["markerIds"]]
+        reporter_id = payload["id"] if "id" in payload else self.draw_reporter_id()
         stability_level = payload["stabilityLevel"] if "stabilityLevel" in payload else 0.95
-        reporter_id = self.draw_reporter_id()
 
         reporter = FindMarkersReporter(
             board_area,
@@ -488,6 +492,29 @@ class Server(WebSocket):
         self.reporters[reporter_id] = reporter
 
         return None
+
+    def start_tracking_marker(self, payload):
+        """
+        Starts tracking marker.
+
+        areaId: Board area id
+        markerId: Marker id
+        id: (Optional) Reporter id
+        """
+        board_area = self.board_areas[payload["areaId"]]
+        marker = self.markers[payload["markerId"]]
+        reporter_id = payload["id"] if "id" in payload else self.draw_reporter_id()
+
+        reporter = MarkerTracker(
+            board_area,
+            marker,
+            reporter_id,
+            callback_function=lambda (marker): self.send_message("OK", "markerTracked", {"id": reporter_id,
+                                                                                         "areaId": payload["areaId"],
+                                                                                         "marker": filter_out_contour_from_marker_result(marker)}))
+        self.reporters[reporter_id] = reporter
+
+        return "OK", {"id": reporter_id}
 
     def reset_reporters(self):
         """

@@ -341,8 +341,11 @@ Client = (function() {
     return this.sendMessage("reportBackWhenMarkerFound", json);
   };
 
-  Client.prototype.requestMarkers = function(areaId, markerIds, stabilityLevel) {
+  Client.prototype.requestMarkers = function(areaId, markerIds, id, stabilityLevel) {
     var json;
+    if (id == null) {
+      id = void 0;
+    }
     if (stabilityLevel == null) {
       stabilityLevel = void 0;
     }
@@ -350,10 +353,28 @@ Client = (function() {
       "areaId": areaId,
       "markerIds": markerIds
     };
+    if (id != null) {
+      json["id"] = id;
+    }
     if (stabilityLevel != null) {
       json["stabilityLevel"] = stabilityLevel;
     }
     return this.sendMessage("requestMarkers", json);
+  };
+
+  Client.prototype.startTrackingMarker = function(areaId, markerId, id) {
+    var json;
+    if (id == null) {
+      id = void 0;
+    }
+    json = {
+      "areaId": areaId,
+      "markerId": markerId
+    };
+    if (id != null) {
+      json["id"] = id;
+    }
+    return this.sendMessage("startTrackingMarker", json);
   };
 
   Client.prototype.sendMessage = function(action, payload) {
