@@ -30,13 +30,7 @@ class ImageMarker(Marker):
         # Find features in marker image
         self.kp1, self.des1 = self.sift.detectAndCompute(marker_image, None)
 
-    def find_marker_in_image(self, image):
-        """
-        Find marker in image.
-
-        :param image: Image
-        :return: Marker in form {"markerId", "x", "y", "width", "height", "angle", "contour"}
-        """
+    def find_marker_in_image(self, image, size_constraint_offset=0.0):
 
         # Find features in image
         kp2, des2 = self.sift.detectAndCompute(image, None)
@@ -70,32 +64,20 @@ class ImageMarker(Marker):
         # Return resulting points
         return self.contour_to_marker_result(image, np.int32(dst))
 
-    def find_marker_in_thresholded_image(self, image):
-        """
-        Find marker in image which has already been thresholded.
+    def find_marker_in_thresholded_image(self, image, size_constraint_offset=0.0):
+        return self.find_marker_in_image(image, size_constraint_offset)
 
-        :param image: Thresholded image
-        :return: Marker in form {"markerId", "x", "y", "width", "height", "angle", "contour"}
-        """
-        return self.find_marker_in_image(image)
-
-    def find_markers_in_image(self, image):
-        """
-        Find all markers in image.
-
-        :param image: Image
-        :return: List of markers each in form {"markerId", "x", "y", "width", "height", "angle", "contour"}
-        """
+    def find_markers_in_image(self, image, size_constraint_offset=0.0):
 
         # TODO! Extract all markers!
-        result = self.find_marker_in_image(image)
+        result = self.find_marker_in_image(image, size_constraint_offset)
         return [result] if result is not None else []
 
-    def find_markers_in_thresholded_image(self, image):
+    def find_markers_in_thresholded_image(self, image, size_constraint_offset=0.0):
         """
         Find all markers in image which has already been thresholded.
 
         :param image: Thresholded image
         :return: List of markers each in form {"markerId", "x", "y", "width", "height", "angle", "contour"}
         """
-        return self.find_markers_in_image(image)
+        return self.find_markers_in_image(image, size_constraint_offset)

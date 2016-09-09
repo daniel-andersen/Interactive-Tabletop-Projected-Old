@@ -6,41 +6,23 @@ from util import misc_math
 
 class DefaultMarker(Marker):
 
-    def find_marker_in_image(self, image):
-        """
-        Find marker in image.
-
-        :param image: Image
-        :return: Marker in form {"markerId", "x", "y", "width", "height", "angle", "contour"}
-        """
+    def find_marker_in_image(self, image, size_constraint_offset=0.0):
 
         # Find all markers
-        markers = self.find_markers_in_image(image)
+        markers = self.find_markers_in_image(image, size_constraint_offset)
 
         # Return first marker
         return markers[0] if len(markers) > 0 else None
 
-    def find_marker_in_thresholded_image(self, image):
-        """
-        Find marker in image which has already been thresholded.
-
-        :param image: Thresholded image
-        :return: Marker in form {"markerId", "x", "y", "width", "height", "angle", "contour"}
-        """
+    def find_marker_in_thresholded_image(self, image, size_constraint_offset=0.0):
 
         # Find all markers
-        markers = self.find_markers_in_thresholded_image(image)
+        markers = self.find_markers_in_thresholded_image(image, size_constraint_offset)
 
         # Return first marker
         return markers[0] if len(markers) > 0 else None
 
-    def find_markers_in_image(self, image):
-        """
-        Find all markers in image.
-
-        :param image: Image
-        :return: List of markers each in form {"markerId", "x", "y", "width", "height", "angle", "contour"}
-        """
+    def find_markers_in_image(self, image, size_constraint_offset=0.0):
 
         # OTSU image
         image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -48,15 +30,9 @@ class DefaultMarker(Marker):
         ret, image = cv2.threshold(image, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
 
         # Find marker in OTSU'ed image
-        return self.find_markers_in_thresholded_image(image)
+        return self.find_markers_in_thresholded_image(image, size_constraint_offset)
 
-    def find_markers_in_thresholded_image(self, image):
-        """
-        Find all markers in image which has already been thresholded.
-
-        :param image: Thresholded image
-        :return: List of markers each in form {"markerId", "x", "y", "width", "height", "angle", "contour"}
-        """
+    def find_markers_in_thresholded_image(self, image, size_constraint_offset=0.0):
 
         original_image = image
 
@@ -108,7 +84,7 @@ class DefaultMarker(Marker):
             #cv2.imshow('Contours', image2)
             #cv2.waitKey(0)
 
-            if self.are_marker_conditions_satisfied_for_contour(contours, approxed_contours, hierarchy, i, min_marker_size, max_marker_size, (image_width, image_height)):
+            if self.are_marker_conditions_satisfied_for_contour(contours, approxed_contours, hierarchy, i, min_marker_size, max_marker_size, (image_width, image_height), size_constraint_offset):
 
                 #image2 = cv2.cvtColor(image.copy(), cv2.COLOR_GRAY2BGR)
                 #cv2.drawContours(image2, [approxed_contours[hierarchy[0][i][2]]], -1, (255, 0, 255), 1)
@@ -125,7 +101,7 @@ class DefaultMarker(Marker):
         # Return markers
         return self.contours_to_marker_result(original_image, markers)
 
-    def are_marker_conditions_satisfied_for_contour(self, contours, approxed_contours, hierachy, index, min_marker_size, max_marker_size, image_size):
+    def are_marker_conditions_satisfied_for_contour(self, contours, approxed_contours, hierachy, index, min_marker_size, max_marker_size, image_size, size_constraint_offset=0.0):
 
         approxed_contour = approxed_contours[index]
         contour = contours[index]
@@ -137,6 +113,7 @@ class DefaultMarker(Marker):
 
         # Check area
         area = cv2.contourArea(contour, False)
+
         if area < min_marker_size:
             #print("Area too small: %f vs %f" % (area, min_marker_size))
             return False

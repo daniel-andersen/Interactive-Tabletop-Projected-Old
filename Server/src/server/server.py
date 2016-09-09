@@ -479,7 +479,7 @@ class Server(WebSocket):
         board_area = self.board_areas[payload["areaId"]]
         markers = [self.markers[marker_id] for marker_id in payload["markerIds"]]
         reporter_id = payload["id"] if "id" in payload else self.draw_reporter_id()
-        stability_level = payload["stabilityLevel"] if "stabilityLevel" in payload else 0.95
+        stability_level = payload["stabilityLevel"] if "stabilityLevel" in payload else 0.0
 
         reporter = FindMarkersReporter(
             board_area,
