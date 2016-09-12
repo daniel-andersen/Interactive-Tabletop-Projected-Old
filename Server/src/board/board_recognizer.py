@@ -3,7 +3,7 @@ import numpy as np
 import math
 from util import enum
 from util import misc_math
-from board.board_descriptor import BoardDescriptor
+from board.board_descriptor import BoardSnapshot
 from board.board_descriptor import BoardStatus
 from board import transform
 from board import histogram_util
@@ -95,7 +95,7 @@ class BoardRecognizer(object):
         corners = self.find_corners(marker_contours, image)
         if corners is not None:
             transformed_image = transform.transform_image(image, corners)
-            return BoardDescriptor.Snapshot(camera_image=image, board_image=transformed_image, board_corners=corners)
+            return BoardSnapshot(camera_image=image, board_image=transformed_image, board_corners=corners)
 
         return None
 
@@ -291,4 +291,4 @@ class BoardRecognizer(object):
             corners.append("bottomLeft")
         if bottom_right is None:
             corners.append("bottomRight")
-        return BoardDescriptor.Snapshot(status=BoardStatus.NOT_RECOGNIZED, camera_image=image, missing_corners=corners)
+        return BoardSnapshot(status=BoardStatus.NOT_RECOGNIZED, camera_image=image, missing_corners=corners)

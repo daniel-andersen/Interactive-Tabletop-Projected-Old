@@ -23,7 +23,7 @@ class TiledBrickPositionReporter(Reporter):
             return
 
         #if globals.debug:
-            #cv2.imwrite("debug/output_board_recognized_{0}.png".format(self.reporter_id), globals.board_descriptor.snapshot.board_image)
+            #cv2.imwrite("debug/output_board_recognized_{0}.png".format(self.reporter_id), globals.board_descriptor.snapshot.board_image())
 
         # Check sufficient stability
         if self.tiled_board_area.stability_score() < self.stability_level:
@@ -37,7 +37,7 @@ class TiledBrickPositionReporter(Reporter):
                 print("%i: Brick recognized: %s" % (self.reporter_id, probabilities))
                 #image = globals.camera.read()
                 #cv2.imwrite("debug/output_brick_recognized_{0}.png".format(self.reporter_id), image)
-                #cv2.imwrite("debug/output_brick_recognized_{0}_board.png".format(self.reporter_id), globals.board_descriptor.snapshot.board_image)
+                #cv2.imwrite("debug/output_brick_recognized_{0}_board.png".format(self.reporter_id), globals.board_descriptor.snapshot.board_image())
                 #cv2.imwrite("debug/output_brick_recognized_{0}_strip.png".format(self.reporter_id), globals.board_descriptor.tile_strip(self.valid_positions))
             self.callback_function(position)
             self.stop()

@@ -21,7 +21,7 @@ class FindMarkerReporter(Reporter):
     def run_iteration(self):
 
         # Get area image
-        image = self.board_area.area_image(reuse=True)
+        image = self.board_area.area_image()
 
         # Check if we have a board area image
         if image is None:
@@ -38,7 +38,7 @@ class FindMarkerReporter(Reporter):
 
         if globals.debug:
             print("%i: Marker recognized" % self.reporter_id)
-            #cv2.imwrite("area.png", self.board_area.area_image(reuse=True))
+            #cv2.imwrite("area.png", self.board_area.area_image())
 
 
         self.callback_function(marker_result)

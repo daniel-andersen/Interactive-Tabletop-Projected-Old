@@ -2,6 +2,7 @@ import cv2
 from random import randint
 from server import globals
 from board import histogram_util
+from board.board_descriptor import BoardDescriptor
 
 
 class BoardArea(object):
@@ -13,10 +14,9 @@ class BoardArea(object):
     board_descriptor -- Board descriptor
     area_image -- Extracted area image
     """
-    extracted_area_image = None
-    extracted_grayscaled_area_image = None
+    extracted_area_images = {}
+    extracted_grayscaled_area_images = {}
     foreground_mask = None
-    foreground_mask_should_update = True
 
     def __init__(self, area_id=None, board_area_pct=[0.0, 0.0, 1.0, 1.0], board_descriptor=None):
         """
@@ -31,31 +31,31 @@ class BoardArea(object):
         self.board_descriptor = board_descriptor if board_descriptor is not None else globals.board_descriptor
         self.background_subtractor = cv2.BackgroundSubtractorMOG2(history=5, varThreshold=16)
         self.current_stability_score = 1.0
+        self.current_board_snapshot_id = None
 
-    def reset_area_image(self):
-        """
-        Resets the area image to force extraction of new image on next request.
-        """
-        self.extracted_area_image = None
-        self.extracted_grayscaled_area_image = None
-        self.foreground_mask_should_update = True
-
-    def area_image(self, reuse=False):
+    def area_image(self, snapshot_size=BoardDescriptor.SnapshotSize.SMALL):
         """
         Extracts area image from board snapshot.
 
-        :param reuse: If True, reuse current snapshot, or else force extract new.
+        :param snapshot_size: Snapshot size to use
         :return Extracted area image
         """
 
         # Check if board is recognized
         if not self.board_descriptor.is_recognized():
-            self.extracted_area_image = None
             return None
 
-        # Already extracted image
-        if reuse and self.extracted_area_image is not None:
-            return self.extracted_area_image
+        # Check if snapshot has changed
+        if self.current_board_snapshot_id is not self.board_descriptor.snapshot.id:
+            self.extracted_area_images = {}
+            self.extracted_grayscaled_area_images = {}
+
+        # Return pre-processed area image
+        if snapshot_size in self.extracted_area_images:
+            return self.extracted_area_images[snapshot_size]
+
+        # Save snapshot ID
+        self.current_board_snapshot_id = self.board_descriptor.snapshot.id
 
         # Get board canvas image
         board_image = self.board_descriptor.board_canvas()
@@ -67,43 +67,45 @@ class BoardArea(object):
         x2 = int(float(image_width) * self.board_area_pct[2])
         y2 = int(float(image_height) * self.board_area_pct[3])
 
-        self.extracted_area_image = board_image[y1:y2, x1:x2]
+        self.extracted_area_images[snapshot_size] = board_image[y1:y2, x1:x2]
 
-        return self.extracted_area_image
+        return self.extracted_area_images[snapshot_size]
 
-    def grayscaled_area_image(self, reuse=False):
+    def grayscaled_area_image(self, snapshot_size=BoardDescriptor.SnapshotSize.SMALL):
         """
         Extracts grayscaled area image from board snapshot.
 
-        :param reuse: If True, reuse current snapshot, or else force extract new.
+        :param snapshot_size: Snapshot size to use
         :return Extracted area image
         """
 
+        # Check if board is recognized
+        if not self.board_descriptor.is_recognized():
+            return None
+
         # Already extracted image
-        if reuse and self.extracted_grayscaled_area_image is not None:
-            return self.extracted_grayscaled_area_image
+        if self.current_board_snapshot_id is self.board_descriptor.snapshot.id:
+            if snapshot_size in self.extracted_grayscaled_area_images:
+                return self.extracted_grayscaled_area_images[snapshot_size]
 
         # Extract image
-        image = self.area_image(reuse)
+        image = self.area_image(snapshot_size)
 
         # Grayscale image
-        self.extracted_grayscaled_area_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        self.extracted_grayscaled_area_images[snapshot_size] = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
-        return self.extracted_grayscaled_area_image
+        return self.extracted_grayscaled_area_images[snapshot_size]
 
     def update_stability_score(self):
-        if not self.foreground_mask_should_update:
-            return
 
         # Get area image
-        image = self.grayscaled_area_image(reuse=True)
+        image = self.grayscaled_area_image(BoardDescriptor.SnapshotSize.SMALL)
         if self.foreground_mask is not None:
             mask_height, mask_width = self.foreground_mask.shape[:2]
             image = cv2.resize(image, (mask_width, mask_height))
 
         # Update foreground mask with area image
         self.foreground_mask = self.background_subtractor.apply(image, learningRate=0.5)
-        self.foreground_mask_should_update = False
 
         mask_height, mask_width = self.foreground_mask.shape[:2]
 

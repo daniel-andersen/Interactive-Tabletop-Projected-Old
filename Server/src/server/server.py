@@ -628,7 +628,7 @@ class Server(WebSocket):
                             #cv2.imwrite("board.png", image)
                         else:
 
-                            #cv2.imwrite("board.png", globals.board_descriptor.snapshot.board_image)
+                            #cv2.imwrite("board.png", globals.board_descriptor.snapshot.board_image())
 
                             # Notify client that board is recognized
                             if board_recognized_time is None:
@@ -637,13 +637,9 @@ class Server(WebSocket):
                             board_recognized_time = time.time()
 
                     # Update board areas
-                    for (_, board_area) in self.board_areas.copy().iteritems():
+                    if globals.board_descriptor.is_recognized():
 
-                        # Reset area image in order to force extraction of new upon next request
-                        board_area.reset_area_image()
-
-                        # Update stability score
-                        if globals.board_descriptor.is_recognized():
+                        for (_, board_area) in self.board_areas.copy().iteritems():
                             board_area.update_stability_score()
 
                     # Run all reporters

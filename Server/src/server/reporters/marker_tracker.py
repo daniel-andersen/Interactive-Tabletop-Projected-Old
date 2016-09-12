@@ -1,7 +1,7 @@
 import cv2
 import time
 from reporter import Reporter
-
+from board.board_descriptor import BoardDescriptor
 
 class MarkerTracker(Reporter):
 
@@ -20,7 +20,7 @@ class MarkerTracker(Reporter):
     def run_iteration(self):
 
         # Get area image
-        area_image = self.board_area.area_image(reuse=True)
+        area_image = self.board_area.area_image(BoardDescriptor.SnapshotSize.SMALL)
 
         # Check if we have a board area image
         if area_image is None:

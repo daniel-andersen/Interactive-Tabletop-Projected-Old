@@ -19,7 +19,7 @@ class FindMarkersReporter(Reporter):
     def run_iteration(self):
 
         # Get area image
-        image = self.board_area.area_image(reuse=True)
+        image = self.board_area.area_image()
 
         # Check if we have a board area image
         if image is None:
