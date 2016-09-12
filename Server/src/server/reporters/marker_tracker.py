@@ -1,5 +1,6 @@
 import cv2
 import time
+import math
 from reporter import Reporter
 from board.board_descriptor import BoardDescriptor
 
@@ -65,9 +66,6 @@ class MarkerTracker(Reporter):
             # Update bounds
             self.update_bounds(area_image, marker_result)
 
-            # Smoothen marker result
-            marker_result = self.smoothened_marker_result(marker_result)
-
             # Notify client
             self.callback_function(marker_result)
 
@@ -122,35 +120,3 @@ class MarkerTracker(Reporter):
 
         # Extract image
         return image[y1:y2, x1:x2]
-
-    def smoothened_marker_result(self, marker_result):
-        """
-        Smoothens marker result based on marker history.
-
-        :param marker_result: Marker result to smoothen
-        :return: Smoothened marker result
-        """
-        x = 0.0
-        y = 0.0
-        width = 0.0
-        height = 0.0
-        angle = 0.0
-
-        for history_entry in self.marker_history:
-            history_result = history_entry["marker_result"]
-
-            x += history_result["x"]
-            y += history_result["y"]
-            width += history_result["width"]
-            height += history_result["height"]
-            angle += history_result["angle"]
-
-        count = float(len(self.marker_history))
-
-        marker_result["x"] = x / count
-        marker_result["y"] = y / count
-        marker_result["width"] = width / count
-        marker_result["height"] = height / count
-        marker_result["angle"] = angle / count
-
-        return marker_result
