@@ -1,6 +1,7 @@
 import numpy as np
 import cv2
 from random import randint
+from threading import RLock
 from markers.default_marker import DefaultMarker
 from util import enum
 
@@ -191,7 +192,10 @@ class BoardSnapshot:
         self.board_canvas_images = {}
         self.board_corners = board_corners
         self.missing_corners = missing_corners
+
         self.id = randint(0, 100000)
+
+        self.lock = RLock()
 
         if board_image is not None:
             self.board_images[BoardDescriptor.SnapshotSize.ORIGINAL] = board_image
@@ -204,30 +208,32 @@ class BoardSnapshot:
         :return: Board image in given size
         """
 
-        # Check if image already exists
-        if image_size in self.board_images:
+        with self.lock:
+
+            # Check if image already exists
+            if image_size in self.board_images:
+                return self.board_images[image_size]
+
+            if BoardDescriptor.SnapshotSize.ORIGINAL not in self.board_images:
+                return None
+
+            # Original image measurements
+            original_image = self.board_images[BoardDescriptor.SnapshotSize.ORIGINAL]
+            original_height, original_width = original_image.shape[:2]
+            aspect_ratio = float(original_height) / float(original_width)
+
+            # Find scaled width
+            dest_width = original_width
+            if image_size is BoardDescriptor.SnapshotSize.SMALL:
+                dest_width = 640.0
+
+            # Resize image
+            if dest_width < original_width:
+                self.board_images[image_size] = cv2.resize(original_image, (int(dest_width), int(dest_width * aspect_ratio)))
+            else:
+                self.board_images[image_size] = original_image
+
             return self.board_images[image_size]
-
-        if BoardDescriptor.SnapshotSize.ORIGINAL not in self.board_images:
-            return None
-
-        # Original image measurements
-        original_image = self.board_images[BoardDescriptor.SnapshotSize.ORIGINAL]
-        original_height, original_width = original_image.shape[:2]
-        aspect_ratio = float(original_height) / float(original_width)
-
-        # Find scaled width
-        dest_width = original_width
-        if image_size is BoardDescriptor.SnapshotSize.SMALL:
-            dest_width = 640.0
-
-        # Resize image
-        if dest_width < original_width:
-            self.board_images[image_size] = cv2.resize(original_image, (int(dest_width), int(dest_width * aspect_ratio)))
-        else:
-            self.board_images[image_size] = original_image
-
-        return self.board_images[image_size]
 
     def grayscaled_board_image(self, image_size=BoardDescriptor.SnapshotSize.SMALL):
         """
@@ -237,17 +243,19 @@ class BoardSnapshot:
         :return: Grayscaled board image in given size
         """
 
-        # Check if image already exists
-        if image_size in self.grayscaled_board_images:
+        with self.lock:
+
+            # Check if image already exists
+            if image_size in self.grayscaled_board_images:
+                return self.grayscaled_board_images[image_size]
+
+            # Check for original board image
+            if BoardDescriptor.SnapshotSize.ORIGINAL not in self.board_images:
+                return None
+
+            # Grayscale imagae
+            self.grayscaled_board_images[image_size] = cv2.cvtColor(self.board_image(image_size), cv2.COLOR_BGR2GRAY)
             return self.grayscaled_board_images[image_size]
-
-        # Check for original board image
-        if BoardDescriptor.SnapshotSize.ORIGINAL not in self.board_images:
-            return None
-
-        # Grayscale imagae
-        self.grayscaled_board_images[image_size] = cv2.cvtColor(self.board_image(image_size), cv2.COLOR_BGR2GRAY)
-        return self.grayscaled_board_images[image_size]
 
     def board_canvas_image(self, canvas_region, image_size=BoardDescriptor.SnapshotSize.SMALL):
         """
@@ -258,17 +266,19 @@ class BoardSnapshot:
         :return: Grayscaled board image in given size
         """
 
-        # Check if already present
-        if image_size not in self.board_canvas_images:
+        with self.lock:
 
-            # Extract board image
-            board_image = self.board_image(image_size)
-            if board_image is None:
-                return None
+            # Check if already present
+            if image_size not in self.board_canvas_images:
 
-            # Extract region
-            self.board_canvas_images[image_size] = board_image[
-                                                   int(canvas_region[1]):int(canvas_region[3]),
-                                                   int(canvas_region[0]):int(canvas_region[2])]
+                # Extract board image
+                board_image = self.board_image(image_size)
+                if board_image is None:
+                    return None
 
-        return self.board_canvas_images[image_size]
+                # Extract region
+                self.board_canvas_images[image_size] = board_image[
+                                                       int(canvas_region[1]):int(canvas_region[3]),
+                                                       int(canvas_region[0]):int(canvas_region[2])]
+
+            return self.board_canvas_images[image_size]

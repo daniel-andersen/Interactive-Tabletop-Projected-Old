@@ -15,9 +15,14 @@ class MarkerTracker(Reporter):
         self.board_area = board_area
         self.marker = marker
         self.marker_bounds_pct = None
-        self.reset_bounds_time = time.time()
+        self.marker_history = []
+        self.marker_history_time = 2.0
 
     def run_iteration(self):
+
+        # Update marker history
+        while len(self.marker_history) > 0 and self.marker_history[0]["timestamp"] < time.time() - self.marker_history_time:
+            self.marker_history.pop(0)
 
         # Get area image
         area_image = self.board_area.area_image(BoardDescriptor.SnapshotSize.SMALL)
@@ -27,27 +32,17 @@ class MarkerTracker(Reporter):
             return
 
         # Reset bounds if marker not found in a while
-        if self.reset_bounds_time <= time.time():
+        if len(self.marker_history) is 0:
             self.marker_bounds_pct = None
 
         # Extract sub-image in which marker was last found
         area_image_bounded = self.image_from_bounds(area_image, self.marker_bounds_pct) if self.marker_bounds_pct else area_image
 
-        # Threshold image according to state - OTSU works best in smaller areas, whereas adaptive thresholding works better in larger areas
-        area_image_bounded = cv2.cvtColor(area_image_bounded, cv2.COLOR_BGR2GRAY)
-        area_image_bounded = cv2.blur(area_image_bounded, (5, 5))
-        if self.marker_bounds_pct:
-            ret, area_image_bounded = cv2.threshold(area_image_bounded, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
-        else:
-            area_image_bounded = cv2.adaptiveThreshold(area_image_bounded, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 11, 2)
-        area_image_bounded = cv2.erode(area_image_bounded, (5, 5))
-        area_image_bounded = cv2.dilate(area_image_bounded, (5, 5))
-
         #if self.marker_bounds_pct:
         #    cv2.imwrite("test.png", area_image_bounded)
 
         # Find marker
-        marker_result = self.marker.find_marker_in_thresholded_image(area_image_bounded, size_constraint_offset=0.1 if self.marker_bounds_pct else 0.0)
+        marker_result = self.marker.find_marker_in_image(area_image_bounded, size_constraint_offset=0.1 if self.marker_bounds_pct else 0.0)
 
         if marker_result is not None:
 
@@ -64,11 +59,14 @@ class MarkerTracker(Reporter):
                 marker_result["width"] *= scale_x
                 marker_result["height"] *= scale_y
 
+            # Append marker to history
+            self.marker_history.append({"timestamp": time.time(), "marker_result": marker_result})
+
             # Update bounds
             self.update_bounds(area_image, marker_result)
 
-            # Reset found counter
-            self.reset_bounds_time = time.time() + 2.0
+            # Smoothen marker result
+            marker_result = self.smoothened_marker_result(marker_result)
 
             # Notify client
             self.callback_function(marker_result)
@@ -99,10 +97,10 @@ class MarkerTracker(Reporter):
 
         # Update bounds
         self.marker_bounds_pct = [
-            x - padding_x,
-            y - padding_y,
-            x + width + padding_x,
-            y + height + padding_y
+            max(0.0, x - padding_x),
+            max(0.0, y - padding_y),
+            min(image_width, x + width + padding_x),
+            min(image_height, y + height + padding_y)
         ]
 
     def image_from_bounds(self, image, bounds_pct):
@@ -117,10 +115,42 @@ class MarkerTracker(Reporter):
         # Calculate bounds in image coordinates
         image_height, image_width = image.shape[:2]
 
-        x1 = max(0.0, min(image_width - 1, float(image_width) * bounds_pct[0]))
-        y1 = max(0.0, min(image_height - 1, float(image_height) * bounds_pct[1]))
-        x2 = max(0.0, min(image_width - 1, float(image_width) * bounds_pct[2]))
-        y2 = max(0.0, min(image_height - 1, float(image_height) * bounds_pct[3]))
+        x1 = int(max(0.0, min(image_width - 1, float(image_width) * bounds_pct[0])))
+        y1 = int(max(0.0, min(image_height - 1, float(image_height) * bounds_pct[1])))
+        x2 = int(max(0.0, min(image_width - 1, float(image_width) * bounds_pct[2])))
+        y2 = int(max(0.0, min(image_height - 1, float(image_height) * bounds_pct[3])))
 
         # Extract image
         return image[y1:y2, x1:x2]
+
+    def smoothened_marker_result(self, marker_result):
+        """
+        Smoothens marker result based on marker history.
+
+        :param marker_result: Marker result to smoothen
+        :return: Smoothened marker result
+        """
+        x = 0.0
+        y = 0.0
+        width = 0.0
+        height = 0.0
+        angle = 0.0
+
+        for history_entry in self.marker_history:
+            history_result = history_entry["marker_result"]
+
+            x += history_result["x"]
+            y += history_result["y"]
+            width += history_result["width"]
+            height += history_result["height"]
+            angle += history_result["angle"]
+
+        count = float(len(self.marker_history))
+
+        marker_result["x"] = x / count
+        marker_result["y"] = y / count
+        marker_result["width"] = width / count
+        marker_result["height"] = height / count
+        marker_result["angle"] = angle / count
+
+        return marker_result
