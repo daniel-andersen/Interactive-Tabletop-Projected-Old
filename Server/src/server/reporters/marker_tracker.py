@@ -1,8 +1,9 @@
 import cv2
 import time
-import math
 from reporter import Reporter
 from board.board_descriptor import BoardDescriptor
+from util import misc_math
+
 
 class MarkerTracker(Reporter):
 
@@ -63,6 +64,10 @@ class MarkerTracker(Reporter):
             # Append marker to history
             self.marker_history.append({"timestamp": time.time(), "marker_result": marker_result})
 
+            # Check enough movement
+            if not self.marker_did_move_sufficiently(area_image):
+                return
+
             # Update bounds
             self.update_bounds(area_image, marker_result)
 
@@ -120,3 +125,44 @@ class MarkerTracker(Reporter):
 
         # Extract image
         return image[y1:y2, x1:x2]
+
+    def marker_did_move_sufficiently(self, area_image):
+        """
+        Check whether marker moved sufficiently to trigger client update.
+
+        :param area_image: Complete area image
+        :return: Boolean value
+        """
+
+        # Make sure we have marker history entries
+        if len(self.marker_history) < 2:
+            return True
+
+        # Get entries
+        marker1 = self.marker_history[len(self.marker_history) - 2]["marker_result"]
+        marker2 = self.marker_history[len(self.marker_history) - 1]["marker_result"]
+
+        # Calculate minimum movement in pixels
+        image_height, image_width = area_image.shape[:2]
+
+        min_movement = max(2.0, max(image_width, image_height) * 0.01)
+
+        # Compare positions
+        delta_x = abs(marker1["x"] - marker2["x"])
+        if delta_x >= min_movement:
+            return True
+
+        delta_y = abs(marker1["y"] - marker2["y"])
+        if delta_y >= min_movement:
+            return True
+
+        # Compare sizes
+        # TODO!
+
+        # Compare angles
+        delta_angle = misc_math.angle_difference(marker1["angle"], marker2["angle"])
+        if delta_angle > 0.1:
+            return True
+
+        # Not enough movement
+        return False

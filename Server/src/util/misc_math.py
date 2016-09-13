@@ -22,5 +22,9 @@ def max_cosine_from_contour(contour):
     return max_cosine
 
 
+def angle_difference(angle1, angle2):
+    return (((angle1 - angle2) + math.pi) % (math.pi * 2.0)) - math.pi
+
+
 def line_length(p1, p2):
     return math.sqrt(((p1[0] - p2[0]) * (p1[0] - p2[0])) + ((p1[1] - p2[1]) * (p1[1] - p2[1])))

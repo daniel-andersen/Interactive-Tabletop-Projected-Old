@@ -286,7 +286,7 @@ class Server(WebSocket):
         board_area = self.board_areas[payload["areaId"]]
         reporter_id = payload["id"] if "id" in payload else self.draw_reporter_id()
         valid_positions = payload["validPositions"]
-        stability_evel = payload["stabilityLevel"] if "stabilityLevel" in payload else 0.95
+        stability_evel = payload["stabilityLevel"] if "stabilityLevel" in payload else 0.98
 
         reporter = TiledBrickPositionReporter(
             board_area,
@@ -313,7 +313,7 @@ class Server(WebSocket):
         reporter_id = payload["id"] if "id" in payload else self.draw_reporter_id()
         initial_position = payload["initialPosition"]
         valid_positions = payload["validPositions"]
-        stability_level = payload["stabilityLevel"] if "stabilityLevel" in payload else 0.95
+        stability_level = payload["stabilityLevel"] if "stabilityLevel" in payload else 0.98
 
         reporter = TiledBrickMovedToAnyOfPositionsReporter(
             board_area,
@@ -340,7 +340,7 @@ class Server(WebSocket):
         reporter_id = payload["id"] if "id" in payload else self.draw_reporter_id()
         position = payload["position"]
         valid_positions = payload["validPositions"]
-        stability_level = payload["stabilityLevel"] if "stabilityLevel" in payload else 0.95
+        stability_level = payload["stabilityLevel"] if "stabilityLevel" in payload else 0.98
 
         reporter = TiledBrickMovedToPositionReporter(
             board_area,
@@ -453,7 +453,7 @@ class Server(WebSocket):
         board_area = self.board_areas[payload["areaId"]]
         marker = self.markers[payload["markerId"]]
         reporter_id = payload["id"] if "id" in payload else self.draw_reporter_id()
-        stability_level = payload["stability_level"] if "stability_level" in payload else 0.95
+        stability_level = payload["stability_level"] if "stability_level" in payload else 0.98
 
         reporter = FindMarkerReporter(
             board_area,
