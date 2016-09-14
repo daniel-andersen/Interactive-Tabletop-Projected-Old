@@ -95,14 +95,15 @@ class ShapeMarker(Marker):
 
         # Blur to remove noise
         image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-        image = cv2.blur(image, (5, 5))
+        image = cv2.blur(image, (1, 1))
 
-        # Threshold by using adaptive thresholding
-        image = cv2.adaptiveThreshold(image, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 11, 2)
+        # Threshold by using OTSU
+        #image = cv2.adaptiveThreshold(image, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 11, 2)
+        ret, image = cv2.threshold(image, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
 
         # Remove noise again
-        image = cv2.erode(image, (5, 5))
         image = cv2.dilate(image, (5, 5))
+        image = cv2.erode(image, (5, 5))
 
         # Find marker in image
         return self.find_markers_in_thresholded_image(image, size_constraint_offset)
