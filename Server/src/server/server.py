@@ -61,7 +61,7 @@ class Server(WebSocket):
                     result = self.handle_action(action, json_dict["payload"])
 
                 if result is not None:
-                    self.send_message(result[0], action, result[1])
+                    self.send_message(result=result[0], action=action, payload=result[1], request_id=result[2])
 
         except Exception, e:
             print("Exception in handleMessage: %s" % str(e))
@@ -69,11 +69,11 @@ class Server(WebSocket):
 
     def handle_action(self, action, payload):
         if action == "enableDebug":
-            return self.enable_debug()
+            return self.enable_debug(payload)
         if action == "reset":
             return self.reset(payload)
         if action == "resetReporters":
-            return self.reset_reporters()
+            return self.reset_reporters(payload)
         if action == "resetReporter":
             return self.reset_reporter(payload)
         if action == "takeScreenshot":
@@ -87,11 +87,11 @@ class Server(WebSocket):
         if action == "removeBoardArea":
             return self.remove_board_area(payload)
         if action == "removeBoardAreas":
-            return self.remove_board_areas()
+            return self.remove_board_areas(payload)
         if action == "removeMarker":
             return self.remove_marker(payload)
         if action == "removeMarkers":
-            return self.remove_markers()
+            return self.remove_markers(payload)
         if action == "reportBackWhenBrickFoundAtAnyOfPositions":
             return self.report_back_when_brick_found_at_any_of_positions(payload)
         if action == "reportBackWhenBrickMovedToAnyOfPositions":
@@ -130,6 +130,7 @@ class Server(WebSocket):
         """
         Resets the board.
 
+        requestId: (Optional) Request ID
         cameraResolution: (Optional) Camera resolution in [width, height]. Default: [640, 480].
         """
         resolution = payload["resolution"] if "resolution" in payload else [640, 480]
@@ -138,13 +139,13 @@ class Server(WebSocket):
         self.reset_board_descriptor()
 
         self.initialize_reporter_thread()
-        self.reset_reporters()
-        self.remove_board_areas()
-        self.remove_markers()
+        self.reset_reporters({})
+        self.remove_board_areas({})
+        self.remove_markers({})
 
         self.initialize_video(resolution)
 
-        return "OK", {}
+        return "OK", {}, self.request_id_from_payload(payload)
 
     def reset_board_descriptor(self):
         """
@@ -153,18 +154,21 @@ class Server(WebSocket):
         globals.board_descriptor.board_size = [1280, 800]
         globals.board_descriptor.border_percentage_size = [0.0, 0.0]
 
-    def enable_debug(self):
+    def enable_debug(self, payload):
         """
         Enables debug output.
+
+        requestId: (Optional) Request ID
         """
         globals.debug = True
 
-        return "OK", {}
+        return "OK", {}, self.request_id_from_payload(payload)
 
     def take_screenshot(self, payload):
         """
         Take a screenshot and saves it to disk.
 
+        requestId: (Optional) Request ID
         filename: (Optional) Screenshot filename
         """
         image = globals.camera.read()
@@ -172,14 +176,15 @@ class Server(WebSocket):
             filename = "debug/board_{0}.png".format(time.strftime("%Y-%m-%d-%H%M%S"))\
                 if "filename" not in payload else payload["filename"]
             cv2.imwrite(filename, image)
-            return "OK", {}
+            return "OK", {}, self.request_id_from_payload(payload)
         else:
-            return "CAMERA_NOT_READY", {}
+            return "CAMERA_NOT_READY", {}, self.request_id_from_payload(payload)
 
     def initialize_board(self, payload):
         """
         Initializes board with given parameters.
 
+        requestId: (Optional) Request ID
         borderPctX: (Optional) Border width in percentage of board size.
         borderPctY: (Optional) Border height in percentage of board size.
         cornerMarker: (Optional) Corner marker
@@ -193,12 +198,13 @@ class Server(WebSocket):
         ]
         globals.board_descriptor.corner_marker = create_marker_from_name(payload["cornerMarker"], marker_id=-1) if "cornerMarker" in payload else DefaultMarker(marker_id=-1)
 
-        return "OK", {}
+        return "OK", {}, self.request_id_from_payload(payload)
 
     def initialize_board_area(self, payload):
         """
         Initializes board area with given parameters.
 
+        requestId: (Optional) Request ID
         id: (Optional) Area id
         x1: X1 in percentage of board size.
         y1: Y1 in percentage of board size.
@@ -212,12 +218,13 @@ class Server(WebSocket):
         )
         self.board_areas[board_area.area_id] = board_area
 
-        return "OK", {"id": board_area.area_id}
+        return "OK", {"id": board_area.area_id}, self.request_id_from_payload(payload)
 
     def initialize_tiled_board_area(self, payload):
         """
         Initializes tiled board area with given parameters.
 
+        requestId: (Optional) Request ID
         id: (Optional) Area id
         tileCountX: Number of horizontal tiles.
         tileCountY: Number of vertical tiles.
@@ -234,57 +241,64 @@ class Server(WebSocket):
         )
         self.board_areas[board_area.area_id] = board_area
 
-        return "OK", {"id": board_area.area_id}
+        return "OK", {"id": board_area.area_id}, self.request_id_from_payload(payload)
 
-    def remove_board_areas(self):
+    def remove_board_areas(self, payload):
         """
         Removes all board areas.
+
+        requestId: (Optional) Request ID
         """
         self.board_areas = {}
 
-        return "OK", {}
+        return "OK", {}, self.request_id_from_payload(payload)
 
     def remove_board_area(self, payload):
         """
         Removes the given board area.
 
+        requestId: (Optional) Request ID
         id: Area ID.
         """
         area_id = payload["id"]
         del self.board_areas[area_id]
 
-        return "OK", {}
+        return "OK", {}, self.request_id_from_payload(payload)
 
-    def remove_markers(self):
+    def remove_markers(self, payload):
         """
         Removes all markers.
+
+        requestId: (Optional) Request ID
         """
         self.markers = {}
 
-        return "OK", {}
+        return "OK", {}, self.request_id_from_payload(payload)
 
     def remove_marker(self, payload):
         """
         Removes the given marker.
 
+        requestId: (Optional) Request ID
         id: Marker ID.
         """
         marker_id = payload["id"]
         del self.markers[marker_id]
 
-        return "OK", {}
+        return "OK", {}, self.request_id_from_payload(payload)
 
     def report_back_when_brick_found_at_any_of_positions(self, payload):
         """
         Reports back when object is found in any of the given positions.
 
+        requestId: (Optional) Request ID
         areaId: Board area id
         validPositions: Positions to search for object in.
         stabilityLevel: (Optional) Minimum board area stability level before searching for object
         id: (Optional) Reporter id.
         """
         board_area = self.board_areas[payload["areaId"]]
-        reporter_id = payload["id"] if "id" in payload else self.draw_reporter_id()
+        reporter_id = payload["id"] if "id" in payload else self.random_id()
         valid_positions = payload["validPositions"]
         stability_evel = payload["stabilityLevel"] if "stabilityLevel" in payload else 0.98
 
@@ -293,16 +307,19 @@ class Server(WebSocket):
             valid_positions,
             stability_evel,
             reporter_id,
-            callback_function=lambda tile: self.send_message("OK", "brickFoundAtPosition", {"id": reporter_id, "position": tile})
-        )
+            callback_function=lambda tile: self.send_message(result="UPDATE",
+                                                             action="brickFoundAtPosition",
+                                                             payload={"id": reporter_id, "position": tile},
+                                                             request_id=self.request_id_from_payload(payload)))
         self.reporters[reporter_id] = reporter
 
-        return "OK", {"id": reporter_id}
+        return "OK", {"id": reporter_id}, None
 
     def report_back_when_brick_moved_to_any_of_positions(self, payload):
         """
         Reports back when object is found in any of the given positions other than the initial position.
 
+        requestId: (Optional) Request ID
         areaId: Board area id
         initialPosition: Initial position.
         validPositions: Positions to search for object in.
@@ -310,7 +327,7 @@ class Server(WebSocket):
         id: (Optional) Reporter id.
         """
         board_area = self.board_areas[payload["areaId"]]
-        reporter_id = payload["id"] if "id" in payload else self.draw_reporter_id()
+        reporter_id = payload["id"] if "id" in payload else self.random_id()
         initial_position = payload["initialPosition"]
         valid_positions = payload["validPositions"]
         stability_level = payload["stabilityLevel"] if "stabilityLevel" in payload else 0.98
@@ -321,15 +338,19 @@ class Server(WebSocket):
             valid_positions,
             stability_level,
             reporter_id,
-            callback_function=lambda tile: self.send_message("OK", "brickMovedToPosition", {"id": reporter_id, "position": tile, "initialPosition": initial_position}))
+            callback_function=lambda tile: self.send_message(result="UPDATE",
+                                                             action="brickMovedToPosition",
+                                                             payload={"id": reporter_id, "position": tile, "initialPosition": initial_position},
+                                                             request_id=self.request_id_from_payload(payload)))
         self.reporters[reporter_id] = reporter
 
-        return "OK", {"id": reporter_id}
+        return "OK", {"id": reporter_id}, None
 
     def report_back_when_brick_moved_to_position(self, payload):
         """
         Reports back when object is found at the given position.
 
+        requestId: (Optional) Request ID
         areaId: Board area id
         position: Position for brick to be found
         validPositions: Positions to search for object in
@@ -337,7 +358,7 @@ class Server(WebSocket):
         id: (Optional) Reporter id
         """
         board_area = self.board_areas[payload["areaId"]]
-        reporter_id = payload["id"] if "id" in payload else self.draw_reporter_id()
+        reporter_id = payload["id"] if "id" in payload else self.random_id()
         position = payload["position"]
         valid_positions = payload["validPositions"]
         stability_level = payload["stabilityLevel"] if "stabilityLevel" in payload else 0.98
@@ -348,16 +369,20 @@ class Server(WebSocket):
             valid_positions,
             stability_level,
             reporter_id,
-            callback_function=lambda tile: self.send_message("OK", "brickMovedToPosition", {"id": reporter_id, "position": tile}))
+            callback_function=lambda tile: self.send_message(result="UPDATE",
+                                                             action="brickMovedToPosition",
+                                                             payload={"id": reporter_id, "position": tile},
+                                                             request_id=self.request_id_from_payload(payload)))
         self.reporters[reporter_id] = reporter
 
-        return "OK", {"id": reporter_id}
+        return "OK", {"id": reporter_id}, None
 
 
     def request_brick_position(self, payload):
         """
         Returns object position from given positions.
 
+        requestId: (Optional) Request ID
         areaId: Board area id
         validPositions: Positions to search for object in
         """
@@ -372,16 +397,17 @@ class Server(WebSocket):
             valid_positions = payload["validPositions"]
             position = globals.brick_detector.find_brick_among_tiles(board_area, valid_positions)[0]
             if position is not None:
-                return "OK", {"position": position}
+                return "OK", {"position": position}, self.request_id_from_payload(payload)
             else:
-                return "BRICK_NOT_FOUND", {}
+                return "BRICK_NOT_FOUND", {}, self.request_id_from_payload(payload)
         else:
-            return "BOARD_NOT_RECOGNIZED", {}
+            return "BOARD_NOT_RECOGNIZED", {}, self.request_id_from_payload(payload)
 
     def initialize_image_marker(self, payload):
         """
         Initializes image marker with given parameters.
 
+        requestId: (Optional) Request ID
         markerId: Marker id
         imageBase64: Image as base 64 encoded PNG
         minMatches: (Optional)Minimum number of required matches
@@ -395,12 +421,13 @@ class Server(WebSocket):
         image_marker = ImageMarker(marker_id, image, min_matches=min_matches)
         self.markers[marker_id] = image_marker
 
-        return "OK", {"id": marker_id}
+        return "OK", {"id": marker_id}, self.request_id_from_payload(payload)
 
     def initialize_haar_classifier_marker(self, payload):
         """
         Initializes haar classifier marker with given parameters.
 
+        requestId: (Optional) Request ID
         markerId: Marker id
         dataBase64: Base 64 encoded Haar Cascade Classifier data
         """
@@ -409,12 +436,13 @@ class Server(WebSocket):
         haar_classifier_marker = HaarClassifierMarker(marker_id, cascade_data)
         self.markers[marker_id] = haar_classifier_marker
 
-        return "OK", {"id": marker_id}
+        return "OK", {"id": marker_id}, self.request_id_from_payload(payload)
 
     def initialize_shape_marker(self, payload):
         """
         Initializes a shape marker with given image and parameters.
 
+        requestId: (Optional) Request ID
         markerId: Marker id
         shape: (Optional)Shape
         imageBase64: (Optional)Image as base 64 encoded PNG
@@ -439,12 +467,13 @@ class Server(WebSocket):
 
         self.markers[marker_id] = shape_marker
 
-        return "OK", {"id": marker_id}
+        return "OK", {"id": marker_id}, self.request_id_from_payload(payload)
 
     def report_back_when_marker_found(self, payload):
         """
         Reports back when marker is found.
 
+        requestId: (Optional) Request ID
         areaId: Board area id
         markerId: Marker id
         stabilityLevel: (Optional) Minimum board area stability level before searching for marker
@@ -452,7 +481,7 @@ class Server(WebSocket):
         """
         board_area = self.board_areas[payload["areaId"]]
         marker = self.markers[payload["markerId"]]
-        reporter_id = payload["id"] if "id" in payload else self.draw_reporter_id()
+        reporter_id = payload["id"] if "id" in payload else self.random_id()
         stability_level = payload["stability_level"] if "stability_level" in payload else 0.98
 
         reporter = FindMarkerReporter(
@@ -460,17 +489,21 @@ class Server(WebSocket):
             marker,
             stability_level,
             reporter_id,
-            callback_function=lambda (marker): self.send_message("OK", "markerFound", {"id": reporter_id,
-                                                                                       "areaId": payload["areaId"],
-                                                                                       "marker": filter_out_contour_from_marker_result(marker)}))
+            callback_function=lambda (marker): self.send_message(result="UPDATE",
+                                                                 action="markerFound",
+                                                                 payload={"id": reporter_id,
+                                                                          "areaId": payload["areaId"],
+                                                                          "marker": filter_out_contour_from_marker_result(marker)},
+                                                                 request_id=self.request_id_from_payload(payload)))
         self.reporters[reporter_id] = reporter
 
-        return "OK", {"id": reporter_id}
+        return "OK", {"id": reporter_id}, None
 
     def request_markers(self, payload):
         """
         Searches for the specified markers in given area.
 
+        requestId: (Optional) Request ID
         areaId: Board area id
         markerIds: List of marker id's
         stabilityLevel: (Optional) Minimum board area stability level before searching for markers
@@ -478,7 +511,7 @@ class Server(WebSocket):
         """
         board_area = self.board_areas[payload["areaId"]]
         markers = [self.markers[marker_id] for marker_id in payload["markerIds"]]
-        reporter_id = payload["id"] if "id" in payload else self.draw_reporter_id()
+        reporter_id = payload["id"] if "id" in payload else self.random_id()
         stability_level = payload["stabilityLevel"] if "stabilityLevel" in payload else 0.0
 
         reporter = FindMarkersReporter(
@@ -486,55 +519,65 @@ class Server(WebSocket):
             markers,
             stability_level,
             reporter_id,
-            callback_function=lambda (result): self.send_message("OK", "markersFound", {"id": reporter_id,
-                                                                                        "areaId": payload["areaId"],
-                                                                                        "markers": filter_out_contour_from_marker_result_list(result)}))
+            callback_function=lambda (result): self.send_message(result="UPDATE",
+                                                                 action="markersFound",
+                                                                 payload={"id": reporter_id,
+                                                                          "areaId": payload["areaId"],
+                                                                          "markers": filter_out_contour_from_marker_result_list(result)},
+                                                                 request_id=self.request_id_from_payload(payload)))
         self.reporters[reporter_id] = reporter
 
-        return None
+        return "OK", {"id": reporter_id}, None
 
     def start_tracking_marker(self, payload):
         """
         Starts tracking marker.
 
+        requestId: (Optional) Request ID
         areaId: Board area id
         markerId: Marker id
         id: (Optional) Reporter id
         """
         board_area = self.board_areas[payload["areaId"]]
         marker = self.markers[payload["markerId"]]
-        reporter_id = payload["id"] if "id" in payload else self.draw_reporter_id()
+        reporter_id = payload["id"] if "id" in payload else self.random_id()
 
         reporter = MarkerTracker(
             board_area,
             marker,
             reporter_id,
-            callback_function=lambda (marker): self.send_message("OK", "markerTracked", {"id": reporter_id,
-                                                                                         "areaId": payload["areaId"],
-                                                                                         "marker": filter_out_contour_from_marker_result(marker)}))
+            callback_function=lambda (marker): self.send_message(result="UPDATE",
+                                                                 action="markerTracked",
+                                                                 payload={"id": reporter_id,
+                                                                          "areaId": payload["areaId"],
+                                                                          "marker": filter_out_contour_from_marker_result(marker)},
+                                                                 request_id=self.request_id_from_payload(payload)))
         self.reporters[reporter_id] = reporter
 
-        return "OK", {"id": reporter_id}
+        return "OK", {"id": reporter_id}, None
 
-    def reset_reporters(self):
+    def reset_reporters(self, payload):
         """
         Stops and resets all reporters.
+
+        requestId: (Optional) Request ID
         """
         for (_, reporter) in self.reporters.iteritems():
             reporter.stop()
 
-        return "OK", {}
+        return "OK", {}, self.request_id_from_payload(payload)
 
     def reset_reporter(self, payload):
         """
         Stops and resets the reporter with given ID.
 
+        requestId: (Optional) Request ID
         id: Reporter ID.
         """
         reporter_id = payload["id"]
         self.reporters[reporter_id].stop()
 
-        return "OK", {}
+        return "OK", {}, self.request_id_from_payload(payload)
 
     def take_photo(self):
         """
@@ -565,17 +608,19 @@ class Server(WebSocket):
         """
         self.send_message("BOARD_RECOGNIZED", "recognizeBoard", {})
 
-    def send_message(self, result, action, payload={}):
+    def send_message(self, result, action, payload={}, request_id=None):
         """
         Sends a new message to the client.
 
         :param result Result code
         :param action Client action from which the message originates
         :param payload Payload
+        :param request_id: Request ID. If none given, random ID is generated
         """
         message = {"result": result,
                    "action": action,
-                   "payload": payload}
+                   "payload": payload,
+                   "requestId": request_id if request_id is not None else self.random_id()}
         self.sendMessage(json.dumps(message, ensure_ascii=False, encoding='utf8'))
 
         print("Sent message: %s" % message)
@@ -584,10 +629,10 @@ class Server(WebSocket):
         print self.address, 'connected'
 
     def handleClose(self):
-        self.reset_reporters()
+        self.reset_reporters({})
         print self.address, 'closed'
 
-    def draw_reporter_id(self):
+    def random_id(self):
         while True:
             reporter_id = randint(0, 100000)
             if reporter_id not in self.reporters:
@@ -661,6 +706,15 @@ class Server(WebSocket):
             except Exception, e:
                 print("Exception in reporter loop: %s" % str(e))
                 traceback.print_exc(file=sys.stdout)
+
+    def request_id_from_payload(self, payload):
+        """
+        Returns payload from request. If no payload given, a random ID is generated.
+
+        :param payload: Payload
+        :return: Request ID from payload, or random if none given
+        """
+        return payload["requestId"] if "requestId" in payload else self.random_id()
 
 
 def start_server():

@@ -7,6 +7,8 @@ class Client
 
         @socketOpen = false
 
+        @requests = {}
+
     connect: (onSocketOpen, onMessage) ->
         @disconnect()
 
@@ -17,6 +19,8 @@ class Client
 
         @socket.onmessage = (event) =>
             json = JSON.parse(event.data)
+            @performCompletionCallbackForRequest(json)
+
             onMessage(json)
 
             if @debug_textField?
@@ -29,36 +33,51 @@ class Client
             @socket.close()
             @socket = undefined
 
-    enableDebug: () ->
-        @sendMessage("enableDebug", {})
+    enableDebug: (completionCallback = undefined) ->
+        requestId = @addCompletionCallback(completionCallback)
+        @sendMessage("enableDebug", {
+            "requestId": requestId
+        })
 
-    reset: (resolution = undefined) ->
-        json = {}
+    reset: (resolution = undefined, completionCallback = undefined) ->
+        @requests = {}
+        requestId = @addCompletionCallback(completionCallback)
+        json = {"requestId": requestId}
         if resolution? then json["resolution"] = resolution
         @sendMessage("reset", json)
 
-    resetReporters: ->
-        @sendMessage("resetReporters", {})
+    resetReporters: (completionCallback = undefined) ->
+        requestId = @addCompletionCallback(completionCallback)
+        @sendMessage("resetReporters", {
+            "requestId": requestId
+        })
 
-    resetReporter: (reporterId) ->
+    resetReporter: (reporterId, completionCallback = undefined) ->
+        requestId = @addCompletionCallback(completionCallback)
         @sendMessage("resetReporter", {
+            "requestId": requestId,
             "id": reporterId
         })
 
-    takeScreenshot: (filename = undefined) ->
-        json = {}
+    takeScreenshot: (filename = undefined, completionCallback = undefined) ->
+        requestId = @addCompletionCallback(completionCallback)
+        json = {"requestId": requestId}
         if filename? then json["filename"] = filename
         @sendMessage("takeScreenshot", json)
 
-    initializeBoard: (borderPctX = 0.0, borderPctY = 0.0, cornerMarker = "DEFAULT") ->
+    initializeBoard: (borderPctX = 0.0, borderPctY = 0.0, cornerMarker = "DEFAULT", completionCallback = undefined) ->
+        requestId = @addCompletionCallback(completionCallback)
         @sendMessage("initializeBoard", {
+            "requestId": requestId,
             "borderPctX": borderPctX,
             "borderPctY": borderPctY,
             "cornerMarker": cornerMarker
         })
 
-    initializeBoardArea: (x1 = 0.0, y1 = 0.0, x2 = 1.0, y2 = 1.0, areaId = undefined) ->
+    initializeBoardArea: (x1 = 0.0, y1 = 0.0, x2 = 1.0, y2 = 1.0, areaId = undefined, completionCallback = undefined) ->
+        requestId = @addCompletionCallback(completionCallback)
         json = {
+            "requestId": requestId,
             "x1": x1,
             "y1": y1,
             "x2": x2,
@@ -67,8 +86,10 @@ class Client
         if areaId? then json["id"] = areaId
         @sendMessage("initializeBoardArea", json)
 
-    initializeTiledBoardArea: (tileCountX, tileCountY, x1 = 0.0, y1 = 0.0, x2 = 1.0, y2 = 1.0, areaId = undefined) ->
+    initializeTiledBoardArea: (tileCountX, tileCountY, x1 = 0.0, y1 = 0.0, x2 = 1.0, y2 = 1.0, areaId = undefined, completionCallback = undefined) ->
+        requestId = @addCompletionCallback(completionCallback)
         json = {
+            "requestId": requestId,
             "tileCountX": tileCountX,
             "tileCountY": tileCountY,
             "x1": x1,
@@ -79,39 +100,55 @@ class Client
         if areaId? then json["id"] = areaId
         @sendMessage("initializeTiledBoardArea", json)
 
-    removeBoardAreas: ->
-        @sendMessage("removeBoardAreas", {})
+    removeBoardAreas: (completionCallback = undefined) ->
+        requestId = @addCompletionCallback(completionCallback)
+        @sendMessage("removeBoardAreas", {
+            "requestId": requestId
+        })
 
-    removeBoardArea: (areaId) ->
+    removeBoardArea: (areaId, completionCallback = undefined) ->
+        requestId = @addCompletionCallback(completionCallback)
         @sendMessage("removeBoardArea", {
+            "requestId": requestId,
             "id": areaId
         })
 
-    removeMarkers: ->
-        @sendMessage("removeMarkers", {})
+    removeMarkers: (completionCallback = undefined) ->
+        requestId = @addCompletionCallback(completionCallback)
+        @sendMessage("removeMarkers", {
+            "requestId": requestId
+        })
 
-    removeMarker: (markerId) ->
+    removeMarker: (markerId, completionCallback = undefined) ->
+        requestId = @addCompletionCallback(completionCallback)
         @sendMessage("removeMarker", {
+            "requestId": requestId,
             "id": markerId
         })
 
-    requestTiledObjectPosition: (areaId, validPositions) ->
+    requestTiledObjectPosition: (areaId, validPositions, completionCallback = undefined) ->
+        requestId = @addCompletionCallback(completionCallback)
         @sendMessage("requestBrickPosition", {
+            "requestId": requestId,
             "areaId": areaId,
             "validPositions": validPositions
         })
 
-    reportBackWhenBrickFoundAtAnyOfPositions: (areaId, validPositions, id = undefined, stabilityLevel = undefined) ->
+    reportBackWhenBrickFoundAtAnyOfPositions: (areaId, validPositions, id = undefined, stabilityLevel = undefined, completionCallback = undefined) ->
+        requestId = @addCompletionCallback(completionCallback)
         json = {
-              "areaId": areaId,
-              "validPositions": validPositions
+            "requestId": requestId,
+            "areaId": areaId,
+            "validPositions": validPositions
         }
         if id? then json["id"] = id
         if stabilityLevel? then json["stabilityLevel"] = stabilityLevel
         @sendMessage("reportBackWhenBrickFoundAtAnyOfPositions", json)
 
-    reportBackWhenBrickMovedToAnyOfPositions: (areaId, initialPosition, validPositions, id = undefined, stabilityLevel = undefined) ->
+    reportBackWhenBrickMovedToAnyOfPositions: (areaId, initialPosition, validPositions, id = undefined, stabilityLevel = undefined, completionCallback = undefined) ->
+        requestId = @addCompletionCallback(completionCallback)
         json = {
+            "requestId": requestId,
             "areaId": areaId,
             "initialPosition": initialPosition,
             "validPositions": validPositions
@@ -120,8 +157,10 @@ class Client
         if stabilityLevel? then json["stabilityLevel"] = stabilityLevel
         @sendMessage("reportBackWhenBrickMovedToAnyOfPositions", json)
 
-    reportBackWhenBrickMovedToPosition: (areaId, position, validPositions, id = undefined, stabilityLevel = undefined) ->
+    reportBackWhenBrickMovedToPosition: (areaId, position, validPositions, id = undefined, stabilityLevel = undefined, completionCallback = undefined) ->
+        requestId = @addCompletionCallback(completionCallback)
         json = {
+            "requestId": requestId,
             "areaId": areaId,
             "position": position,
             "validPositions": validPositions
@@ -130,9 +169,11 @@ class Client
         if stabilityLevel? then json["stabilityLevel"] = stabilityLevel
         @sendMessage("reportBackWhenBrickMovedToPosition", json)
 
-    initializeImageMarker: (markerId, image, minMatches = undefined) ->
+    initializeImageMarker: (markerId, image, minMatches = undefined, completionCallback = undefined) ->
+        requestId = @addCompletionCallback(completionCallback)
         @convertImageToDataURL(image, (base64Image) =>
             json = {
+                "requestId": requestId,
                 "markerId": markerId,
                 "imageBase64": base64Image
             }
@@ -140,16 +181,20 @@ class Client
             @sendMessage("initializeImageMarker", json)
         )
 
-    initializeHaarClassifierMarker: (markerId, filename) ->
+    initializeHaarClassifierMarker: (markerId, filename, completionCallback = undefined) ->
+        requestId = @addCompletionCallback(completionCallback)
         @readFileBase64(filename, (base64Data) =>
             @sendMessage("initializeHaarClassifierMarker", {
+                "requestId": requestId,
                 "markerId": markerId,
                 "dataBase64": base64Data
             })
         )
 
-    initializeShapeMarkerWithContour: (markerId, contour, minArea = undefined, maxArea = undefined) ->
+    initializeShapeMarkerWithContour: (markerId, contour, minArea = undefined, maxArea = undefined, completionCallback = undefined) ->
+        requestId = @addCompletionCallback(completionCallback)
         json = {
+            "requestId": requestId,
             "markerId": markerId,
             "shape": contour
         }
@@ -157,9 +202,11 @@ class Client
         if maxArea? then json["maxArea"] = maxArea
         @sendMessage("initializeShapeMarker", json)
 
-    initializeShapeMarkerWithImage: (markerId, image, minArea = undefined, maxArea = undefined) ->
+    initializeShapeMarkerWithImage: (markerId, image, minArea = undefined, maxArea = undefined, completionCallback = undefined) ->
+        requestId = @addCompletionCallback(completionCallback)
         @convertImageToDataURL(image, (base64Image) =>
             json = {
+                "requestId": requestId,
                 "markerId": markerId,
                 "imageBase64": base64Image
             }
@@ -168,8 +215,10 @@ class Client
             @sendMessage("initializeShapeMarker", json)
         )
 
-    reportBackWhenMarkerFound: (areaId, markerId, id = undefined, stabilityLevel = undefined) ->
+    reportBackWhenMarkerFound: (areaId, markerId, id = undefined, stabilityLevel = undefined, completionCallback = undefined) ->
+        requestId = @addCompletionCallback(completionCallback)
         json = {
+            "requestId": requestId,
             "areaId": areaId,
             "markerId": markerId
         }
@@ -177,8 +226,10 @@ class Client
         if stabilityLevel? then json["stabilityLevel"] = stabilityLevel
         @sendMessage("reportBackWhenMarkerFound", json)
 
-    requestMarkers: (areaId, markerIds, id = undefined, stabilityLevel = undefined) ->
+    requestMarkers: (areaId, markerIds, id = undefined, stabilityLevel = undefined, completionCallback = undefined) ->
+        requestId = @addCompletionCallback(completionCallback)
         json = {
+            "requestId": requestId,
             "areaId": areaId,
             "markerIds": markerIds
         }
@@ -186,8 +237,10 @@ class Client
         if stabilityLevel? then json["stabilityLevel"] = stabilityLevel
         @sendMessage("requestMarkers", json)
 
-    startTrackingMarker: (areaId, markerId, id = undefined) ->
+    startTrackingMarker: (areaId, markerId, id = undefined, completionCallback = undefined) ->
+        requestId = @addCompletionCallback(completionCallback)
         json = {
+            "requestId": requestId,
             "areaId": areaId,
             "markerId": markerId
         }
@@ -201,6 +254,40 @@ class Client
         }
         @socket.send(JSON.stringify(message))
 
+
+    addCompletionCallback: (completionCallback) ->
+        if completionCallback?
+            requestId = ClientUtil.randomRequestId()
+            @requests[requestId] = {"timestamp": Date.now(), "completionCallback": completionCallback}
+            return requestId
+        else
+            return undefined
+
+    performCompletionCallbackForRequest: (json) ->
+
+        # Extract fields
+        action = json["action"]
+        requestId = json["requestId"]
+        payload = json["payload"]
+
+        # Json validation
+        if not action? or not requestId? or not payload?
+            return
+
+        # Extract request from request dict
+        requestDict = @requests[requestId]
+
+        if not requestDict?
+            return
+
+        # Fire callback handler
+        completionCallback = requestDict["completionCallback"]
+
+        shouldRemoveRequest = completionCallback(action, payload)
+
+        # Delete request if not explicitely specified otherwise by callback handler
+        if not shouldRemoveRequest? or shouldRemoveRequest
+            delete @requests[requestId]
 
 
     convertImageToDataURL: (image, callback) ->

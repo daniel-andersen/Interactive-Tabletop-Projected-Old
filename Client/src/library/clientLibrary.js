@@ -7,6 +7,7 @@ Client = (function() {
     this.debug_log = [];
     this.socket = void 0;
     this.socketOpen = false;
+    this.requests = {};
   }
 
   Client.prototype.connect = function(onSocketOpen, onMessage) {
@@ -21,6 +22,7 @@ Client = (function() {
       return function(event) {
         var json;
         json = JSON.parse(event.data);
+        _this.performCompletionCallbackForRequest(json);
         onMessage(json);
         if (_this.debug_textField != null) {
           _this.debug_log.splice(0, 0, JSON.stringify(json));
@@ -37,45 +39,79 @@ Client = (function() {
     }
   };
 
-  Client.prototype.enableDebug = function() {
-    return this.sendMessage("enableDebug", {});
+  Client.prototype.enableDebug = function(completionCallback) {
+    var requestId;
+    if (completionCallback == null) {
+      completionCallback = void 0;
+    }
+    requestId = this.addCompletionCallback(completionCallback);
+    return this.sendMessage("enableDebug", {
+      "requestId": requestId
+    });
   };
 
-  Client.prototype.reset = function(resolution) {
-    var json;
+  Client.prototype.reset = function(resolution, completionCallback) {
+    var json, requestId;
     if (resolution == null) {
       resolution = void 0;
     }
-    json = {};
+    if (completionCallback == null) {
+      completionCallback = void 0;
+    }
+    this.requests = {};
+    requestId = this.addCompletionCallback(completionCallback);
+    json = {
+      "requestId": requestId
+    };
     if (resolution != null) {
       json["resolution"] = resolution;
     }
     return this.sendMessage("reset", json);
   };
 
-  Client.prototype.resetReporters = function() {
-    return this.sendMessage("resetReporters", {});
+  Client.prototype.resetReporters = function(completionCallback) {
+    var requestId;
+    if (completionCallback == null) {
+      completionCallback = void 0;
+    }
+    requestId = this.addCompletionCallback(completionCallback);
+    return this.sendMessage("resetReporters", {
+      "requestId": requestId
+    });
   };
 
-  Client.prototype.resetReporter = function(reporterId) {
+  Client.prototype.resetReporter = function(reporterId, completionCallback) {
+    var requestId;
+    if (completionCallback == null) {
+      completionCallback = void 0;
+    }
+    requestId = this.addCompletionCallback(completionCallback);
     return this.sendMessage("resetReporter", {
+      "requestId": requestId,
       "id": reporterId
     });
   };
 
-  Client.prototype.takeScreenshot = function(filename) {
-    var json;
+  Client.prototype.takeScreenshot = function(filename, completionCallback) {
+    var json, requestId;
     if (filename == null) {
       filename = void 0;
     }
-    json = {};
+    if (completionCallback == null) {
+      completionCallback = void 0;
+    }
+    requestId = this.addCompletionCallback(completionCallback);
+    json = {
+      "requestId": requestId
+    };
     if (filename != null) {
       json["filename"] = filename;
     }
     return this.sendMessage("takeScreenshot", json);
   };
 
-  Client.prototype.initializeBoard = function(borderPctX, borderPctY, cornerMarker) {
+  Client.prototype.initializeBoard = function(borderPctX, borderPctY, cornerMarker, completionCallback) {
+    var requestId;
     if (borderPctX == null) {
       borderPctX = 0.0;
     }
@@ -85,15 +121,20 @@ Client = (function() {
     if (cornerMarker == null) {
       cornerMarker = "DEFAULT";
     }
+    if (completionCallback == null) {
+      completionCallback = void 0;
+    }
+    requestId = this.addCompletionCallback(completionCallback);
     return this.sendMessage("initializeBoard", {
+      "requestId": requestId,
       "borderPctX": borderPctX,
       "borderPctY": borderPctY,
       "cornerMarker": cornerMarker
     });
   };
 
-  Client.prototype.initializeBoardArea = function(x1, y1, x2, y2, areaId) {
-    var json;
+  Client.prototype.initializeBoardArea = function(x1, y1, x2, y2, areaId, completionCallback) {
+    var json, requestId;
     if (x1 == null) {
       x1 = 0.0;
     }
@@ -109,7 +150,12 @@ Client = (function() {
     if (areaId == null) {
       areaId = void 0;
     }
+    if (completionCallback == null) {
+      completionCallback = void 0;
+    }
+    requestId = this.addCompletionCallback(completionCallback);
     json = {
+      "requestId": requestId,
       "x1": x1,
       "y1": y1,
       "x2": x2,
@@ -121,8 +167,8 @@ Client = (function() {
     return this.sendMessage("initializeBoardArea", json);
   };
 
-  Client.prototype.initializeTiledBoardArea = function(tileCountX, tileCountY, x1, y1, x2, y2, areaId) {
-    var json;
+  Client.prototype.initializeTiledBoardArea = function(tileCountX, tileCountY, x1, y1, x2, y2, areaId, completionCallback) {
+    var json, requestId;
     if (x1 == null) {
       x1 = 0.0;
     }
@@ -138,7 +184,12 @@ Client = (function() {
     if (areaId == null) {
       areaId = void 0;
     }
+    if (completionCallback == null) {
+      completionCallback = void 0;
+    }
+    requestId = this.addCompletionCallback(completionCallback);
     json = {
+      "requestId": requestId,
       "tileCountX": tileCountX,
       "tileCountY": tileCountY,
       "x1": x1,
@@ -152,42 +203,79 @@ Client = (function() {
     return this.sendMessage("initializeTiledBoardArea", json);
   };
 
-  Client.prototype.removeBoardAreas = function() {
-    return this.sendMessage("removeBoardAreas", {});
+  Client.prototype.removeBoardAreas = function(completionCallback) {
+    var requestId;
+    if (completionCallback == null) {
+      completionCallback = void 0;
+    }
+    requestId = this.addCompletionCallback(completionCallback);
+    return this.sendMessage("removeBoardAreas", {
+      "requestId": requestId
+    });
   };
 
-  Client.prototype.removeBoardArea = function(areaId) {
+  Client.prototype.removeBoardArea = function(areaId, completionCallback) {
+    var requestId;
+    if (completionCallback == null) {
+      completionCallback = void 0;
+    }
+    requestId = this.addCompletionCallback(completionCallback);
     return this.sendMessage("removeBoardArea", {
+      "requestId": requestId,
       "id": areaId
     });
   };
 
-  Client.prototype.removeMarkers = function() {
-    return this.sendMessage("removeMarkers", {});
+  Client.prototype.removeMarkers = function(completionCallback) {
+    var requestId;
+    if (completionCallback == null) {
+      completionCallback = void 0;
+    }
+    requestId = this.addCompletionCallback(completionCallback);
+    return this.sendMessage("removeMarkers", {
+      "requestId": requestId
+    });
   };
 
-  Client.prototype.removeMarker = function(markerId) {
+  Client.prototype.removeMarker = function(markerId, completionCallback) {
+    var requestId;
+    if (completionCallback == null) {
+      completionCallback = void 0;
+    }
+    requestId = this.addCompletionCallback(completionCallback);
     return this.sendMessage("removeMarker", {
+      "requestId": requestId,
       "id": markerId
     });
   };
 
-  Client.prototype.requestTiledObjectPosition = function(areaId, validPositions) {
+  Client.prototype.requestTiledObjectPosition = function(areaId, validPositions, completionCallback) {
+    var requestId;
+    if (completionCallback == null) {
+      completionCallback = void 0;
+    }
+    requestId = this.addCompletionCallback(completionCallback);
     return this.sendMessage("requestBrickPosition", {
+      "requestId": requestId,
       "areaId": areaId,
       "validPositions": validPositions
     });
   };
 
-  Client.prototype.reportBackWhenBrickFoundAtAnyOfPositions = function(areaId, validPositions, id, stabilityLevel) {
-    var json;
+  Client.prototype.reportBackWhenBrickFoundAtAnyOfPositions = function(areaId, validPositions, id, stabilityLevel, completionCallback) {
+    var json, requestId;
     if (id == null) {
       id = void 0;
     }
     if (stabilityLevel == null) {
       stabilityLevel = void 0;
     }
+    if (completionCallback == null) {
+      completionCallback = void 0;
+    }
+    requestId = this.addCompletionCallback(completionCallback);
     json = {
+      "requestId": requestId,
       "areaId": areaId,
       "validPositions": validPositions
     };
@@ -200,15 +288,20 @@ Client = (function() {
     return this.sendMessage("reportBackWhenBrickFoundAtAnyOfPositions", json);
   };
 
-  Client.prototype.reportBackWhenBrickMovedToAnyOfPositions = function(areaId, initialPosition, validPositions, id, stabilityLevel) {
-    var json;
+  Client.prototype.reportBackWhenBrickMovedToAnyOfPositions = function(areaId, initialPosition, validPositions, id, stabilityLevel, completionCallback) {
+    var json, requestId;
     if (id == null) {
       id = void 0;
     }
     if (stabilityLevel == null) {
       stabilityLevel = void 0;
     }
+    if (completionCallback == null) {
+      completionCallback = void 0;
+    }
+    requestId = this.addCompletionCallback(completionCallback);
     json = {
+      "requestId": requestId,
       "areaId": areaId,
       "initialPosition": initialPosition,
       "validPositions": validPositions
@@ -222,15 +315,20 @@ Client = (function() {
     return this.sendMessage("reportBackWhenBrickMovedToAnyOfPositions", json);
   };
 
-  Client.prototype.reportBackWhenBrickMovedToPosition = function(areaId, position, validPositions, id, stabilityLevel) {
-    var json;
+  Client.prototype.reportBackWhenBrickMovedToPosition = function(areaId, position, validPositions, id, stabilityLevel, completionCallback) {
+    var json, requestId;
     if (id == null) {
       id = void 0;
     }
     if (stabilityLevel == null) {
       stabilityLevel = void 0;
     }
+    if (completionCallback == null) {
+      completionCallback = void 0;
+    }
+    requestId = this.addCompletionCallback(completionCallback);
     json = {
+      "requestId": requestId,
       "areaId": areaId,
       "position": position,
       "validPositions": validPositions
@@ -244,14 +342,20 @@ Client = (function() {
     return this.sendMessage("reportBackWhenBrickMovedToPosition", json);
   };
 
-  Client.prototype.initializeImageMarker = function(markerId, image, minMatches) {
+  Client.prototype.initializeImageMarker = function(markerId, image, minMatches, completionCallback) {
+    var requestId;
     if (minMatches == null) {
       minMatches = void 0;
     }
+    if (completionCallback == null) {
+      completionCallback = void 0;
+    }
+    requestId = this.addCompletionCallback(completionCallback);
     return this.convertImageToDataURL(image, (function(_this) {
       return function(base64Image) {
         var json;
         json = {
+          "requestId": requestId,
           "markerId": markerId,
           "imageBase64": base64Image
         };
@@ -263,10 +367,16 @@ Client = (function() {
     })(this));
   };
 
-  Client.prototype.initializeHaarClassifierMarker = function(markerId, filename) {
+  Client.prototype.initializeHaarClassifierMarker = function(markerId, filename, completionCallback) {
+    var requestId;
+    if (completionCallback == null) {
+      completionCallback = void 0;
+    }
+    requestId = this.addCompletionCallback(completionCallback);
     return this.readFileBase64(filename, (function(_this) {
       return function(base64Data) {
         return _this.sendMessage("initializeHaarClassifierMarker", {
+          "requestId": requestId,
           "markerId": markerId,
           "dataBase64": base64Data
         });
@@ -274,15 +384,20 @@ Client = (function() {
     })(this));
   };
 
-  Client.prototype.initializeShapeMarkerWithContour = function(markerId, contour, minArea, maxArea) {
-    var json;
+  Client.prototype.initializeShapeMarkerWithContour = function(markerId, contour, minArea, maxArea, completionCallback) {
+    var json, requestId;
     if (minArea == null) {
       minArea = void 0;
     }
     if (maxArea == null) {
       maxArea = void 0;
     }
+    if (completionCallback == null) {
+      completionCallback = void 0;
+    }
+    requestId = this.addCompletionCallback(completionCallback);
     json = {
+      "requestId": requestId,
       "markerId": markerId,
       "shape": contour
     };
@@ -295,17 +410,23 @@ Client = (function() {
     return this.sendMessage("initializeShapeMarker", json);
   };
 
-  Client.prototype.initializeShapeMarkerWithImage = function(markerId, image, minArea, maxArea) {
+  Client.prototype.initializeShapeMarkerWithImage = function(markerId, image, minArea, maxArea, completionCallback) {
+    var requestId;
     if (minArea == null) {
       minArea = void 0;
     }
     if (maxArea == null) {
       maxArea = void 0;
     }
+    if (completionCallback == null) {
+      completionCallback = void 0;
+    }
+    requestId = this.addCompletionCallback(completionCallback);
     return this.convertImageToDataURL(image, (function(_this) {
       return function(base64Image) {
         var json;
         json = {
+          "requestId": requestId,
           "markerId": markerId,
           "imageBase64": base64Image
         };
@@ -320,15 +441,20 @@ Client = (function() {
     })(this));
   };
 
-  Client.prototype.reportBackWhenMarkerFound = function(areaId, markerId, id, stabilityLevel) {
-    var json;
+  Client.prototype.reportBackWhenMarkerFound = function(areaId, markerId, id, stabilityLevel, completionCallback) {
+    var json, requestId;
     if (id == null) {
       id = void 0;
     }
     if (stabilityLevel == null) {
       stabilityLevel = void 0;
     }
+    if (completionCallback == null) {
+      completionCallback = void 0;
+    }
+    requestId = this.addCompletionCallback(completionCallback);
     json = {
+      "requestId": requestId,
       "areaId": areaId,
       "markerId": markerId
     };
@@ -341,15 +467,20 @@ Client = (function() {
     return this.sendMessage("reportBackWhenMarkerFound", json);
   };
 
-  Client.prototype.requestMarkers = function(areaId, markerIds, id, stabilityLevel) {
-    var json;
+  Client.prototype.requestMarkers = function(areaId, markerIds, id, stabilityLevel, completionCallback) {
+    var json, requestId;
     if (id == null) {
       id = void 0;
     }
     if (stabilityLevel == null) {
       stabilityLevel = void 0;
     }
+    if (completionCallback == null) {
+      completionCallback = void 0;
+    }
+    requestId = this.addCompletionCallback(completionCallback);
     json = {
+      "requestId": requestId,
       "areaId": areaId,
       "markerIds": markerIds
     };
@@ -362,12 +493,17 @@ Client = (function() {
     return this.sendMessage("requestMarkers", json);
   };
 
-  Client.prototype.startTrackingMarker = function(areaId, markerId, id) {
-    var json;
+  Client.prototype.startTrackingMarker = function(areaId, markerId, id, completionCallback) {
+    var json, requestId;
     if (id == null) {
       id = void 0;
     }
+    if (completionCallback == null) {
+      completionCallback = void 0;
+    }
+    requestId = this.addCompletionCallback(completionCallback);
     json = {
+      "requestId": requestId,
       "areaId": areaId,
       "markerId": markerId
     };
@@ -384,6 +520,39 @@ Client = (function() {
       "payload": payload
     };
     return this.socket.send(JSON.stringify(message));
+  };
+
+  Client.prototype.addCompletionCallback = function(completionCallback) {
+    var requestId;
+    if (completionCallback != null) {
+      requestId = ClientUtil.randomRequestId();
+      this.requests[requestId] = {
+        "timestamp": Date.now(),
+        "completionCallback": completionCallback
+      };
+      return requestId;
+    } else {
+      return void 0;
+    }
+  };
+
+  Client.prototype.performCompletionCallbackForRequest = function(json) {
+    var action, completionCallback, payload, requestDict, requestId, shouldRemoveRequest;
+    action = json["action"];
+    requestId = json["requestId"];
+    payload = json["payload"];
+    if ((action == null) || (requestId == null) || (payload == null)) {
+      return;
+    }
+    requestDict = this.requests[requestId];
+    if (requestDict == null) {
+      return;
+    }
+    completionCallback = requestDict["completionCallback"];
+    shouldRemoveRequest = completionCallback(action, payload);
+    if ((shouldRemoveRequest == null) || shouldRemoveRequest) {
+      return delete this.requests[requestId];
+    }
   };
 
   Client.prototype.convertImageToDataURL = function(image, callback) {
