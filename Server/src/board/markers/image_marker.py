@@ -2,6 +2,7 @@ import cv2
 import numpy as np
 from marker import Marker
 from board.board_descriptor import BoardDescriptor
+from util import misc_math
 
 
 class ImageMarker(Marker):
@@ -65,8 +66,14 @@ class ImageMarker(Marker):
         pts = np.float32([[0, 0], [0, self.query_image_height - 1], [self.query_image_width - 1, self.query_image_height - 1], [self.query_image_width - 1, 0]]).reshape(-1,1,2)
         dst = cv2.perspectiveTransform(pts, M)
 
-        # Return resulting points
-        return self.contour_to_marker_result(image, np.int32(dst))
+        # Convert into marker result
+        marker_result = self.contour_to_marker_result(image, np.int32(dst))
+
+        # Calculate correct angle
+        marker_result["angle"] = misc_math.angle_from_homography_matrix(M) * 180.0 / math.pi
+
+        # Return result
+        return marker_result
 
     def find_marker_in_thresholded_image(self, image, size_constraint_offset=0.0):
         return self.find_marker_in_image(image, size_constraint_offset)

@@ -28,3 +28,7 @@ def angle_difference(angle1, angle2):
 
 def line_length(p1, p2):
     return math.sqrt(((p1[0] - p2[0]) * (p1[0] - p2[0])) + ((p1[1] - p2[1]) * (p1[1] - p2[1])))
+
+
+def angle_from_homography_matrix(M):
+    return math.atan2(M[1][0], M[0][0])
