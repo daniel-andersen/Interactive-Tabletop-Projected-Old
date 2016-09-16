@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
 from marker import Marker
+from board.board_descriptor import BoardDescriptor
 
 
 class ImageMarker(Marker):
@@ -29,6 +30,9 @@ class ImageMarker(Marker):
 
         # Find features in marker image
         self.kp1, self.des1 = self.sift.detectAndCompute(marker_image, None)
+
+    def preferred_input_image_resolution(self):
+        return BoardDescriptor.SnapshotSize.LARGE
 
     def find_marker_in_image(self, image, size_constraint_offset=0.0):
 

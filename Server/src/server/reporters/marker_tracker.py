@@ -27,7 +27,7 @@ class MarkerTracker(Reporter):
             self.marker_history.pop(0)
 
         # Get area image
-        area_image = self.board_area.area_image(BoardDescriptor.SnapshotSize.SMALL)
+        area_image = self.board_area.area_image(snapshot_size=self.marker.preferred_input_image_resolution())
 
         # Check if we have a board area image
         if area_image is None:

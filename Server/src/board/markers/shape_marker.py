@@ -2,6 +2,7 @@ import cv2
 import math
 import numpy as np
 from marker import Marker
+from board.board_descriptor import BoardDescriptor
 from util import misc_math
 from util import contour_util
 
@@ -74,6 +75,9 @@ class ShapeMarker(Marker):
         approxed_contour = cv2.approxPolyDP(contour, cv2.arcLength(contour, True) * 0.02, True)
 
         return approxed_contour
+
+    def preferred_input_image_resolution(self):
+        return BoardDescriptor.SnapshotSize.MEDIUM
 
     def find_marker_in_image(self, image, size_constraint_offset=0.0):
 

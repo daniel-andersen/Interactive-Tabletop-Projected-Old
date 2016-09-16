@@ -21,7 +21,7 @@ class FindMarkerReporter(Reporter):
     def run_iteration(self):
 
         # Get area image
-        image = self.board_area.area_image()
+        image = self.board_area.area_image(snapshot_size=self.marker.preferred_input_image_resolution())
 
         # Check if we have a board area image
         if image is None:

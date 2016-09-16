@@ -1,10 +1,14 @@
 import cv2
 import numpy as np
 from marker import Marker
+from board.board_descriptor import BoardDescriptor
 from util import misc_math
 
 
 class DefaultMarker(Marker):
+
+    def preferred_input_image_resolution(self):
+        return BoardDescriptor.SnapshotSize.LARGE
 
     def find_marker_in_image(self, image, size_constraint_offset=0.0):
 

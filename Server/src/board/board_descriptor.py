@@ -2,7 +2,6 @@ import numpy as np
 import cv2
 from random import randint
 from threading import RLock
-from markers.default_marker import DefaultMarker
 from util import enum
 
 
@@ -20,14 +19,14 @@ class BoardDescriptor(object):
     tile_count -- [width, height]
     corner_marker -- Corner marker to use as detection
     """
-    SnapshotSize = enum.Enum('SMALL', 'ORIGINAL')
+    SnapshotSize = enum.Enum('EXTRA_SMALL', 'SMALL', 'MEDIUM', 'LARGE', 'ORIGINAL')
 
     def __init__(self):
         self.snapshot = None
         self.board_size = None
         self.border_percentage_size = [0.0, 0.0]
         self.tile_count = None
-        self.corner_marker = DefaultMarker(marker_id=-2)
+        self.corner_marker = None
 
     def is_recognized(self):
         """
@@ -224,8 +223,14 @@ class BoardSnapshot:
 
             # Find scaled width
             dest_width = original_width
-            if image_size is BoardDescriptor.SnapshotSize.SMALL:
+            if image_size is BoardDescriptor.SnapshotSize.EXTRA_SMALL:
+                dest_width = 320.0
+            elif image_size is BoardDescriptor.SnapshotSize.SMALL:
                 dest_width = 640.0
+            elif image_size is BoardDescriptor.SnapshotSize.MEDIUM:
+                dest_width = 800.0
+            elif image_size is BoardDescriptor.SnapshotSize.LARGE:
+                dest_width = 1200.0
 
             # Resize image
             if dest_width < original_width:

@@ -1,4 +1,5 @@
 import cv2
+from board.board_descriptor import BoardDescriptor
 
 
 class Marker(object):
@@ -8,6 +9,14 @@ class Marker(object):
         :param marker_id: Marker ID
         """
         self.marker_id = marker_id
+
+    def preferred_input_image_resolution(self):
+        """
+        Returns the preferred input resolution for this marker detector. Defaults to medium.
+
+        :return: Input resolution (of type BoardDescriptor.SnapshotSize)
+        """
+        return BoardDescriptor.SnapshotSize.MEDIUM
 
     def find_markers_in_image(self, image, size_constraint_offset=0.0):
         """

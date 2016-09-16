@@ -18,13 +18,6 @@ class FindMarkersReporter(Reporter):
 
     def run_iteration(self):
 
-        # Get area image
-        image = self.board_area.area_image()
-
-        # Check if we have a board area image
-        if image is None:
-            return
-
         # Check sufficient stability
         if self.board_area.stability_score() < self.stability_level:
             return
@@ -32,11 +25,20 @@ class FindMarkersReporter(Reporter):
         # Find markers
         result = []
         for marker in self.markers:
+
+            # Get area image
+            image = self.board_area.area_image(snapshot_size=marker.preferred_input_image_resolution())
+
+            # Check if we have a board area image
+            if image is None:
+                return
+
+            # Find marker in image
             marker_result = marker.find_marker_in_image(image)
             if marker_result:
                 result.append(marker_result)
 
-        if globals.debug:
-            print("%i: Markers found: %i" % (self.reporter_id, len(result)))
+        #if globals.debug:
+            #print("%i: Markers found: %i" % (self.reporter_id, len(result)))
         self.callback_function(result)
         self.stop()

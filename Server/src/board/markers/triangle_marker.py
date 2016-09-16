@@ -1,10 +1,14 @@
 import cv2
 import math
 from marker import Marker
+from board.board_descriptor import BoardDescriptor
 from util import misc_math
 
 
 class TriangleMarker(Marker):
+
+    def preferred_input_image_resolution(self):
+        return BoardDescriptor.SnapshotSize.SMALL
 
     def find_marker_in_image(self, image, size_constraint_offset=0.0):
 
