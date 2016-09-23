@@ -18,42 +18,38 @@ class Marker(object):
         """
         return BoardDescriptor.SnapshotSize.MEDIUM
 
-    def find_markers_in_image(self, image, size_constraint_offset=0.0):
+    def find_markers_in_image(self, image):
         """
         Find all markers in image.
 
         :param image: Image
-        :param size_constraint_offset: Offset for size constraint. Used fx. when tracking in smaller areas.
         :return: List of markers each in form {"markerId", "x", "y", "width", "height", "angle", "contour"}
         """
         return []
 
-    def find_markers_in_thresholded_image(self, image, size_constraint_offset=0.0):
+    def find_markers_in_thresholded_image(self, image):
         """
         Find all markers in image which has already been thresholded.
 
         :param image: Image
-        :param size_constraint_offset: Offset for size constraint. Used fx. when tracking in smaller areas.
         :return: List of markers each in form {"markerId", "x", "y", "width", "height", "angle", "contour"}
         """
         return []
 
-    def find_marker_in_image(self, image, size_constraint_offset=0.0):
+    def find_marker_in_image(self, image):
         """
         Find marker in image.
 
         :param image: Image
-        :param size_constraint_offset: Offset for size constraint. Used fx. when tracking in smaller areas.
         :return: Marker in form {"markerId", "x", "y", "width", "height", "angle", "contour"}
         """
         return None
 
-    def find_marker_in_thresholded_image(self, image, size_constraint_offset=0.0):
+    def find_marker_in_thresholded_image(self, image):
         """
         Find marker in image which has already been thresholded.
 
         :param image: Thresholded image
-        :param size_constraint_offset: Offset for size constraint. Used fx. when tracking in smaller areas.
         :return: Marker in form {"markerId", "x", "y", "width", "height", "angle", "contour"}
         """
         return None

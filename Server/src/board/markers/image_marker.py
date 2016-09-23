@@ -36,7 +36,7 @@ class ImageMarker(Marker):
     def preferred_input_image_resolution(self):
         return BoardDescriptor.SnapshotSize.LARGE
 
-    def find_marker_in_image(self, image, size_constraint_offset=0.0):
+    def find_marker_in_image(self, image):
 
         # Find features in image
         kp2, des2 = self.sift.detectAndCompute(image, None)
@@ -76,20 +76,20 @@ class ImageMarker(Marker):
         # Return result
         return marker_result
 
-    def find_marker_in_thresholded_image(self, image, size_constraint_offset=0.0):
-        return self.find_marker_in_image(image, size_constraint_offset)
+    def find_marker_in_thresholded_image(self, image):
+        return self.find_marker_in_image(image)
 
-    def find_markers_in_image(self, image, size_constraint_offset=0.0):
+    def find_markers_in_image(self, image):
 
         # TODO! Extract all markers!
-        result = self.find_marker_in_image(image, size_constraint_offset)
+        result = self.find_marker_in_image(image)
         return [result] if result is not None else []
 
-    def find_markers_in_thresholded_image(self, image, size_constraint_offset=0.0):
+    def find_markers_in_thresholded_image(self, image):
         """
         Find all markers in image which has already been thresholded.
 
         :param image: Thresholded image
         :return: List of markers each in form {"markerId", "x", "y", "width", "height", "angle", "contour"}
         """
-        return self.find_markers_in_image(image, size_constraint_offset)
+        return self.find_markers_in_image(image)

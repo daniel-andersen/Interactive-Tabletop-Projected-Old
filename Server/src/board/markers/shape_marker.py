@@ -79,23 +79,23 @@ class ShapeMarker(Marker):
     def preferred_input_image_resolution(self):
         return BoardDescriptor.SnapshotSize.MEDIUM
 
-    def find_marker_in_image(self, image, size_constraint_offset=0.0):
+    def find_marker_in_image(self, image):
 
         # Find all markers
-        markers = self.find_markers_in_image(image, size_constraint_offset)
+        markers = self.find_markers_in_image(image)
 
         # Return first marker
         return markers[0] if len(markers) > 0 else None
 
-    def find_marker_in_thresholded_image(self, image, size_constraint_offset=0.0):
+    def find_marker_in_thresholded_image(self, image):
 
         # Find all markers
-        markers = self.find_markers_in_thresholded_image(image, size_constraint_offset)
+        markers = self.find_markers_in_thresholded_image(image)
 
         # Return first marker
         return markers[0] if len(markers) > 0 else None
 
-    def find_markers_in_image(self, image, size_constraint_offset=0.0):
+    def find_markers_in_image(self, image):
 
         # Blur to remove noise
         image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -110,9 +110,9 @@ class ShapeMarker(Marker):
         image = cv2.erode(image, (5, 5))
 
         # Find marker in image
-        return self.find_markers_in_thresholded_image(image, size_constraint_offset)
+        return self.find_markers_in_thresholded_image(image)
 
-    def find_markers_in_thresholded_image(self, image, size_constraint_offset=0.0):
+    def find_markers_in_thresholded_image(self, image):
 
         # Find contours
         contours, _ = cv2.findContours(image.copy(), cv2.RETR_LIST, cv2.CHAIN_APPROX_NONE)
@@ -125,7 +125,7 @@ class ShapeMarker(Marker):
         for contour in contours:
 
             # Match contour
-            matched_contour, marker_contour_start_index = self.match_contour(contour, image, size_constraint_offset)
+            matched_contour, marker_contour_start_index = self.match_contour(contour, image)
 
             if matched_contour is not None:
                 #image2 = cv2.cvtColor(image.copy(), cv2.COLOR_GRAY2BGR)
@@ -159,13 +159,12 @@ class ShapeMarker(Marker):
         # Return markers
         return markers
 
-    def match_contour(self, contour, image, size_constraint_offset=0.0):
+    def match_contour(self, contour, image):
         """
         Algorithm: XXX
 
         :param contour: Contour
         :param image: Image
-        :param size_constraint_offset: Skip size constraints
         :return (Matched contour, start index into marker contour)
         """
         image_height, image_width = image.shape[:2]
@@ -173,11 +172,8 @@ class ShapeMarker(Marker):
         # Check contour arc length
         arclength = cv2.arcLength(contour, self.closed)
 
-        min_arclength_pct = size_constraint_offset + self.min_arclength
-        max_arclength_pct = size_constraint_offset + self.max_arclength
-
-        min_contour_length = max(image_width, image_height) * min_arclength_pct
-        max_contour_length = max(image_width, image_height) * max_arclength_pct
+        min_contour_length = max(image_width, image_height) * self.min_arclength
+        max_contour_length = max(image_width, image_height) * self.max_arclength
 
         if arclength < min_contour_length:
             #print("Arclength to small: %f < %f" % (arclength, min_contour_length))
@@ -194,11 +190,8 @@ class ShapeMarker(Marker):
 
         area = abs(area)
 
-        min_area_pct = size_constraint_offset + self.min_area
-        max_area_pct = size_constraint_offset + self.max_area
-
-        min_contour_area = image_width * image_height * min_area_pct
-        max_contour_area = image_width * image_height * max_area_pct
+        min_contour_area = image_width * image_height * self.min_area
+        max_contour_area = image_width * image_height * self.max_area
 
         if area < min_contour_area:
             #print("Area to small: %f < %f" % (area, min_contour_area))

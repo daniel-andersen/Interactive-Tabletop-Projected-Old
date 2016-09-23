@@ -24,11 +24,11 @@ class HaarClassifierMarker(Marker):
         finally:
             os.remove(cascade_file.name)
 
-    def find_marker_in_image(self, image, size_constraint_offset=0.0):
+    def find_marker_in_image(self, image):
         image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         return self.find_marker_in_thresholded_image(image)
 
-    def find_marker_in_thresholded_image(self, image, size_constraint_offset=0.0):
+    def find_marker_in_thresholded_image(self, image):
 
         # Find all markers
         markers = self.find_markers_in_thresholded_image(image)
@@ -36,11 +36,11 @@ class HaarClassifierMarker(Marker):
         # Return first marker
         return markers[0] if len(markers) > 0 else None
 
-    def find_markers_in_image(self, image, size_constraint_offset=0.0):
+    def find_markers_in_image(self, image):
         image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         return self.find_markers_in_thresholded_image(image)
 
-    def find_markers_in_thresholded_image(self, image, size_constraint_offset=0.0):
+    def find_markers_in_thresholded_image(self, image):
         matches = self.cascade_data.detectMultiScale(image)
         return [{"markerId": self.marker_id,
                  "x": int(x - (width / 2)),

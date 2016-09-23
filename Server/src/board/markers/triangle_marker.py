@@ -10,23 +10,23 @@ class TriangleMarker(Marker):
     def preferred_input_image_resolution(self):
         return BoardDescriptor.SnapshotSize.SMALL
 
-    def find_marker_in_image(self, image, size_constraint_offset=0.0):
+    def find_marker_in_image(self, image):
 
         # Find all markers
-        markers = self.find_markers_in_image(image, size_constraint_offset)
+        markers = self.find_markers_in_image(image)
 
         # Return first marker
         return markers[0] if len(markers) > 0 else None
 
-    def find_marker_in_thresholded_image(self, image, size_constraint_offset=0.0):
+    def find_marker_in_thresholded_image(self, image):
 
         # Find all markers
-        markers = self.find_markers_in_thresholded_image(image, size_constraint_offset)
+        markers = self.find_markers_in_thresholded_image(image)
 
         # Return first marker
         return markers[0] if len(markers) > 0 else None
 
-    def find_markers_in_image(self, image, size_constraint_offset=0.0):
+    def find_markers_in_image(self, image):
 
         # OTSU image
         image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -34,9 +34,9 @@ class TriangleMarker(Marker):
         ret, image = cv2.threshold(image, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
 
         # Find marker in OTSU'ed image
-        return self.find_markers_in_thresholded_image(image, size_constraint_offset)
+        return self.find_markers_in_thresholded_image(image)
 
-    def find_markers_in_thresholded_image(self, image, size_constraint_offset=0.0):
+    def find_markers_in_thresholded_image(self, image):
 
         # Prepare constants
         image_height, image_width = image.shape[:2]
@@ -78,7 +78,7 @@ class TriangleMarker(Marker):
             #cv2.imshow('Contours', image2)
             #cv2.waitKey(0)
 
-            if self.are_marker_conditions_satisfied_for_contour(contours, approxed_contours, hierarchy, i, min_marker_size, max_marker_size, size_constraint_offset):
+            if self.are_marker_conditions_satisfied_for_contour(contours, approxed_contours, hierarchy, i, min_marker_size, max_marker_size):
 
                 #image2 = cv2.cvtColor(image.copy(), cv2.COLOR_GRAY2BGR)
                 #cv2.drawContours(image2, [approxed_contours[hierarchy[0][i][2]]], -1, (255, 0, 255), 1)
@@ -90,7 +90,7 @@ class TriangleMarker(Marker):
         # Return markers
         return self.contours_to_marker_result(image, markers)
 
-    def are_marker_conditions_satisfied_for_contour(self, contours, approxed_contours, hierachy, index, min_marker_size, max_marker_size, size_constraint_offset=0.0):
+    def are_marker_conditions_satisfied_for_contour(self, contours, approxed_contours, hierachy, index, min_marker_size, max_marker_size):
 
         contour = contours[index]
         approxed_contour = approxed_contours[index]
@@ -103,13 +103,12 @@ class TriangleMarker(Marker):
         # Check area
         area = cv2.contourArea(contour, False)
 
-        if not size_constraint_offset:
-            if area < min_marker_size:
-                #print("Area too small: %f vs %f" % (area, min_marker_size))
-                return False
-            if area > max_marker_size:
-                #print("Area too big: %f vs %f" % (area, max_marker_size))
-                return False
+        if area < min_marker_size:
+            #print("Area too small: %f vs %f" % (area, min_marker_size))
+            return False
+        if area > max_marker_size:
+            #print("Area too big: %f vs %f" % (area, max_marker_size))
+            return False
 
         # Check angles - must have two 45 degrees and one 90 degrees
         angle_count_45 = 0
