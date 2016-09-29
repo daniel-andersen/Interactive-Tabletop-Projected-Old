@@ -185,16 +185,15 @@ class Server(WebSocket):
         Initializes board with given parameters.
 
         requestId: (Optional) Request ID
-        borderPctX: (Optional) Border width in percentage of board size.
-        borderPctY: (Optional) Border height in percentage of board size.
+        borderPercentage: (Optional) Border [width, height] in percentage of board size.
         cornerMarker: (Optional) Corner marker
         """
         globals.board_descriptor = BoardDescriptor()
         self.reset_board_descriptor()
 
         globals.board_descriptor.border_percentage_size = [
-            payload["borderPctX"] if "borderPctX" in payload else 0.0,
-            payload["borderPctY"] if "borderPctY" in payload else 0.0
+            payload["borderPercentage"][0] if "borderPercentage" in payload else 0.0,
+            payload["borderPercentage"][1] if "borderPercentage" in payload else 0.0
         ]
         globals.board_descriptor.corner_marker = create_marker_from_name(payload["cornerMarker"], marker_id=-1) if "cornerMarker" in payload else DefaultMarker(marker_id=-1)
 

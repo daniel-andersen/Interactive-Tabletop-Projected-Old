@@ -10,6 +10,8 @@ Client = (function() {
     this.requests = {};
   }
 
+  "connect: Establishes a websocket connection to the server.\n\nTakes two callback parameters.\nonSocketOpen: onSocketOpen() is called when socket connection has been established.\nonMessage: onMessage(json) is called with json response from server. The json consists of the following mandatory fields:\n  - result: Fx. \"OK\" or \"BOARD_NOT_RECOGNIZED\"\n  - action: Action which message is a reply to, fx. \"reset\" or \"initializeBoard\"\n  - payload: The actual payload. Varies from response to response.\n  - requestId: Unique request id for which this is a response to.";
+
   Client.prototype.connect = function(onSocketOpen, onMessage) {
     this.disconnect();
     this.socket = new WebSocket("ws://localhost:" + this.port + "/");
@@ -32,12 +34,16 @@ Client = (function() {
     })(this);
   };
 
+  "disconnect: Disconnects from the server.";
+
   Client.prototype.disconnect = function() {
     if (this.socket != null) {
       this.socket.close();
       return this.socket = void 0;
     }
   };
+
+  "enableDebug: Enables server debug.\n\ncompletionCallback: (Optional) completionCallback(action, payload) is called when receiving a respond to the request.";
 
   Client.prototype.enableDebug = function(completionCallback) {
     var requestId;
@@ -49,6 +55,8 @@ Client = (function() {
       "requestId": requestId
     });
   };
+
+  "reset: Resets the server.\n\nresolution: (Optional) Camera resolution to use in form [width, height].\ncompletionCallback: (Optional) completionCallback(action, payload) is called when receiving a respond to the request.";
 
   Client.prototype.reset = function(resolution, completionCallback) {
     var json, requestId;
@@ -69,6 +77,8 @@ Client = (function() {
     return this.sendMessage("reset", json);
   };
 
+  "resetReporters: Resets all active reporters.\n\ncompletionCallback: (Optional) completionCallback(action, payload) is called when receiving a respond to the request.";
+
   Client.prototype.resetReporters = function(completionCallback) {
     var requestId;
     if (completionCallback == null) {
@@ -79,6 +89,8 @@ Client = (function() {
       "requestId": requestId
     });
   };
+
+  "resetReporter: Resets a specific reporter.\n\nreporterId: Reporter ID.\ncompletionCallback: (Optional) completionCallback(action, payload) is called when receiving a respond to the request.";
 
   Client.prototype.resetReporter = function(reporterId, completionCallback) {
     var requestId;
@@ -91,6 +103,8 @@ Client = (function() {
       "id": reporterId
     });
   };
+
+  "takeScreenshot: Takes and stores a screenshot from the camera.\n\nfilename: (Optional) Screenshot filename.\ncompletionCallback: (Optional) completionCallback(action, payload) is called when receiving a respond to the request.";
 
   Client.prototype.takeScreenshot = function(filename, completionCallback) {
     var json, requestId;
@@ -110,28 +124,33 @@ Client = (function() {
     return this.sendMessage("takeScreenshot", json);
   };
 
-  Client.prototype.initializeBoard = function(borderPctX, borderPctY, cornerMarker, completionCallback) {
-    var requestId;
-    if (borderPctX == null) {
-      borderPctX = 0.0;
-    }
-    if (borderPctY == null) {
-      borderPctY = 0.0;
+  "initializeBoard: Initializes the board.\n\nborderPercentage: (Optional) Border percentage [width (0..1), height (0..1)] in percentage of width and height.\ncornerMarker: (Optional) Corner marker to use.\ncompletionCallback: (Optional) completionCallback(action, payload) is called when receiving a respond to the request.";
+
+  Client.prototype.initializeBoard = function(borderPercentage, cornerMarker, completionCallback) {
+    var json, requestId;
+    if (borderPercentage == null) {
+      borderPercentage = void 0;
     }
     if (cornerMarker == null) {
-      cornerMarker = "DEFAULT";
+      cornerMarker = void 0;
     }
     if (completionCallback == null) {
       completionCallback = void 0;
     }
     requestId = this.addCompletionCallback(completionCallback);
-    return this.sendMessage("initializeBoard", {
-      "requestId": requestId,
-      "borderPctX": borderPctX,
-      "borderPctY": borderPctY,
-      "cornerMarker": cornerMarker
-    });
+    json = {
+      "requestId": requestId
+    };
+    if (borderPercentage != null) {
+      json["borderPercentage"] = borderPercentage;
+    }
+    if (cornerMarker != null) {
+      json["cornerMarker"] = cornerMarker;
+    }
+    return this.sendMessage("initializeBoard", json);
   };
+
+  "initializeBoardArea: Initializes an area of the board. Is used to search for markers in a specific region, etc.\n\nx1: Left coordinate in percentage [0..1] of board width.\ny1: Top in percentage [0..1] of board height.\nx2: Right coordinate in percentage [0..1] of board width.\ny2: Bottom coordinate in percentage [0..1] of board height.\nareaId: (Optional) Area ID to use. If none is given, a random area ID is generated and returned from the server.\ncompletionCallback: (Optional) completionCallback(action, payload) is called when receiving a respond to the request.";
 
   Client.prototype.initializeBoardArea = function(x1, y1, x2, y2, areaId, completionCallback) {
     var json, requestId;
@@ -166,6 +185,8 @@ Client = (function() {
     }
     return this.sendMessage("initializeBoardArea", json);
   };
+
+  "initializeTiledBoardArea: Initializes a tiled board area, ie. an area which is divided into equally sized tiles.\n\ntileCountX: Number of tiles horizontally.\ntileCountY: Number of tiles vertically.\nx1: Left coordinate in percentage [0..1] of board width.\ny1: Top in percentage [0..1] of board height.\nx2: Right coordinate in percentage [0..1] of board width.\ny2: Bottom coordinate in percentage [0..1] of board height.\nareaId: (Optional) Area ID to use. If none is given, a random area ID is generated and returned from the server.\ncompletionCallback: (Optional) completionCallback(action, payload) is called when receiving a respond to the request.";
 
   Client.prototype.initializeTiledBoardArea = function(tileCountX, tileCountY, x1, y1, x2, y2, areaId, completionCallback) {
     var json, requestId;
@@ -203,6 +224,8 @@ Client = (function() {
     return this.sendMessage("initializeTiledBoardArea", json);
   };
 
+  "removeBoardAreas: Removes all board areas at server end. Maintaining a board area requires some server processing, so\nit is good practice to remove them when not used any longer.\n\ncompletionCallback: (Optional) completionCallback(action, payload) is called when receiving a respond to the request.";
+
   Client.prototype.removeBoardAreas = function(completionCallback) {
     var requestId;
     if (completionCallback == null) {
@@ -213,6 +236,8 @@ Client = (function() {
       "requestId": requestId
     });
   };
+
+  "removeBoardArea: Removes a specific board area at server end. Maintaining a board area requires some server processing, so\nit is good practice to remove them when not used any longer.\n\nareaId: Board area ID.\ncompletionCallback: (Optional) completionCallback(action, payload) is called when receiving a respond to the request.";
 
   Client.prototype.removeBoardArea = function(areaId, completionCallback) {
     var requestId;
@@ -226,6 +251,8 @@ Client = (function() {
     });
   };
 
+  "removeMarkers: Removes all markers from the server.\n\ncompletionCallback: (Optional) completionCallback(action, payload) is called when receiving a respond to the request.";
+
   Client.prototype.removeMarkers = function(completionCallback) {
     var requestId;
     if (completionCallback == null) {
@@ -236,6 +263,8 @@ Client = (function() {
       "requestId": requestId
     });
   };
+
+  "removeMarker: Removes a specific marker from the server.\n\nmarkerId: Marker ID.\ncompletionCallback: (Optional) completionCallback(action, payload) is called when receiving a respond to the request.";
 
   Client.prototype.removeMarker = function(markerId, completionCallback) {
     var requestId;
@@ -249,7 +278,9 @@ Client = (function() {
     });
   };
 
-  Client.prototype.requestTiledObjectPosition = function(areaId, validPositions, completionCallback) {
+  "requestTiledBrickPosition: Returns the position of a brick among the given possible positions in a tiled area.\n\nareaId: Area ID of tiled board area.\nvalidPositions: A list of valid positions in the form [[x, y], [x, y], ...].\ncompletionCallback: (Optional) completionCallback(action, payload) is called when receiving a respond to the request.";
+
+  Client.prototype.requestTiledBrickPosition = function(areaId, validPositions, completionCallback) {
     var requestId;
     if (completionCallback == null) {
       completionCallback = void 0;
@@ -261,6 +292,8 @@ Client = (function() {
       "validPositions": validPositions
     });
   };
+
+  "reportBackWhenBrickFoundAtAnyOfPositions: Keeps searching for a brick in the given positions in a tiled area and returns\nthe position when found.\n\nareaId: Area ID of tiled board area.\nvalidPositions: A list of valid positions in the form [[x, y], [x, y], ...].\nid: (Optional) Reporter ID.\nstabilityLevel: (Optional) Minimum stability level of board area before returning result.\ncompletionCallback: (Optional) completionCallback(action, payload) is called when receiving a respond to the request.";
 
   Client.prototype.reportBackWhenBrickFoundAtAnyOfPositions = function(areaId, validPositions, id, stabilityLevel, completionCallback) {
     var json, requestId;
@@ -287,6 +320,8 @@ Client = (function() {
     }
     return this.sendMessage("reportBackWhenBrickFoundAtAnyOfPositions", json);
   };
+
+  "reportBackWhenBrickMovedToAnyOfPositions: Reports back when brick has moved to any of the given positions in a tiled area.\n\nareaId: Area ID of tiled board area.\ninitialPosition: Position where brick is currently located in form [x, y].\nvalidPositions: A list of valid positions in the form [[x, y], [x, y], ...].\nid: (Optional) Reporter ID.\nstabilityLevel: (Optional) Minimum stability level of board area before returning result.\ncompletionCallback: (Optional) completionCallback(action, payload) is called when receiving a respond to the request.";
 
   Client.prototype.reportBackWhenBrickMovedToAnyOfPositions = function(areaId, initialPosition, validPositions, id, stabilityLevel, completionCallback) {
     var json, requestId;
@@ -315,6 +350,8 @@ Client = (function() {
     return this.sendMessage("reportBackWhenBrickMovedToAnyOfPositions", json);
   };
 
+  "reportBackWhenBrickMovedToPosition: Reports back when brick has moved to the given position in a tiled area.\n\nposition: Target position to trigger the callback in form [x, y].\nvalidPositions: A list of valid positions in the form [[x, y], [x, y], ...] where the brick could be located.\nid: (Optional) Reporter ID.\nstabilityLevel: (Optional) Minimum stability level of board area before returning result.\ncompletionCallback: (Optional) completionCallback(action, payload) is called when receiving a respond to the request.";
+
   Client.prototype.reportBackWhenBrickMovedToPosition = function(areaId, position, validPositions, id, stabilityLevel, completionCallback) {
     var json, requestId;
     if (id == null) {
@@ -342,6 +379,8 @@ Client = (function() {
     return this.sendMessage("reportBackWhenBrickMovedToPosition", json);
   };
 
+  "initializeImageMarker: Initializes an image marker.\n\nmarkerId: Marker ID.\nimage: Source marker image.\nminMatches: (Optional) Minimum number of matches required. (8 is recommended minimum).\ncompletionCallback: (Optional) completionCallback(action, payload) is called when receiving a respond to the request.";
+
   Client.prototype.initializeImageMarker = function(markerId, image, minMatches, completionCallback) {
     var requestId;
     if (minMatches == null) {
@@ -367,6 +406,8 @@ Client = (function() {
     })(this));
   };
 
+  "initializeHaarClassifierMarker: Initializes a Haar Classifier with the given filename.\n\nmarkerId: Marker ID.\nfilename: Filename of Haar Classifier.\ncompletionCallback: (Optional) completionCallback(action, payload) is called when receiving a respond to the request.";
+
   Client.prototype.initializeHaarClassifierMarker = function(markerId, filename, completionCallback) {
     var requestId;
     if (completionCallback == null) {
@@ -383,6 +424,8 @@ Client = (function() {
       };
     })(this));
   };
+
+  "initializeShapeMarkerWithContour: Initializes a shape marker with the given contour.\n\nmarkerId: Marker ID.\ncontour: Contour of shape in form [[x, y], [x, y], ...].\nminArea: (Optional) Minimum area in percentage [0..1] of board area image size.\nmaxArea: (Optional) Maximum area in percentage [0..1] of board area image size.\ncompletionCallback: (Optional) completionCallback(action, payload) is called when receiving a respond to the request.";
 
   Client.prototype.initializeShapeMarkerWithContour = function(markerId, contour, minArea, maxArea, completionCallback) {
     var json, requestId;
@@ -409,6 +452,8 @@ Client = (function() {
     }
     return this.sendMessage("initializeShapeMarker", json);
   };
+
+  "initializeShapeMarkerWithImage: Initializes a shape marker with shape extracted from the given image.\n\nmarkerId: Marker ID.\nimage: Marker image. Must be black contour on white image.\nminArea: (Optional) Minimum area in percentage [0..1] of board area image size.\nmaxArea: (Optional) Maximum area in percentage [0..1] of board area image size.\ncompletionCallback: (Optional) completionCallback(action, payload) is called when receiving a respond to the request.";
 
   Client.prototype.initializeShapeMarkerWithImage = function(markerId, image, minArea, maxArea, completionCallback) {
     var requestId;
@@ -441,6 +486,8 @@ Client = (function() {
     })(this));
   };
 
+  "reportBackWhenMarkerFound: Keeps searching for marker and reports back when found.\n\nareaId: Area ID to search for marker in.\nmarkerId: Marker ID to search for.\nid: (Optional) Reporter ID.\nstabilityLevel: (Optional) Minimum stability level of board area before returning result.\ncompletionCallback: (Optional) completionCallback(action, payload) is called when receiving a respond to the request.";
+
   Client.prototype.reportBackWhenMarkerFound = function(areaId, markerId, id, stabilityLevel, completionCallback) {
     var json, requestId;
     if (id == null) {
@@ -467,6 +514,8 @@ Client = (function() {
     return this.sendMessage("reportBackWhenMarkerFound", json);
   };
 
+  "requestMarkers: Returns which markers among the given list of markers that are currently visible in the given area.\n\nareaId: Area ID to search for markers in.\nmarkerIds: Marker IDs to search for in form [id, id, ...].\nid: (Optional) Reporter ID.\nstabilityLevel: (Optional) Minimum stability level of board area before returning result.\ncompletionCallback: (Optional) completionCallback(action, payload) is called when receiving a respond to the request.";
+
   Client.prototype.requestMarkers = function(areaId, markerIds, id, stabilityLevel, completionCallback) {
     var json, requestId;
     if (id == null) {
@@ -492,6 +541,8 @@ Client = (function() {
     }
     return this.sendMessage("requestMarkers", json);
   };
+
+  "startTrackingMarker: Continously tracks a marker in the given area. Continously reports back.\n\nareaId: Area ID to track marker in.\nmarkerId: Marker ID to track.\nid: (Optional) Reporter ID.\ncompletionCallback: (Optional) completionCallback(action, payload) is called when receiving a respond to the request.";
 
   Client.prototype.startTrackingMarker = function(areaId, markerId, id, completionCallback) {
     var json, requestId;
