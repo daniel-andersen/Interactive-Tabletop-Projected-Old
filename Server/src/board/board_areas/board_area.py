@@ -62,7 +62,7 @@ class BoardArea(object):
             self.current_board_snapshot_id = self.board_descriptor.snapshot.id
 
             # Get board canvas image
-            board_image = self.board_descriptor.board_canvas()
+            board_image = self.board_descriptor.board_canvas(snapshot_size)
             image_height, image_width = board_image.shape[:2]
 
             # Extract area image
