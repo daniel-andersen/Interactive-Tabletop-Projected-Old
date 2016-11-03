@@ -1,5 +1,5 @@
 import cv2
-import histogram_util
+from board import histogram_util
 
 
 def compare_images(image1, image2, threshold=1.0):

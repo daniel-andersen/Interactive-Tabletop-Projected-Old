@@ -236,6 +236,21 @@ class Client
         })
 
     """
+    requestTiledBrickPositions: Returns the positions of bricks among the given possible positions in a tiled area.
+
+    areaId: Area ID of tiled board area.
+    validPositions: A list of valid positions in the form [[x, y], [x, y], ...].
+    completionCallback: (Optional) completionCallback(action, payload) is called when receiving a respond to the request.
+    """
+    requestTiledBrickPosition: (areaId, validPositions, completionCallback = undefined) ->
+        requestId = @addCompletionCallback(completionCallback)
+        @sendMessage("requestBrickPositions", {
+            "requestId": requestId,
+            "areaId": areaId,
+            "validPositions": validPositions
+        })
+
+    """
     reportBackWhenBrickFoundAtAnyOfPositions: Keeps searching for a brick in the given positions in a tiled area and returns
     the position when found.
 
@@ -379,6 +394,26 @@ class Client
         )
 
     """
+    initializeArUcoMarker: Initializes an ArUco marker with given properties.
+
+    markerId: Marker ID.
+    arUcoMarkerId: ArUco marker ID. Number in range [0..dictionarySize-1].
+    markerSize: Marker size. Any of 4, 5, 6, 7.
+    dictionarySize: (Optional) Dictionary size. Any of 100, 250, 1000.
+    completionCallback: (Optional) completionCallback(action, payload) is called when receiving a respond to the request.
+    """
+    initializeArUcoMarker: (markerId, arUcoMarkerId, markerSize, dictionarySize = undefined, completionCallback = undefined) ->
+        requestId = @addCompletionCallback(completionCallback)
+        json = {
+            "requestId": requestId,
+            "markerId": markerId,
+            "arUcoMarkerId": arUcoMarkerId,
+            "markerSize": markerSize
+        }
+        if dictionarySize? then json["dictionarySize"] = dictionarySize
+        @sendMessage("initializeArUcoMarker", json)
+
+    """
     reportBackWhenMarkerFound: Keeps searching for marker and reports back when found.
 
     areaId: Area ID to search for marker in.
@@ -419,6 +454,24 @@ class Client
         @sendMessage("requestMarkers", json)
 
     """
+    requestArUcoMarkers: Returns a list of all visible ArUco markers of given size in given area.
+
+    areaId: Area ID to search for markers in.
+    markerSize: ArUco marker size. Any of 4, 5, 6, 7.
+    id: (Optional) Reporter ID.
+    completionCallback: (Optional) completionCallback(action, payload) is called when receiving a respond to the request.
+    """
+    requestArUcoMarkers: (areaId, markerSize, id = undefined, completionCallback = undefined) ->
+        requestId = @addCompletionCallback(completionCallback)
+        json = {
+            "requestId": requestId,
+            "areaId": areaId,
+            "markerSize": markerSize
+        }
+        if id? then json["id"] = id
+        @sendMessage("requestArUcoMarkers", json)
+
+    """
     startTrackingMarker: Continously tracks a marker in the given area. Continously reports back.
 
     areaId: Area ID to track marker in.
@@ -435,6 +488,24 @@ class Client
         }
         if id? then json["id"] = id
         @sendMessage("startTrackingMarker", json)
+
+    """
+    requestContours: Returns a list of all visible contours in given area.
+
+    areaId: Area ID to search for markers in.
+    approximation: (Optional) Contour approximation constant. This is the maximum distance between the original curve and its approximation.
+    id: (Optional) Reporter ID.
+    completionCallback: (Optional) completionCallback(action, payload) is called when receiving a respond to the request.
+    """
+    requestContours: (areaId, approximation, id = undefined, completionCallback = undefined) ->
+        requestId = @addCompletionCallback(completionCallback)
+        json = {
+            "requestId": requestId,
+            "areaId": areaId,
+        }
+        if id? then json["id"] = id
+        if approximation? then json["approximation"] = approximation
+        @sendMessage("requestContours", json)
 
 
 

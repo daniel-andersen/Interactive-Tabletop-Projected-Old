@@ -1,3 +1,4 @@
+from threading import RLock
 import cv2
 import numpy as np
 import math
@@ -35,20 +36,35 @@ class BoardRecognizer(object):
     image_width = 0
     image_height = 0
 
+    lock = RLock()
+
     def __init__(self):
         self.state = BoardRecognizedState()
 
-    def find_board(self, image, board_descriptor):
+    def find_board(self, image, board_descriptor, force_detection=False):
+        with self.lock:
+            return self._find_board(image, board_descriptor, force_detection)
+
+    def _find_board(self, image, board_descriptor, force_detection=False):
         """
         Finds a board, if any, in the source image and populates the board descriptor.
 
         :param image: Source image from which to recognize board
         :param board_descriptor: Board descriptor
+        :param force_detection: Force detection of board
         :return Board descriptor
         """
 
+        # Check if board is already detected
+        if board_descriptor.is_recognized() and not force_detection:
+            return BoardSnapshot(camera_image=image,
+                                 board_image=transform.transform_image(image, board_descriptor.get_snapshot().board_corners),
+                                 board_corners=board_descriptor.get_snapshot().board_corners)
+
+        # Prepare image
         source_image = self.prepare_image(image)
 
+        # Prepare search constants
         self.prepare_constants_from_image(source_image, board_descriptor)
 
         # Find markers in all four part of image
@@ -94,8 +110,9 @@ class BoardRecognizer(object):
         # Find corners
         corners = self.find_corners(marker_contours, image)
         if corners is not None:
-            transformed_image = transform.transform_image(image, corners)
-            return BoardSnapshot(camera_image=image, board_image=transformed_image, board_corners=corners)
+            return BoardSnapshot(camera_image=image,
+                                 board_image=transform.transform_image(image, corners),
+                                 board_corners=corners)
 
         return None
 
@@ -130,8 +147,8 @@ class BoardRecognizer(object):
                 return self.centered_search_rect(contour), contour
 
         # Go through whole image
-        for y in range(part_offset_y, part_offset_y + part_height, self.marker_search_height / 2):
-            for x in range(part_offset_x, part_offset_x + part_width, self.marker_search_width / 2):
+        for y in range(int(part_offset_y), int(part_offset_y + part_height), int(self.marker_search_height / 2)):
+            for x in range(int(part_offset_x), int(part_offset_x + part_width), int(self.marker_search_width / 2)):
 
                 # Check bounds
                 bx = min(x, part_offset_x + part_width - self.marker_search_width)
@@ -185,7 +202,7 @@ class BoardRecognizer(object):
             return None
 
         # Translate points to offset
-        contour = marker_result["contour"]
+        contour = marker_result["rawContour"]
         for i in range(0, len(contour)):
             contour[i][0][0] += search_rect[0]
             contour[i][0][1] += search_rect[1]

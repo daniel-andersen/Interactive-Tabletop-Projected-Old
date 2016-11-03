@@ -1,5 +1,5 @@
 import numpy as np
-from board_area import BoardArea
+from board.board_areas.board_area import BoardArea
 
 
 class TiledBoardArea(BoardArea):

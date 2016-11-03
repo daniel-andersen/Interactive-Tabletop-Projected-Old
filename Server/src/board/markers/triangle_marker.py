@@ -1,6 +1,6 @@
 import cv2
 import math
-from marker import Marker
+from board.markers.marker import Marker
 from board.board_descriptor import BoardDescriptor
 from util import misc_math
 
@@ -45,7 +45,7 @@ class TriangleMarker(Marker):
 
         # Find contours
         contours, hierarchy = \
-            cv2.findContours(image, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+            cv2.findContours(image, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)[-2:]
 
         if len(contours) == 0:
             return []

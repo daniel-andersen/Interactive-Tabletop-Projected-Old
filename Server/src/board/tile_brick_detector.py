@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 import heapq
-import histogram_util
+from board import histogram_util
 
 
 class TileBrickDetector(object):
@@ -12,15 +12,15 @@ class TileBrickDetector(object):
     def __init__(self):
         self.brick_detection_minimum_median_delta = 20.0
         self.brick_detection_minimum_probability = 0.15
-        self.brick_detection_minimum_probability_delta = 0.35
+        self.brick_detection_minimum_probability_delta = 0.30
 
     def find_brick_among_tiles(self, tiled_board_area, coordinates):
         """
-        Returns the coordinate of a brick from one the given tile coordinates.
+        Returns the coordinate of a brick from one of the given tile coordinates.
 
         :param tiled_board_area: Tiled board area
         :param coordinates: Coordinates [(x, y), ...] on which to search for a brick
-        :return: (x, y), [probabilities...] - where (x, y) is position of brick, or None if no brick is found, followed by list of probabilities.
+        :return: (x, y), [probabilities...] - where (x, y) is position of brick, or None if no brick is found, followed by list of probabilities
         """
 
         # Extract tile strip
@@ -52,6 +52,35 @@ class TileBrickDetector(object):
             return None, probabilities
 
         return coordinates[np.argmin(medians)], probabilities
+
+    def find_bricks_among_tiles(self, tiled_board_area, coordinates):
+        """
+        Returns the coordinates of bricks from any of the given tile coordinates.
+
+        :param tiled_board_area: Tiled board area
+        :param coordinates: Coordinates [(x, y), ...] on which to search for bricks
+        :return: [((x, y), hasBrick, probability), ...] - where (x, y) is position of brick and hasBrick is True if brick is detected and otherwise false
+        """
+
+        # Extract tile strip
+        tile_strip_image = tiled_board_area.tile_strip(coordinates, grayscaled=True)
+
+        # Calculate medians
+        medians = self.medians_of_tiles(tile_strip_image, coordinates, tiled_board_area)
+        min_median, second_min_median = heapq.nsmallest(2, medians)[:2]
+
+        # Check medians
+        if second_min_median - min_median < self.brick_detection_minimum_median_delta:
+            return None, [0.0 for _ in medians]
+
+        # OTSU strip
+        _, tile_strip_image = cv2.threshold(tile_strip_image, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
+
+        # Calculate probabilities
+        probabilities = self.probabilities_of_bricks(tile_strip_image, coordinates, tiled_board_area)
+
+        # Calculate and return brick positions
+        return [(coordinates[i], probabilities[i] < self.brick_detection_minimum_probability, probabilities[i]) for i in range(0, len(coordinates))]
 
     def medians_of_tiles(self, tile_strip_image, coordinates, tiled_board_area):
         return [self.median_of_tile(i, tile_strip_image, tiled_board_area) for i in range(0, len(coordinates))]

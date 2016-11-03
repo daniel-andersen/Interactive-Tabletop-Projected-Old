@@ -102,15 +102,14 @@ Install dependencies:
     $ sudo apt-get install build-essential cmake pkg-config  # Build essentials
     $ sudo apt-get install libjpeg8-dev libjasper-dev libpng12-dev  # Image handling
     $ sudo apt-get install libatlas-base-dev gfortran   # For optimizations within OpenCV
-    $ sudo apt-get install libv4l-dev v4l-utils qv4l2 v4l2ucp  # For Video4Linux
     $ sudo apt-get install python-pip python-dev python-picamera
     $ ./install_packages.sh
 
 Install OpenCV:
 
-    $ wget -O opencv-2.4.13.zip https://codeload.github.com/Itseez/opencv/zip/2.4.13
-    $ unzip opencv-2.4.13.zip
-    $ cd opencv-2.4.13
+    $ wget -O opencv-2.4.10.zip http://sourceforge.net/projects/opencvlibrary/files/opencv-unix/2.4.10/opencv-2.4.10.zip/download
+    $ unzip opencv-2.4.10.zip
+    $ cd opencv-2.4.10
 
     $ mkdir build
     $ cd build

@@ -1,7 +1,6 @@
 import cv2
-import time
 from server import globals
-from reporter import Reporter
+from server.reporters.reporter import Reporter
 
 
 class FindMarkerReporter(Reporter):
@@ -18,7 +17,7 @@ class FindMarkerReporter(Reporter):
         self.marker = marker
         self.stability_level = stability_level
 
-    def run_iteration(self):
+    def update(self):
 
         # Get area image
         image = self.board_area.area_image(snapshot_size=self.marker.preferred_input_image_resolution())
@@ -34,12 +33,12 @@ class FindMarkerReporter(Reporter):
         # Find marker
         marker_result = self.marker.find_marker_in_image(image)
         if marker_result is None:
+            #cv2.imwrite("area.png", self.board_area.area_image())
             return
 
-        if globals.debug:
+        if globals.get_state().debug:
             print("%i: Marker recognized" % self.reporter_id)
             #cv2.imwrite("area.png", self.board_area.area_image())
-
 
         self.callback_function(marker_result)
         self.stop()

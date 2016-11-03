@@ -22,8 +22,8 @@ class Camera(object):
 
         # Initialize camera
         self.camera = cv2.VideoCapture(0)
-        self.camera.set(cv2.cv.CV_CAP_PROP_FRAME_WIDTH, resolution[0])
-        self.camera.set(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT, resolution[1])
+        self.camera.set(cv2.CAP_PROP_FRAME_WIDTH, resolution[0])
+        self.camera.set(cv2.CAP_PROP_FRAME_HEIGHT, resolution[1])
         self.grab_image()
 
         # Start thread
@@ -59,3 +59,4 @@ class Camera(object):
         _, camera_image = self.camera.read()
         with self.lock:
             self.image = camera_image
+            #self.image = cv2.imread("board.png")  # TODO! Remove! Only for test purposes!

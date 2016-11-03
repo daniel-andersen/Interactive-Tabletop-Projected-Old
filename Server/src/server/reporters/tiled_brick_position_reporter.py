@@ -1,5 +1,5 @@
 from server import globals
-from reporter import Reporter
+from server.reporters.reporter import Reporter
 
 
 class TiledBrickPositionReporter(Reporter):
@@ -16,28 +16,28 @@ class TiledBrickPositionReporter(Reporter):
         self.valid_positions = valid_positions
         self.stability_level = stability_level
 
-    def run_iteration(self):
+    def update(self):
 
         # Check if we have a board area image
         if self.tiled_board_area.area_image() is None:
             return
 
-        #if globals.debug:
-            #cv2.imwrite("debug/output_board_recognized_{0}.png".format(self.reporter_id), globals.board_descriptor.snapshot.board_image())
+        #if globals.get_state().debug:
+            #cv2.imwrite("debug/output_board_recognized_{0}.png".format(self.reporter_id), globals.board_descriptor.get_snapshot().board_image())
 
         # Check sufficient stability
         if self.tiled_board_area.stability_score() < self.stability_level:
             return
 
         # Find brick
-        position, probabilities = globals.brick_detector.find_brick_among_tiles(self.tiled_board_area, self.valid_positions)
+        position, probabilities = globals.get_state().get_brick_detector().find_brick_among_tiles(self.tiled_board_area, self.valid_positions)
 
         if self.is_position_ok(position):
-            if globals.debug:
+            if globals.get_state().debug:
                 print("%i: Brick recognized: %s" % (self.reporter_id, probabilities))
                 #image = globals.camera.read()
                 #cv2.imwrite("debug/output_brick_recognized_{0}.png".format(self.reporter_id), image)
-                #cv2.imwrite("debug/output_brick_recognized_{0}_board.png".format(self.reporter_id), globals.board_descriptor.snapshot.board_image())
+                #cv2.imwrite("debug/output_brick_recognized_{0}_board.png".format(self.reporter_id), globals.board_descriptor.get_snapshot().board_image())
                 #cv2.imwrite("debug/output_brick_recognized_{0}_strip.png".format(self.reporter_id), globals.board_descriptor.tile_strip(self.valid_positions))
             self.callback_function(position)
             self.stop()

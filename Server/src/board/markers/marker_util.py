@@ -1,5 +1,5 @@
-from default_marker import DefaultMarker
-from triangle_marker import TriangleMarker
+from board.markers.default_marker import DefaultMarker
+from board.markers.triangle_marker import TriangleMarker
 
 
 def create_marker_from_name(name=None, marker_id=-1):
@@ -12,21 +12,21 @@ def create_marker_from_name(name=None, marker_id=-1):
     return DefaultMarker(marker_id)
 
 
-def filter_out_contour_from_marker_result_list(marker_result_list):
+def marker_result_list_to_server_output(marker_result_list):
     """
-    Filters out the "contour" key from marker result list.
+    Transforms marker results to usable server output.
 
     :param marker_result_list: Marker result list
-    :return: List of dictionaries with "contour" key filtered out
+    :return: List of transformed dictionaries
     """
-    return [filter_out_contour_from_marker_result(marker_result) for marker_result in marker_result_list]
+    return [marker_result_to_server_output(marker_result) for marker_result in marker_result_list]
 
 
-def filter_out_contour_from_marker_result(marker_result):
+def marker_result_to_server_output(marker_result):
     """
-    Filters out the "contour" key from marker result.
+    Transforms marker result to usable server output.
 
     :param marker_result: Marker result
-    :return: Dictionary with "contour" key filtered out
+    :return: Transformed dictionary
     """
-    return {k: v for k, v in marker_result.iteritems() if k != "contour"}
+    return {k: v for k, v in marker_result.items() if k != "rawContour"}

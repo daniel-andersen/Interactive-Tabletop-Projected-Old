@@ -1,8 +1,6 @@
 import cv2
 import time
-from reporter import Reporter
-from board.board_descriptor import BoardDescriptor
-from util import misc_math
+from server.reporters.reporter import Reporter
 
 
 class MarkerTracker(Reporter):
@@ -19,7 +17,7 @@ class MarkerTracker(Reporter):
         self.marker_history = []
         self.marker_history_time = 2.0
 
-    def run_iteration(self):
+    def update(self):
 
         # Update marker history
         while len(self.marker_history) > 0 and self.marker_history[0]["timestamp"] < time.time() - self.marker_history_time:
@@ -32,7 +30,7 @@ class MarkerTracker(Reporter):
         if area_image is None:
             return
 
-        #cv2.imwrite("test.png", area_image_bounded)
+        #cv2.imwrite("test2.png", area_image)
 
         # Find marker
         marker_result = self.marker.find_marker_in_image(area_image)

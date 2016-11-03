@@ -1,5 +1,4 @@
-from server import globals
-from reporter import Reporter
+from server.reporters.reporter import Reporter
 
 
 class FindMarkersReporter(Reporter):
@@ -16,7 +15,7 @@ class FindMarkersReporter(Reporter):
         self.markers = markers
         self.stability_level = stability_level
 
-    def run_iteration(self):
+    def update(self):
 
         # Check sufficient stability
         if self.board_area.stability_score() < self.stability_level:
@@ -38,7 +37,9 @@ class FindMarkersReporter(Reporter):
             if marker_result:
                 result.append(marker_result)
 
-        #if globals.debug:
+        #if globals.get_state().debug:
             #print("%i: Markers found: %i" % (self.reporter_id, len(result)))
+            #cv2.imwrite("area.png", self.board_area.area_image())
+
         self.callback_function(result)
         self.stop()

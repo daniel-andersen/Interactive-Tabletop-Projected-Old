@@ -1,7 +1,8 @@
 import tempfile
 import os
 import cv2
-from marker import Marker
+from threading import RLock
+from board.markers.marker import Marker
 
 
 class HaarClassifierMarker(Marker):
@@ -11,6 +12,8 @@ class HaarClassifierMarker(Marker):
         :param cascade_data: Haar cascade classifier data
         """
         super(HaarClassifierMarker, self).__init__(marker_id)
+
+        self.lock = RLock()
 
         # Create the classifier from a temporary file containing the given data
         cascade_file = tempfile.NamedTemporaryFile(delete=False)
@@ -41,7 +44,12 @@ class HaarClassifierMarker(Marker):
         return self.find_markers_in_thresholded_image(image)
 
     def find_markers_in_thresholded_image(self, image):
-        matches = self.cascade_data.detectMultiScale(image)
+
+        # Find markers
+        with self.lock:
+            matches = self.cascade_data.detectMultiScale(image)
+
+        # Return markers
         return [{"markerId": self.marker_id,
                  "x": int(x - (width / 2)),
                  "y": int(y - (height / 2)),

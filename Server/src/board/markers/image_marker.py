@@ -1,7 +1,8 @@
 import math
 import cv2
 import numpy as np
-from marker import Marker
+from threading import RLock
+from board.markers.marker import Marker
 from board.board_descriptor import BoardDescriptor
 from util import misc_math
 
@@ -17,11 +18,13 @@ class ImageMarker(Marker):
 
         self.min_matches = min_matches
 
+        self.lock = RLock()
+
         # Get size of query image
         self.query_image_height, self.query_image_width = marker_image.shape[:2]
 
         # Initialize SIFT detector
-        self.sift = cv2.SIFT()
+        self.sift = cv2.xfeatures2d.SIFT_create()
 
         # Initialize FLANN matcher
         FLANN_INDEX_KDTREE = 0
@@ -34,18 +37,22 @@ class ImageMarker(Marker):
         self.kp1, self.des1 = self.sift.detectAndCompute(marker_image, None)
 
     def preferred_input_image_resolution(self):
-        return BoardDescriptor.SnapshotSize.LARGE
+        return BoardDescriptor.SnapshotSize.ORIGINAL
 
     def find_marker_in_image(self, image):
 
+        #cv2.imwrite("area_{}.png".format(self.marker_id), image)
+
         # Find features in image
-        kp2, des2 = self.sift.detectAndCompute(image, None)
+        with self.lock:
+            kp2, des2 = self.sift.detectAndCompute(image, None)
 
         if len(self.kp1) < 2 or len(kp2) < 2:
             return None
 
         # Find matches
-        matches = self.flann.knnMatch(self.des1, des2, k=2)
+        with self.lock:
+            matches = self.flann.knnMatch(self.des1, des2, k=2)
 
         # Sort out bad matches
         good_matches = []
@@ -86,10 +93,4 @@ class ImageMarker(Marker):
         return [result] if result is not None else []
 
     def find_markers_in_thresholded_image(self, image):
-        """
-        Find all markers in image which has already been thresholded.
-
-        :param image: Thresholded image
-        :return: List of markers each in form {"markerId", "x", "y", "width", "height", "angle", "contour"}
-        """
         return self.find_markers_in_image(image)

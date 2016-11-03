@@ -1,6 +1,7 @@
+from threading import RLock
+
 import cv2
 from random import randint
-from threading import RLock
 from server import globals
 from board import histogram_util
 from board.board_descriptor import BoardDescriptor
@@ -15,10 +16,10 @@ class BoardArea(object):
     board_descriptor -- Board descriptor
     area_image -- Extracted area image
     """
-    lock = RLock()
     extracted_area_images = {}
     extracted_grayscaled_area_images = {}
     foreground_mask = None
+    foreground_mask_lock = RLock()
 
     def __init__(self, area_id=None, board_area_pct=[0.0, 0.0, 1.0, 1.0], board_descriptor=None):
         """
@@ -30,8 +31,8 @@ class BoardArea(object):
         """
         self.area_id = area_id if area_id is not None else randint(0, 100000)
         self.board_area_pct = board_area_pct
-        self.board_descriptor = board_descriptor if board_descriptor is not None else globals.board_descriptor
-        self.background_subtractor = cv2.BackgroundSubtractorMOG2(history=5, varThreshold=16)
+        self.board_descriptor = board_descriptor if board_descriptor is not None else globals.get_state().get_board_descriptor()
+        self.background_subtractor = cv2.createBackgroundSubtractorMOG2(history=5, varThreshold=16)
         self.current_stability_score = 1.0
         self.current_board_snapshot_id = None
 
@@ -43,14 +44,14 @@ class BoardArea(object):
         :return Extracted area image
         """
 
-        with self.lock:
+        with globals.get_state().board_descriptor_lock:
 
             # Check if board is recognized
             if not self.board_descriptor.is_recognized():
                 return None
 
             # Check if snapshot has changed
-            if self.current_board_snapshot_id is not self.board_descriptor.snapshot.id:
+            if self.current_board_snapshot_id is not self.board_descriptor.get_snapshot().id:
                 self.extracted_area_images = {}
                 self.extracted_grayscaled_area_images = {}
 
@@ -59,7 +60,7 @@ class BoardArea(object):
                 return self.extracted_area_images[snapshot_size]
 
             # Save snapshot ID
-            self.current_board_snapshot_id = self.board_descriptor.snapshot.id
+            self.current_board_snapshot_id = self.board_descriptor.get_snapshot().id
 
             # Get board canvas image
             board_image = self.board_descriptor.board_canvas(snapshot_size)
@@ -83,14 +84,14 @@ class BoardArea(object):
         :return Extracted area image
         """
 
-        with self.lock:
+        with globals.get_state().board_descriptor_lock:
 
             # Check if board is recognized
             if not self.board_descriptor.is_recognized():
                 return None
 
             # Already extracted image
-            if self.current_board_snapshot_id is self.board_descriptor.snapshot.id:
+            if self.current_board_snapshot_id is self.board_descriptor.get_snapshot().id:
                 if snapshot_size in self.extracted_grayscaled_area_images:
                     return self.extracted_grayscaled_area_images[snapshot_size]
 
@@ -104,7 +105,7 @@ class BoardArea(object):
 
     def update_stability_score(self):
 
-        with self.lock:
+        with self.foreground_mask_lock:
 
             # Get area image
             image = self.grayscaled_area_image(BoardDescriptor.SnapshotSize.SMALL)
@@ -128,5 +129,4 @@ class BoardArea(object):
             #cv2.imwrite("mask_%i.png" % self.area_id, self.foreground_mask)
 
     def stability_score(self):
-        with self.lock:
-            return self.current_stability_score
+        return self.current_stability_score

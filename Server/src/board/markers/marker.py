@@ -23,7 +23,7 @@ class Marker(object):
         Find all markers in image.
 
         :param image: Image
-        :return: List of markers each in form {"markerId", "x", "y", "width", "height", "angle", "contour"}
+        :return: List of markers each in form {"markerId", "x", "y", "width", "height", "angle", "contour", "rawContour"}
         """
         return []
 
@@ -32,7 +32,7 @@ class Marker(object):
         Find all markers in image which has already been thresholded.
 
         :param image: Image
-        :return: List of markers each in form {"markerId", "x", "y", "width", "height", "angle", "contour"}
+        :return: List of markers each in form {"markerId", "x", "y", "width", "height", "angle", "contour", "rawContour"}
         """
         return []
 
@@ -41,7 +41,7 @@ class Marker(object):
         Find marker in image.
 
         :param image: Image
-        :return: Marker in form {"markerId", "x", "y", "width", "height", "angle", "contour"}
+        :return: Marker in form {"markerId", "x", "y", "width", "height", "angle", "contour", "rawContour"}
         """
         return None
 
@@ -50,7 +50,7 @@ class Marker(object):
         Find marker in image which has already been thresholded.
 
         :param image: Thresholded image
-        :return: Marker in form {"markerId", "x", "y", "width", "height", "angle", "contour"}
+        :return: Marker in form {"markerId", "x", "y", "width", "height", "angle", "contour", "rawContour"}
         """
         return None
 
@@ -60,7 +60,7 @@ class Marker(object):
 
         :param image: Image
         :param contour: Contour
-        :return: Result in form {"markerId", "x", "y", "width", "height", "angle", "contour"}
+        :return: Result in form {"markerId", "x", "y", "width", "height", "angle", "contour", "rawContour"}
         """
         image_height, image_width = image.shape[:2]
         box = cv2.minAreaRect(contour)
@@ -71,7 +71,8 @@ class Marker(object):
                 "width": float(box[1][0]) / float(image_width),
                 "height": float(box[1][1]) / float(image_height),
                 "angle": box[2],
-                "contour": contour}
+                "rawContour": contour,
+                "contour": [[float(p[0][0]) / float(image_width), float(p[0][1]) / float(image_height)] for p in contour]}
 
     def contours_to_marker_result(self, image, contours):
         """
@@ -79,6 +80,6 @@ class Marker(object):
 
         :param image: Image
         :param contours: Contours
-        :return: List of markers each in form {"markerId", "x", "y", "width", "height", "angle", "contour"}
+        :return: List of markers each in form {"markerId", "x", "y", "width", "height", "angle", "contour", "rawContour"}
         """
         return [self.contour_to_marker_result(image, contour) for contour in contours]

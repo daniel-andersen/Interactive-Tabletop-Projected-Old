@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 import math
-import misc_math
+import util.misc_math
 
 
 def contour_center(contour):

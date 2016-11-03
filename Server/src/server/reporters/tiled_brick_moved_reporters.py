@@ -1,4 +1,4 @@
-from tiled_brick_position_reporter import TiledBrickPositionReporter
+from server.reporters.tiled_brick_position_reporter import TiledBrickPositionReporter
 
 
 class TiledBrickMovedToAnyOfPositionsReporter(TiledBrickPositionReporter):

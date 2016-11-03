@@ -22,16 +22,36 @@ module.exports = function(grunt) {
     },
     serve: {
       options: {
-        port: 9000,
+        port: 9002,
         serve: {
 		  path: "target"
 		}
       }
 	},
     subgrunt: {
+      menu: {
+        projects: {
+          "../Content/Menu": "default"
+        }
+      },
       maze: {
         projects: {
           "../Content/MAZE": "default"
+        }
+      },
+      example2: {
+        projects: {
+          "../Content/Example2": "default"
+        }
+      },
+      example4: {
+        projects: {
+          "../Content/Example4": "default"
+        }
+      },
+      geometry: {
+        projects: {
+          "../Content/Geometry": "default"
         }
       }
     },
@@ -43,12 +63,44 @@ module.exports = function(grunt) {
         src: "**",
         dest: "target/"
       },
+      menu: {
+        files: [
+          {expand: true, cwd: "../Content/Menu/assets", src: "**", dest: "target/content/Menu/assets"},
+          {expand: true, cwd: "../Content/Menu/src", src: "**", dest: "target/content/Menu/src"},
+          {expand: true, cwd: "../Content/Menu/lib", src: "**", dest: "target/content/Menu/lib"},
+          {expand: true, cwd: "../Content/Menu/", src: "*.html", dest: "target/content/Menu/"}
+        ]
+      },
       maze: {
         files: [
           {expand: true, cwd: "../Content/MAZE/assets", src: "**", dest: "target/content/maze/assets"},
           {expand: true, cwd: "../Content/MAZE/src", src: "**", dest: "target/content/maze/src"},
           {expand: true, cwd: "../Content/MAZE/lib", src: "**", dest: "target/content/maze/lib"},
           {expand: true, cwd: "../Content/MAZE/", src: "*.html", dest: "target/content/maze/"}
+        ]
+      },
+      example2: {
+        files: [
+          {expand: true, cwd: "../Content/Example2/assets", src: "**", dest: "target/content/example2/assets"},
+          {expand: true, cwd: "../Content/Example2/src", src: "**", dest: "target/content/example2/src"},
+          {expand: true, cwd: "../Content/Example2/lib", src: "**", dest: "target/content/example2/lib"},
+          {expand: true, cwd: "../Content/Example2/", src: "*.html", dest: "target/content/example2/"}
+        ]
+      },
+      example4: {
+        files: [
+          {expand: true, cwd: "../Content/Example4/assets", src: "**", dest: "target/content/example4/assets"},
+          {expand: true, cwd: "../Content/Example4/src", src: "**", dest: "target/content/example4/src"},
+          {expand: true, cwd: "../Content/Example4/lib", src: "**", dest: "target/content/example4/lib"},
+          {expand: true, cwd: "../Content/Example4/", src: "*.html", dest: "target/content/example4/"}
+        ]
+      },
+      geometry: {
+        files: [
+          {expand: true, cwd: "../Content/Geometry/assets", src: "**", dest: "target/content/Geometry/assets"},
+          {expand: true, cwd: "../Content/Geometry/src", src: "**", dest: "target/content/Geometry/src"},
+          {expand: true, cwd: "../Content/Geometry/lib", src: "**", dest: "target/content/Geometry/lib"},
+          {expand: true, cwd: "../Content/Geometry/", src: "*.html", dest: "target/content/Geometry/"}
         ]
       }
     }

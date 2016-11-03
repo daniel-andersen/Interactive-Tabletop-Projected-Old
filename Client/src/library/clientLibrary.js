@@ -293,6 +293,21 @@ Client = (function() {
     });
   };
 
+  "requestTiledBrickPositions: Returns the positions of bricks among the given possible positions in a tiled area.\n\nareaId: Area ID of tiled board area.\nvalidPositions: A list of valid positions in the form [[x, y], [x, y], ...].\ncompletionCallback: (Optional) completionCallback(action, payload) is called when receiving a respond to the request.";
+
+  Client.prototype.requestTiledBrickPosition = function(areaId, validPositions, completionCallback) {
+    var requestId;
+    if (completionCallback == null) {
+      completionCallback = void 0;
+    }
+    requestId = this.addCompletionCallback(completionCallback);
+    return this.sendMessage("requestBrickPositions", {
+      "requestId": requestId,
+      "areaId": areaId,
+      "validPositions": validPositions
+    });
+  };
+
   "reportBackWhenBrickFoundAtAnyOfPositions: Keeps searching for a brick in the given positions in a tiled area and returns\nthe position when found.\n\nareaId: Area ID of tiled board area.\nvalidPositions: A list of valid positions in the form [[x, y], [x, y], ...].\nid: (Optional) Reporter ID.\nstabilityLevel: (Optional) Minimum stability level of board area before returning result.\ncompletionCallback: (Optional) completionCallback(action, payload) is called when receiving a respond to the request.";
 
   Client.prototype.reportBackWhenBrickFoundAtAnyOfPositions = function(areaId, validPositions, id, stabilityLevel, completionCallback) {
@@ -486,6 +501,29 @@ Client = (function() {
     })(this));
   };
 
+  "initializeArUcoMarker: Initializes an ArUco marker with given properties.\n\nmarkerId: Marker ID.\narUcoMarkerId: ArUco marker ID. Number in range [0..dictionarySize-1].\nmarkerSize: Marker size. Any of 4, 5, 6, 7.\ndictionarySize: (Optional) Dictionary size. Any of 100, 250, 1000.\ncompletionCallback: (Optional) completionCallback(action, payload) is called when receiving a respond to the request.";
+
+  Client.prototype.initializeArUcoMarker = function(markerId, arUcoMarkerId, markerSize, dictionarySize, completionCallback) {
+    var json, requestId;
+    if (dictionarySize == null) {
+      dictionarySize = void 0;
+    }
+    if (completionCallback == null) {
+      completionCallback = void 0;
+    }
+    requestId = this.addCompletionCallback(completionCallback);
+    json = {
+      "requestId": requestId,
+      "markerId": markerId,
+      "arUcoMarkerId": arUcoMarkerId,
+      "markerSize": markerSize
+    };
+    if (dictionarySize != null) {
+      json["dictionarySize"] = dictionarySize;
+    }
+    return this.sendMessage("initializeArUcoMarker", json);
+  };
+
   "reportBackWhenMarkerFound: Keeps searching for marker and reports back when found.\n\nareaId: Area ID to search for marker in.\nmarkerId: Marker ID to search for.\nid: (Optional) Reporter ID.\nstabilityLevel: (Optional) Minimum stability level of board area before returning result.\ncompletionCallback: (Optional) completionCallback(action, payload) is called when receiving a respond to the request.";
 
   Client.prototype.reportBackWhenMarkerFound = function(areaId, markerId, id, stabilityLevel, completionCallback) {
@@ -542,6 +580,28 @@ Client = (function() {
     return this.sendMessage("requestMarkers", json);
   };
 
+  "requestArUcoMarkers: Returns a list of all visible ArUco markers of given size in given area.\n\nareaId: Area ID to search for markers in.\nmarkerSize: ArUco marker size. Any of 4, 5, 6, 7.\nid: (Optional) Reporter ID.\ncompletionCallback: (Optional) completionCallback(action, payload) is called when receiving a respond to the request.";
+
+  Client.prototype.requestArUcoMarkers = function(areaId, markerSize, id, completionCallback) {
+    var json, requestId;
+    if (id == null) {
+      id = void 0;
+    }
+    if (completionCallback == null) {
+      completionCallback = void 0;
+    }
+    requestId = this.addCompletionCallback(completionCallback);
+    json = {
+      "requestId": requestId,
+      "areaId": areaId,
+      "markerSize": markerSize
+    };
+    if (id != null) {
+      json["id"] = id;
+    }
+    return this.sendMessage("requestArUcoMarkers", json);
+  };
+
   "startTrackingMarker: Continously tracks a marker in the given area. Continously reports back.\n\nareaId: Area ID to track marker in.\nmarkerId: Marker ID to track.\nid: (Optional) Reporter ID.\ncompletionCallback: (Optional) completionCallback(action, payload) is called when receiving a respond to the request.";
 
   Client.prototype.startTrackingMarker = function(areaId, markerId, id, completionCallback) {
@@ -562,6 +622,30 @@ Client = (function() {
       json["id"] = id;
     }
     return this.sendMessage("startTrackingMarker", json);
+  };
+
+  "requestContours: Returns a list of all visible contours in given area.\n\nareaId: Area ID to search for markers in.\napproximation: (Optional) Contour approximation constant. This is the maximum distance between the original curve and its approximation.\nid: (Optional) Reporter ID.\ncompletionCallback: (Optional) completionCallback(action, payload) is called when receiving a respond to the request.";
+
+  Client.prototype.requestContours = function(areaId, approximation, id, completionCallback) {
+    var json, requestId;
+    if (id == null) {
+      id = void 0;
+    }
+    if (completionCallback == null) {
+      completionCallback = void 0;
+    }
+    requestId = this.addCompletionCallback(completionCallback);
+    json = {
+      "requestId": requestId,
+      "areaId": areaId
+    };
+    if (id != null) {
+      json["id"] = id;
+    }
+    if (approximation != null) {
+      json["approximation"] = approximation;
+    }
+    return this.sendMessage("requestContours", json);
   };
 
   Client.prototype.sendMessage = function(action, payload) {

@@ -1,7 +1,7 @@
 import cv2
 import math
 import numpy as np
-from marker import Marker
+from board.markers.marker import Marker
 from board.board_descriptor import BoardDescriptor
 from util import misc_math
 from util import contour_util
@@ -10,7 +10,7 @@ from util import contour_util
 class ShapeMarker(Marker):
 
     def __init__(self, marker_id, contour=None, marker_image=None, distance_tolerance=0.35, angle_tolerance=0.25,
-                 fine_grained=True, spike_tolerance=0.25, closed=True, min_arclength=0.1, max_arclength=100.0,
+                 fine_grained=True, spike_tolerance=0.25, closed=True, min_arclength=0.05, max_arclength=100.0,
                  min_area=0.0025, max_area=0.9):
         """
         :param marker_id: Marker ID
@@ -60,7 +60,7 @@ class ShapeMarker(Marker):
         ret, image = cv2.threshold(image, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
 
         # Find contours
-        contours, _ = cv2.findContours(image, cv2.RETR_LIST, cv2.CHAIN_APPROX_NONE)
+        contours, _ = cv2.findContours(image, cv2.RETR_LIST, cv2.CHAIN_APPROX_NONE)[-2:]
 
         # No contours found
         if len(contours) == 0:
@@ -97,25 +97,26 @@ class ShapeMarker(Marker):
 
     def find_markers_in_image(self, image):
 
-        # Blur to remove noise
         image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-        image = cv2.blur(image, (1, 1))
+
+        # Blur to remove noise
+        image = cv2.blur(image, (3, 3))
 
         # Threshold by using OTSU
-        #image = cv2.adaptiveThreshold(image, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 11, 2)
-        ret, image = cv2.threshold(image, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
+        image = cv2.adaptiveThreshold(image, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 11, 2)
+        #ret, image = cv2.threshold(image, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
 
         # Remove noise again
         image = cv2.dilate(image, (5, 5))
         image = cv2.erode(image, (5, 5))
 
-        # Find marker in image
+        # Find marker in OTSU'ed image
         return self.find_markers_in_thresholded_image(image)
 
     def find_markers_in_thresholded_image(self, image):
 
         # Find contours
-        contours, _ = cv2.findContours(image.copy(), cv2.RETR_LIST, cv2.CHAIN_APPROX_NONE)
+        contours, _ = cv2.findContours(image.copy(), cv2.RETR_LIST, cv2.CHAIN_APPROX_NONE)[-2:]
         if len(contours) == 0:
             return []
 
@@ -150,8 +151,8 @@ class ShapeMarker(Marker):
                 image_height, image_width = image.shape[:2]
 
                 result["angle"] = angle * 180.0 / math.pi
-                result["x"] = matched_contour_center[0] / float(image_width),
-                result["y"] = matched_contour_center[1] / float(image_height)
+                #result["x"] = matched_contour_center[0] / float(image_width),
+                #result["y"] = matched_contour_center[1] / float(image_height)
 
                 # Append marker to result list
                 markers.append(result)
@@ -202,7 +203,8 @@ class ShapeMarker(Marker):
             return None, None
 
         # Simplify contour
-        approxed_contour = contour_util.simplify_contour(contour)
+        approxed_contour = cv2.approxPolyDP(contour, cv2.arcLength(contour, True) * 0.02, True)
+        #approxed_contour = contour_util.simplify_contour(contour)
 
         #contour_util.draw_contour(image.copy(), contour=approxed_contour, scale=1, points_color=(0, 255, 0))
         #cv2.waitKey(0)
